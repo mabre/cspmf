@@ -144,7 +144,7 @@ block_comment (startPos, _ ,[], input') 2 = do
     let input = tail $ tail input'
     if (head input' /= '{' && head (tail input') /= '-')
     then error "internal Error : block_comment called with bad args"
-    else case go 1 "-{" input of
+    else case go 1 ['-','{'] (toList input) of
       Nothing -> Alex $ \_-> Left $ LexError {
         lexEPos = startPos
         ,lexEMsg = "Unclosed Blockcomment"
@@ -153,25 +153,23 @@ block_comment (startPos, _ ,[], input') 2 = do
        cnt <- alexCountToken
        let
         tokenId = mkTokenId cnt
-        tokenString = reverse' acc
+        tokenString = reverse acc
         tokenLen = length tokenString
         tokenStart = startPos
-        tokenClass = case (tokenString, toList acc) of
+        tokenClass = case (tokenString, acc) of
             ('{':'-':'#':_, '}':'-':'#':_) ->  L_Pragma
             ('{':'-':_    , '}':'-':_    ) ->  L_BComment
             _ -> error "internal Error: cannot determine variant of block_comment"
-       alexSetInput (foldl' alexMove startPos tokenString, '\125', [],rest)
+       alexSetInput (foldl' alexMove startPos tokenString, '}', [], packed rest)
        return $ Token {tokenId=tokenId, tokenStart=tokenStart, tokenLen=tokenLen, tokenClass=tokenClass, tokenString = packed tokenString}
   where
-    go :: Int -> String -> String -> Maybe (String,String)
+    go :: Int -> [Char] -> [Char] -> Maybe ([Char],[Char])
     go 0 acc rest = Just (acc, rest)
     go nested acc rest =case toList rest of
-      '-' : '}' : r2 -> go (pred nested) ("}-" ++ acc) (packed r2)
-      '{' : '-'  : r2 -> go (succ nested) ("-{" ++ acc) (packed r2)
-      h:r2 -> go nested (ctos h ++ acc) (packed r2)
+      '-' : '}' : r2 -> go (pred nested) ('}' : '-' : acc) r2
+      '{' : '-'  : r2 -> go (succ nested) ('-' : '{' : acc) r2
+      h:r2 -> go nested (h : acc) r2
       [] -> Nothing
-    reverse' :: String -> [Char]
-    reverse' = reverse . toList
 
 block_comment _ _ = error "internal Error : block_comment called with bad args"
 
