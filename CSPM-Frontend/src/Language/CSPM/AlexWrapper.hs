@@ -8,32 +8,32 @@
 -- Wrapper functions for Alex
 
 {-# LANGUAGE RecordWildCards, CPP #-}
-module Language.CSPM.AlexWrapper
+module AlexWrapper
 where
 
-import Language.CSPM.Token
-import Language.CSPM.TokenClasses
+import Token
+import TokenClasses
 
 import Data.Char
-import Data.Word (Word8)
-import qualified Data.Bits
+-- import Data.Word (Word8)
+import Data.Bits
 import Data.List
 
-#if __GLASGOW_HASKELL__ >= 710
-import qualified Control.Monad (ap)
-#endif
+-- #if __GLASGOW_HASKELL__ >= 710
+-- import qualified Control.Monad (ap)
+-- #endif
 
 type AlexInput = (AlexPosn,     -- current position,
                   Char,         -- previous char
-                  [Byte],       -- pending bytes on current char
+                  [Int],       -- pending bytes on current char
                   String)       -- current input string
 
-type Byte = Word8
+type Byte = Int
 
 data AlexState = AlexState {
    alex_input :: AlexInput
-  ,alex_scd :: !Int 	-- the current startcode
-  ,alex_cnt :: !Int 	-- number of tokens
+  ,!alex_scd :: Int 	-- the current startcode
+  ,!alex_cnt :: Int 	-- number of tokens
   }
 
 runAlex :: String -> Alex a -> Either LexError a
@@ -50,74 +50,74 @@ runAlex input (Alex f)
       }
     initAlexInput = (alexStartPos,'\n',[],input)
 
-newtype Alex a = Alex { unAlex :: AlexState -> Either LexError (AlexState, a) }
+data Alex a = Alex { unAlex :: AlexState -> Either LexError (AlexState, a) }
 
-#if __GLASGOW_HASKELL__ >= 710
-instance Functor Alex where
-  fmap f m = do x <- m; return (f x)
-
-instance Applicative Alex where
-  pure = return
-  (<*>) = Control.Monad.ap
-#endif
+-- #if __GLASGOW_HASKELL__ >= 710
+-- instance Functor Alex where
+--   fmap f m = do x <- m; return (f x)
+-- 
+-- instance Applicative Alex where
+--   pure = return
+--   (<*>) = Control.Monad.ap
+-- #endif
 
 instance Monad Alex where
-  m >>= k  = Alex $ \s -> case unAlex m s of
+  m >>= k  = Alex $ \s -> case Alex.unAlex m s of
                             Left msg -> Left msg
-                            Right (s',a) -> unAlex (k a) s'
+                            Right (s',a) -> Alex.unAlex (k a) s'
   return a = Alex $ \s -> Right (s,a)
 
 alexGetInput :: Alex AlexInput
 alexGetInput
-  = Alex $ \s-> Right (s,alex_input s)
+  = Alex $ \s-> Right (s, s.alex_input)
 
 alexSetInput :: AlexInput -> Alex ()
 alexSetInput input
-   = Alex $ \state -> case state {alex_input=input} of
-            s@(AlexState{}) -> Right (s, ())
+   = Alex $ \state -> case state.{alex_input=input} of
+            (s@(AlexState{})) -> Right (s, ())
 
 alexError :: String -> Alex a
-alexError message
-    = Alex $ \st -> let (pos,_,_,_) = alex_input st in
-                 Left $ LexError {lexEPos = pos, lexEMsg = message }
+alexError message = Alex $ \st -> let (pos,_a,_b,_c) = (st.alex_input) in
+                                      Left $ LexError {lexEPos = pos, lexEMsg = message}
 
 alexGetStartCode :: Alex Int
-alexGetStartCode = Alex $ \s@AlexState{alex_scd=sc} -> Right (s, sc)
+alexGetStartCode = Alex $ \(s@AlexState{alex_scd=sc}) -> Right (s, sc)
 
 alexSetStartCode :: Int -> Alex ()
-alexSetStartCode sc = Alex $ \s -> Right (s{alex_scd=sc}, ())
+alexSetStartCode sc = Alex $ \s -> Right (s.{alex_scd=sc}, ())
 
 -- increase token counter and return tokenCount
 alexCountToken :: Alex Int
 alexCountToken
-  = Alex $ \s -> Right (s {alex_cnt = succ $ alex_cnt s}, alex_cnt s)
+  = Alex $ \s -> Right (s.{alex_cnt = succ $ s.alex_cnt}, s.alex_cnt)
 
 -- taken from original Alex-Wrapper
 alexGetByte :: AlexInput -> Maybe (Byte,AlexInput)
 alexGetByte (p,c,(b:bs),s) = Just (b,(p,c,bs,s))
-alexGetByte (_,_,[],[]) = Nothing
-alexGetByte (p,_,[],(c:s))  = let p' = alexMove p c 
+alexGetByte (_,_,[],"") = Nothing
+alexGetByte (p,_,[],(cs))   = let (c,s) = (head cs, tail cs)
+                                  p' = alexMove p c 
                                   (b:bs) = utf8Encode c
                               in p' `seq`  Just (b, (p', c, bs, s))
 
-utf8Encode :: Char -> [Word8]
+utf8Encode :: Char -> [Int]
 utf8Encode = map fromIntegral . go . ord
  where
   go oc
    | oc <= 0x7f       = [oc]
 
-   | oc <= 0x7ff      = [ 0xc0 + (oc `Data.Bits.shiftR` 6)
-                        , 0x80 + oc Data.Bits..&. 0x3f
+   | oc <= 0x7ff      = [ 0xc0 + (shiftR oc 6)
+                        , 0x80 + oc .&. 0x3f
                         ]
 
-   | oc <= 0xffff     = [ 0xe0 + (oc `Data.Bits.shiftR` 12)
-                        , 0x80 + ((oc `Data.Bits.shiftR` 6) Data.Bits..&. 0x3f)
-                        , 0x80 + oc Data.Bits..&. 0x3f
+   | oc <= 0xffff     = [ 0xe0 + (shiftR oc 12)
+                        , 0x80 + ((shiftR oc 6) .&. 0x3f)
+                        , 0x80 + oc .&. 0x3f
                         ]
-   | otherwise        = [ 0xf0 + (oc `Data.Bits.shiftR` 18)
-                        , 0x80 + ((oc `Data.Bits.shiftR` 12) Data.Bits..&. 0x3f)
-                        , 0x80 + ((oc `Data.Bits.shiftR` 6) Data.Bits..&. 0x3f)
-                        , 0x80 + oc Data.Bits..&. 0x3f
+   | otherwise        = [ 0xf0 + (shiftR oc 18)
+                        , 0x80 + ((shiftR oc 12) .&. 0x3f)
+                        , 0x80 + ((shiftR oc 6) .&. 0x3f)
+                        , 0x80 + oc .&. 0x3f
                         ]
 
 
@@ -140,38 +140,44 @@ mkL c (pos, _, _, str) len = do
   }
 
 block_comment :: AlexInput -> Int -> Alex Token
-block_comment (startPos, _ ,[], '\123':'-':input) 2 = do
-    case go 1 "-{" input of
+block_comment (startPos, _ ,[], input') 2 = do
+    let input = tail $ tail input'
+    if (head input' /= '{' && head (tail input') /= '-')
+    then error "internal Error : block_comment called with bad args"
+    else case go 1 "-{" input of
       Nothing -> Alex $ \_-> Left $ LexError {
-         lexEPos = startPos
+        lexEPos = startPos
         ,lexEMsg = "Unclosed Blockcomment"
         }
       Just (acc, rest) -> do
-        cnt <- alexCountToken
-        let
-          tokenId = mkTokenId cnt
-          tokenString = reverse acc
-          tokenLen = length tokenString
-          tokenStart = startPos
-          tokenClass = case (tokenString, acc) of
-               ('\123':'-':'#':_, '\125':'-':'#':_) ->  L_Pragma
-               ('\123':'-':_    , '\125':'-':_    ) ->  L_BComment
-               _ -> error "internal Error: cannot determine variant of block_comment"
-        alexSetInput (foldl' alexMove startPos tokenString, '\125', [],rest)
-        return $ Token {..}
+       cnt <- alexCountToken
+       let
+        tokenId = mkTokenId cnt
+        tokenString = reverse' acc
+        tokenLen = length tokenString
+        tokenStart = startPos
+        tokenClass = case (tokenString, toList acc) of
+            ('{':'-':'#':_, '}':'-':'#':_) ->  L_Pragma
+            ('{':'-':_    , '}':'-':_    ) ->  L_BComment
+            _ -> error "internal Error: cannot determine variant of block_comment"
+       alexSetInput (foldl' alexMove startPos tokenString, '\125', [],rest)
+       return $ Token {tokenId=tokenId, tokenStart=tokenStart, tokenLen=tokenLen, tokenClass=tokenClass, tokenString = packed tokenString}
   where
     go :: Int -> String -> String -> Maybe (String,String)
     go 0 acc rest = Just (acc, rest)
-    go nested acc rest = case rest of
-      '-' : '\125' : r2 -> go (pred nested) ('\125': '-' : acc) r2
-      '\123' : '-'  : r2 -> go (succ nested) ('-'  : '\123': acc) r2
-      h:r2 -> go nested (h : acc) r2
+    go nested acc rest =case toList rest of
+      '-' : '}' : r2 -> go (pred nested) ("}-" ++ acc) (packed r2)
+      '{' : '-'  : r2 -> go (succ nested) ("-{" ++ acc) (packed r2)
+      h:r2 -> go nested (ctos h ++ acc) (packed r2)
       [] -> Nothing
+    reverse' :: String -> [Char]
+    reverse' = reverse . toList
 
 block_comment _ _ = error "internal Error : block_comment called with bad args"
 
 stringchars :: AlexInput -> Int -> Alex Token
-stringchars (startPos, _, [], '\"':input) 1 = do
+stringchars (startPos, _, [], input') 1 = do
+    let input = tail input'
     case go 1 "\"" input of
       Nothing -> Alex $ \_-> Left $ LexError {
          lexEPos = startPos
@@ -181,22 +187,24 @@ stringchars (startPos, _, [], '\"':input) 1 = do
         cnt <- alexCountToken
         let
           tokenId = mkTokenId cnt
-          tokenString = reverse acc
+          tokenString = reverse' acc
           tokenLen = length tokenString
           tokenStart = startPos
-          tokenClass = case (tokenString, acc) of
-               ('\"':_, '\"':_) ->  L_String
+          tokenClass = case (head tokenString, head acc) of
+               ('\"', '\"') ->  L_String
                _ -> error "internal Error: cannot determine variant of string"
         alexSetInput (foldl' alexMove startPos tokenString, '\"', [],rest)
-        return $ Token {..}
+        return $ Token {tokenId=tokenId, tokenStart=tokenStart, tokenLen=tokenLen, tokenClass=tokenClass, tokenString = packed tokenString}
   where
     go :: Int -> String -> String -> Maybe (String,String)
     go 0 acc rest = Just (acc, rest)
-    go nested acc rest = case rest of
-      '\"' : r2 -> go (pred nested) ('\"': acc) r2
-      '\"' : r2 -> go (succ nested) ('\"': acc) r2
-      h:r2 -> go nested (h : acc) r2
+    go nested acc rest = case toList rest of
+      '\"' : r2 -> go (pred nested) ("\"" ++ acc) (packed r2)
+      '\"' : r2 -> go (succ nested) ("\"" ++ acc) (packed r2)
+      h:r2 -> go nested (ctos h ++ acc) (packed r2)
       [] -> Nothing
+    reverse' :: String -> [Char]
+    reverse' = reverse . toList
 
 lexError :: String -> Alex a
 lexError s = do
@@ -206,7 +214,7 @@ lexError s = do
             then " at " ++ (reportChar $ head input)
             else " at end of file"
   alexError $ s ++ pos
-  where
+ where
     reportChar c =
      if isPrint c
        then show c
