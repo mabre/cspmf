@@ -12,9 +12,10 @@
 -- This is the AST that is computed by the parser.
 -- For historical reasons, it is rather unstructured.
 
-{-# LANGUAGE DeriveDataTypeable, GeneralizedNewtypeDeriving,DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable, DeriveGeneric #-}
 -- {-# LANGUAGE EmptyDataDecls, RankNTypes #-}
 -- {-# LANGUAGE RecordWildCards #-}
+--GeneralizedNewtypeDeriving
 module Language.CSPM.AST
 where
 
@@ -33,7 +34,9 @@ type Bindings = Map String UniqueIdent
 type FreeNames = IntMap UniqueIdent
 
 newtype NodeId = NodeId {unNodeId :: Int}
-  deriving (Eq, Ord, Show, Enum, Ix, Typeable, Data, Generic)
+  deriving (Eq, Ord, Show, Ix, Typeable, Data, Generic)
+succ' :: NodeId -> NodeId
+succ' (NodeId i) = NodeId $ succ i
 
 mkNodeId :: Int -> NodeId
 mkNodeId = NodeId

@@ -98,7 +98,7 @@ initialPState = PState {
 mkLabeledNode :: SrcLoc -> t -> PT (Labeled t)
 mkLabeledNode loc node = do
   i <- getStates nodeIdSupply
-  updateState $ \s -> s { nodeIdSupply = succ $ nodeIdSupply s}
+  updateState $ \s -> s { nodeIdSupply = succ' $ nodeIdSupply s}
   return $ Labeled {
     nodeId = i
    ,srcLoc = loc
