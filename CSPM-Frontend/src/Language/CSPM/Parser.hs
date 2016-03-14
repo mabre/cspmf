@@ -11,7 +11,8 @@
 -- This modules defines a Parser for CSP-M
 -- 
 -----------------------------------------------------------------------------
-{-# LANGUAGE DeriveDataTypeable, RecordWildCards #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+-- RecordWildCards
 
 module Language.CSPM.Parser
 (
@@ -156,7 +157,10 @@ parseModule tokenList = do
     moduleSrcLoc = mkSrcSpan s e
     modulePragmas = mapMaybe getPragma tokenList
     moduleComments = mapMaybe getComment tokenList
-  return $ Module { .. }
+  return $ Module { moduleTokens = moduleTokens,
+                    moduleSrcLoc = moduleSrcLoc,
+                    modulePragmas = modulePragmas,
+                    moduleComments = moduleComments }
   where
     getComment :: Token -> Maybe LocComment
     getComment t = case tokenClass t of

@@ -12,7 +12,7 @@
 -- Also decide whether to use ground or non-ground- representaions for the translation to Prolog.
 
 {-# LANGUAGE EmptyDataDecls, DeriveDataTypeable, ViewPatterns #-}
-{-# LANGUAGE RecordWildCards #-}
+-- {-# LANGUAGE RecordWildCards #-}
 
 module Language.CSPM.Rename
   (
@@ -89,16 +89,14 @@ data RenameInfo = RenameInfo
   } deriving Show
 
 initialRState :: RenameInfo
-initialRState = RenameInfo {..}
-  where
-    nameSupply    = 0
-    localBindings = Map.empty
-    visible       = Map.empty
-    identDefinition = IntMap.empty
-    identUse        = IntMap.empty
-    usedNames       = Set.empty
-    prologMode      = PrologVariable
-    bindType        = NotLetBound
+initialRState = RenameInfo { nameSupply    = 0,
+                             localBindings = Map.empty,
+                             visible       = Map.empty,
+                             identDefinition = IntMap.empty,
+                             identUse        = IntMap.empty,
+                             usedNames       = Set.empty,
+                             prologMode      = PrologVariable,
+                             bindType        = NotLetBound }
 
 initPrelude :: RM ()
 initPrelude

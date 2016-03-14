@@ -13,8 +13,8 @@
 -- For historical reasons, it is rather unstructured.
 
 {-# LANGUAGE DeriveDataTypeable, GeneralizedNewtypeDeriving,DeriveGeneric #-}
-{-# LANGUAGE EmptyDataDecls, RankNTypes #-}
-{-# LANGUAGE RecordWildCards #-}
+-- {-# LANGUAGE EmptyDataDecls, RankNTypes #-}
+-- {-# LANGUAGE RecordWildCards #-}
 module Language.CSPM.AST
 where
 
@@ -113,7 +113,7 @@ instance Data FromParser
 instance Eq FromParser
 
 castModule :: Module a -> Module b
-castModule Module {..} = Module {..}
+castModule (Module mds mts msrcloc mcs mps) = Module mds mts msrcloc mcs mps
 
 type ModuleFromParser = Module FromParser
 

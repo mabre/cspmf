@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, RecordWildCards #-}
+-- {-# LANGUAGE TupleSections, RecordWildCards #-}
 module Language.CSPM.LexHelper
 {-
 (

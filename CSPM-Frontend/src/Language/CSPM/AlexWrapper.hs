@@ -7,7 +7,8 @@
 --
 -- Wrapper functions for Alex
 
-{-# LANGUAGE RecordWildCards, CPP #-}
+{-# LANGUAGE CPP #-}
+-- RecordWildCards
 module Language.CSPM.AlexWrapper
 where
 
@@ -158,7 +159,11 @@ block_comment (startPos, _ ,[], '\123':'-':input) 2 = do
                ('\123':'-':_    , '\125':'-':_    ) ->  L_BComment
                _ -> error "internal Error: cannot determine variant of block_comment"
         alexSetInput (foldl' alexMove startPos tokenString, '\125', [],rest)
-        return $ Token {..}
+        return $ Token { tokenId = tokenId,
+                         tokenString = tokenString,
+                         tokenLen = tokenLen,
+                         tokenStart = tokenStart,
+                         tokenClass = tokenClass }
   where
     go :: Int -> String -> String -> Maybe (String,String)
     go 0 acc rest = Just (acc, rest)
@@ -188,7 +193,11 @@ stringchars (startPos, _, [], '\"':input) 1 = do
                ('\"':_, '\"':_) ->  L_String
                _ -> error "internal Error: cannot determine variant of string"
         alexSetInput (foldl' alexMove startPos tokenString, '\"', [],rest)
-        return $ Token {..}
+        return $ Token { tokenId = tokenId,
+                         tokenString = tokenString,
+                         tokenLen = tokenLen,
+                         tokenStart = tokenStart,
+                         tokenClass = tokenClass}
   where
     go :: Int -> String -> String -> Maybe (String,String)
     go 0 acc rest = Just (acc, rest)
