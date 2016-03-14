@@ -11,8 +11,10 @@
 -- Compute the mapping between the using occurences and the defining occurences of all Identifier in a Module
 -- Also decide whether to use ground or non-ground- representaions for the translation to Prolog.
 
-{-# LANGUAGE EmptyDataDecls, DeriveDataTypeable, ViewPatterns #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 -- {-# LANGUAGE RecordWildCards #-}
+-- EmptyDataDecls
+-- ViewPatterns
 
 module Language.CSPM.Rename
   (
@@ -373,14 +375,16 @@ rnCompGen g = case unLabel g of
   Guard e -> rnExp e
 
 reRename :: LRename -> RM ()
-reRename (unLabel -> Rename e1 e2) = rnExp e1 >> rnExp e2
+reRename r = case unLabel r of
+  Rename e1 e2 -> rnExp e1 >> rnExp e2
 
 rnLinkList :: LLinkList -> RM ()
 rnLinkList ll = case unLabel ll of
   LinkList l -> mapM_ rnLink l
   LinkListComprehension a b -> inCompGen a (mapM_ rnLink b)
   where
-    rnLink (unLabel -> Link a b) = rnExp a >> rnExp b
+    rnLink l = case unLabel l of
+      Link a b -> rnExp a >> rnExp b
 
 -- rename a recursive binding group
 rnDeclList :: [LDecl] -> RM ()
@@ -408,11 +412,12 @@ declLHS d = case unLabel d of
   Print _ -> nop
   where
     rnConstructorLHS :: LConstructor -> RM ()
-    rnConstructorLHS (unLabel -> Constructor c _)
-      = bindNewTopIdent ConstrID c
+    rnConstructorLHS c = case unLabel c of
+      Constructor c _ -> bindNewTopIdent ConstrID c
 
     rnSubtypeLHS :: LConstructor -> RM ()
-    rnSubtypeLHS (unLabel -> Constructor c _) = useIdent c
+    rnSubtypeLHS c = case unLabel c of
+      (Constructor c _) -> useIdent c
 
 
 declRHS :: LDecl -> RM ()
