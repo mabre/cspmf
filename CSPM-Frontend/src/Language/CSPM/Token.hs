@@ -10,7 +10,7 @@
 --
 -- This module contains the data type Tokens and some helper functions
 
-{-# LANGUAGE DeriveDataTypeable, GeneralizedNewtypeDeriving #-} --DeriveGeneric
+-- {-# LANGUAGE DeriveDataTypeable, GeneralizedNewtypeDeriving #-} --DeriveGeneric
 
 module Language.CSPM.Token
 where
@@ -25,7 +25,7 @@ import Data.Ix
 import Control.Exception (Exception)
 
 newtype TokenId = TokenId {unTokenId :: Int}
-  deriving (Show, Eq, Ord, Enum, Ix, Typeable, Data)
+  deriving (Show, Eq, Ord, Ix)
 
 mkTokenId :: Int -> TokenId
 mkTokenId = TokenId
@@ -34,7 +34,7 @@ data AlexPosn = AlexPn {
    alexPos :: !Int
   ,alexLine   :: !Int 
   ,alexCol    :: !Int
-  } deriving (Show,Eq,Ord, Typeable, Data)
+  } deriving (Show,Eq,Ord)
 
 pprintAlexPosn :: AlexPosn -> String
 pprintAlexPosn (AlexPn _p l c) = "Line: "++show l++" Col: "++show c
@@ -50,8 +50,8 @@ alexMove (AlexPn a l c) _    = AlexPn (a+1)  l     (c+1)
 data LexError = LexError {
    lexEPos :: !AlexPosn
   ,lexEMsg :: !String
-  } deriving (Show, Typeable)
-instance Exception LexError
+  } deriving (Show)
+-- instance Exception LexError
 
 
 data Token = Token
@@ -60,7 +60,7 @@ data Token = Token
   , tokenLen    :: Int
   , tokenClass  :: PrimToken
   , tokenString :: String
-  } deriving (Show, Eq, Ord, Typeable, Data)
+  } deriving (Show, Eq, Ord)
 
 tokenSentinel :: Token
 tokenSentinel = Token

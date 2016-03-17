@@ -30,21 +30,25 @@ import Control.Exception as Exception
 import System.CPUTime
 
 -- | "eitherToExe" returns the Right part of "Either" or throws the Left part as an dynamic exception.
-eitherToExc :: Exception a => Either a b -> IO b
-eitherToExc (Right r) = return r
-eitherToExc (Left e) = throw e
+-- eitherToExc :: Exception a => Either a b -> IO b
+-- eitherToExc (Right r) = return r
+-- eitherToExc (Left e) = throw e
+eitherToExc = undefined --TODO Generic Exception
 
 -- | Handle a dymanic exception of type "LexError".
 handleLexError :: (LexError -> IO a) -> IO a -> IO a
-handleLexError handler proc = Exception.catch proc handler
+-- handleLexError handler proc = Exception.catch proc handler
+handleLexError = undefined --TODO Generic Exception
 
 -- | Handle a dymanic exception of type "ParseError".
 handleParseError :: (ParseError -> IO a) -> IO a -> IO a
-handleParseError handler proc = Exception.catch proc handler
+-- handleParseError handler proc = Exception.catch proc handler
+handleParseError = undefined --TODO Generic Exception
 
 -- | Handle a dymanic exception of type "RenameError".
 handleRenameError :: (RenameError -> IO a) -> IO a -> IO a
-handleRenameError handler proc = Exception.catch proc handler
+-- handleRenameError handler proc = Exception.catch proc handler
+handleRenameError = undefined --TODO Generic Exception
 
 -- | Lex and parse a file and return a "LModule", throw an exception in case of an error
 parseFile :: FilePath -> IO ModuleFromParser

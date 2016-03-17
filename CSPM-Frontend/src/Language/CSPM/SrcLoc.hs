@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+-- {-# LANGUAGE DeriveDataTypeable #-}
 -- DeriveGeneric
 -----------------------------------------------------------------------------
 -- |
@@ -41,7 +41,7 @@ data SrcLoc
      ,fixedEndCol      :: !Int
      ,fixedEndOffset   :: !Int
    }
-  deriving (Show,Eq,Ord,Typeable, Data)
+  deriving (Show,Eq,Ord)
 
 mkTokSpan :: Token -> Token -> SrcLoc
 mkTokSpan = TokSpan

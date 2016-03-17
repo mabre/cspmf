@@ -11,7 +11,7 @@
 -- Compute the mapping between the using occurences and the defining occurences of all Identifier in a Module
 -- Also decide whether to use ground or non-ground- representaions for the translation to Prolog.
 
-{-# LANGUAGE DeriveDataTypeable #-}
+-- {-# LANGUAGE DeriveDataTypeable #-}
 -- {-# LANGUAGE RecordWildCards #-}
 -- EmptyDataDecls
 -- ViewPatterns
@@ -32,10 +32,10 @@ import qualified Language.CSPM.SrcLoc as SrcLoc
 import Language.CSPM.BuiltIn as BuiltIn
 
 import Data.Generics.Basics (Data(..))
-import Data.Data (mkDataType)
-import Data.Generics.Schemes (everywhere)
-import Data.Generics.Aliases (mkT)
-import Data.Typeable (Typeable)
+-- import Data.Data (mkDataType)
+-- import Data.Generics.Schemes (everywhere)
+-- import Data.Generics.Aliases (mkT)
+-- import Data.Typeable (Typeable)
 import Control.Exception (Exception)
 
 import Control.Monad.Error
@@ -48,17 +48,21 @@ import qualified Data.IntMap as IntMap
 import Data.List as List
 import Data.Maybe
 
-instance Data FromRenaming
-  where
-    gunfold = error "instance Data FromRenaming gunfold"
-    toConstr = error "instance Data FromRenaming toConstr"
-    dataTypeOf _ = mkDataType "Language.CSPM.Rename.FromRenaming" []
+everywhere = undefined --TODO Generics
+mkT= undefined --TODO Generics
+mkDataType = undefined --TODO Generics
+--TODO Generics
+-- instance Data FromRenaming
+--   where
+--     gunfold = error "instance Data FromRenaming gunfold"
+--     toConstr = error "instance Data FromRenaming toConstr"
+--     dataTypeOf _ = mkDataType "Language.CSPM.Rename.FromRenaming" []
 
 -- | A module that has gone through renaming
 type ModuleFromRenaming = Module FromRenaming
 
 -- | Tag that a module has gone through renaming.
-data FromRenaming deriving Typeable
+data FromRenaming --deriving Typeable
 
 -- | 'renameModule' renames a 'Module'.
 -- | (also calls mergeFunBinds)
@@ -109,9 +113,9 @@ data RenameError
   = RenameError {
    renameErrorMsg :: String
   ,renameErrorLoc :: SrcLoc.SrcLoc
-  } deriving (Show,Typeable)
+  } deriving (Show)
 
-instance Exception RenameError
+-- instance Exception RenameError
 
 
 instance Error RenameError where

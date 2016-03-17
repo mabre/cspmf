@@ -30,8 +30,12 @@ import qualified Language.CSPM.SrcLoc as SrcLoc
 import qualified Data.IntMap as IntMap
 import Data.Data
 import Data.Maybe
-import Data.Generics.Schemes (everywhere,listify)
-import Data.Generics.Aliases (mkT)
+-- import Data.Generics.Schemes (everywhere,listify)
+-- import Data.Generics.Aliases (mkT)
+
+everywhere = undefined --TODO Generics
+listify = undefined --TODO Generics
+mkT = undefined --TODO Generics
 
 -- | 'removeSourceLocations' sets all locationsInfos to 'NoLocation'
 removeSourceLocations :: Data a => a -> a

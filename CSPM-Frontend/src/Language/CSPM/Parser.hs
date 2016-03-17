@@ -11,7 +11,7 @@
 -- This modules defines a Parser for CSP-M
 -- 
 -----------------------------------------------------------------------------
-{-# LANGUAGE DeriveDataTypeable #-}
+-- {-# LANGUAGE DeriveDataTypeable #-}
 -- RecordWildCards
 
 module Language.CSPM.Parser
@@ -40,7 +40,7 @@ import Text.ParserCombinators.Parsec
   hiding (parse,eof,notFollowedBy,anyToken,label,ParseError,errorPos,token,newline)
 import Text.ParserCombinators.Parsec.Pos (newPos)
 import qualified Text.ParserCombinators.Parsec.Error as ParsecError
-import Data.Typeable (Typeable)
+-- import Data.Typeable (Typeable)
 import Control.Monad.State
 import Data.List
 import Data.Maybe
@@ -75,9 +75,9 @@ data ParseError = ParseError {
    parseErrorMsg :: String
   ,parseErrorToken :: Token
   ,parseErrorPos   :: AlexPosn
-  } deriving (Show,Typeable)
+  } deriving (Show)
 
-instance Exception ParseError
+-- instance Exception ParseError
 
 data PState
  = PState {

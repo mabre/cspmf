@@ -12,7 +12,7 @@
 -- This is the AST that is computed by the parser.
 -- For historical reasons, it is rather unstructured.
 
-{-# LANGUAGE DeriveDataTypeable #-}
+--{-# LANGUAGE DeriveDataTypeable #-}
 --DeriveGeneric
 -- {-# LANGUAGE EmptyDataDecls, RankNTypes #-}
 -- {-# LANGUAGE RecordWildCards #-}
@@ -35,7 +35,7 @@ type Bindings = Map String UniqueIdent
 type FreeNames = IntMap UniqueIdent
 
 newtype NodeId = NodeId {unNodeId :: Int}
-  deriving (Eq, Ord, Show, Ix, Typeable, Data)
+  deriving (Eq, Ord, Show, Ix)
 succ' :: NodeId -> NodeId
 succ' (NodeId i) = NodeId $ succ i
 
@@ -46,7 +46,7 @@ data Labeled t = Labeled {
     nodeId :: NodeId
    ,srcLoc  :: SrcLoc
    ,unLabel :: t
-   } deriving (Eq, Ord, Typeable, Data, Show)
+   } deriving (Eq, Ord, Show)
 
 -- | Wrap a node with a dummyLabel.
 -- todo: Redo we need a specal case in DataConstructor Labeled.
@@ -65,7 +65,7 @@ type LIdent = Labeled Ident
 data Ident
   = Ident  {unIdent :: String}
   | UIdent UniqueIdent
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 
 unUIdent :: Ident -> UniqueIdent
@@ -86,20 +86,20 @@ data UniqueIdent = UniqueIdent
   ,newName     :: String
   ,prologMode  :: PrologMode
   ,bindType    :: BindType
-  } deriving (Eq, Ord, Show, Typeable, Data)
+  } deriving (Eq, Ord, Show)
 
 data IDType 
   = VarID | ChannelID | NameTypeID | FunID
   | ConstrID | DataTypeID | TransparentID
   | BuiltInID
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 data PrologMode = PrologGround | PrologVariable
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 {- Actually BindType and PrologMode are semantically aquivalent -}
 data BindType = LetBound | NotLetBound
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 isLetBound :: BindType -> Bool
 isLetBound x = x==LetBound
@@ -110,10 +110,10 @@ data Module a = Module {
   ,moduleSrcLoc :: SrcLoc
   ,moduleComments :: [LocComment]
   ,modulePragmas :: [Pragma]
-  } deriving (Eq, Ord, Show, Typeable, Data)
+  } deriving (Eq, Ord, Show)
 
-data FromParser deriving (Typeable)
-instance Data FromParser
+data FromParser --deriving (Typeable)
+-- instance Data FromParser
 instance Eq FromParser
 
 castModule :: Module a -> Module b
@@ -170,36 +170,36 @@ data Exp
   | LetI [LDecl] FreeNames LExp -- freenames of all localBound names
   | LambdaI FreeNames [LPattern] LExp
   | ExprWithFreeNames FreeNames LExp
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 type LRange = Labeled Range
 data Range
   = RangeEnum [LExp]
   | RangeClosed LExp LExp
   | RangeOpen LExp
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 type LCommField = Labeled CommField
 data CommField
   =  InComm LPattern
   | InCommGuarded LPattern LExp
   | OutComm LExp
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 type LLinkList = Labeled LinkList
 data LinkList
   = LinkList [LLink]
   | LinkListComprehension [LCompGen] [LLink]
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 type LLink = Labeled Link
-data Link = Link LExp LExp deriving (Eq, Ord, Show, Typeable, Data)
+data Link = Link LExp LExp deriving (Eq, Ord, Show)
 
 type LRename = Labeled Rename
-data Rename = Rename LExp LExp deriving (Eq, Ord, Show, Typeable, Data)
+data Rename = Rename LExp LExp deriving (Eq, Ord, Show)
 
 type LBuiltIn = Labeled BuiltIn
-data BuiltIn = BuiltIn Const deriving (Eq, Ord, Show, Typeable, Data)
+data BuiltIn = BuiltIn Const deriving (Eq, Ord, Show)
 
 lBuiltInToConst :: LBuiltIn -> Const
 lBuiltInToConst = h . unLabel where
@@ -210,7 +210,7 @@ type LCompGen = Labeled CompGen
 data CompGen
   = Generator LPattern LExp
   | Guard LExp
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 type LPattern = Labeled Pattern
 data Pattern
@@ -234,7 +234,7 @@ data Pattern
                 selectors :: Array Int Selector
                ,idents :: Array Int (Maybe LIdent) }
   | Selector Selector (Maybe LIdent)
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 {- A Selector is a path in a Pattern/Expression. -}
 data Selector
@@ -256,7 +256,7 @@ data Selector
   | TailSel Selector
   | SliceSel Int Int Selector
   | SuffixSel Int Int Selector
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 type LDecl = Labeled Decl
 data Decl
@@ -269,7 +269,7 @@ data Decl
   | NameType LIdent LTypeDef -- nametype S = {1..2}
   | Channel [LIdent] (Maybe LTypeDef) -- channel x:D
   | Print LExp -- print (x+1)
-  deriving (Show, Eq, Ord, Typeable, Data)
+  deriving (Show, Eq, Ord)
 
 {-
 We want to use                1) type FunArgs = [LPattern]
@@ -282,7 +282,7 @@ type FunArgs = [[LPattern]]
 data FunCase
   = FunCase FunArgs LExp
   | FunCaseI [LPattern] LExp
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 --type LTypeDef = Labeled TypeDef
 {-data TypeDef
@@ -293,18 +293,18 @@ data FunCase
 type LTypeDef = Labeled TypeDef
 data TypeDef
   = TypeDot [LNATuples] -- a.(b,c).d.(e,f,g)
-  deriving ( Eq, Ord, Show,Typeable, Data)
+  deriving ( Eq, Ord, Show)
 
 type LNATuples = Labeled NATuples
 data NATuples
   = TypeTuple [LExp]
   | SingleValue LExp
-  deriving ( Eq, Ord, Show,Typeable, Data)
+  deriving ( Eq, Ord, Show)
 
 type LConstructor = Labeled Constructor
 data Constructor
   = Constructor LIdent (Maybe LTypeDef) 
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 withLabel :: ( NodeId -> a -> b ) -> Labeled a -> Labeled b
 withLabel f x = x {unLabel = f (nodeId x) (unLabel x) }
@@ -316,27 +316,27 @@ data AssertDecl
   | AssertLTLCTL     Bool LExp LFormulaType String
   | AssertTauPrio    Bool LExp LTauRefineOp LExp LExp
   | AssertModelCheck Bool LExp LFDRModels (Maybe LFdrExt)
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 type LFDRModels = Labeled FDRModels
 data FDRModels
   = DeadlockFree
   | Deterministic
   | LivelockFree
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 type LFdrExt = Labeled FdrExt
 data FdrExt 
   = F 
   | FD
   | T
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 type LTauRefineOp = Labeled TauRefineOp 
 data TauRefineOp
   = TauTrace
   | TauRefine
- deriving (Eq, Ord, Show, Typeable, Data)
+ deriving (Eq, Ord, Show)
 
 type LRefineOp = Labeled RefineOp
 data RefineOp 
@@ -348,13 +348,13 @@ data RefineOp
   | RevivalTesting
   | RevivalTestingDiv
   | TauPriorityOp
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 type LFormulaType = Labeled FormulaType
 data FormulaType
   = LTL
   | CTL
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 data Const
   = F_true
@@ -407,7 +407,7 @@ data Const
   | F_Hiding
   | F_Timeout
   | F_Interleave
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
 
 type Pragma = String
 type LocComment = (Comment, SrcLoc)
@@ -415,4 +415,4 @@ data Comment
   = LineComment String
   | BlockComment String
   | PragmaComment Pragma
-  deriving (Eq, Ord, Show, Typeable, Data)
+  deriving (Eq, Ord, Show)
