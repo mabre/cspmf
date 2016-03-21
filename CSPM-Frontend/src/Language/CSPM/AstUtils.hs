@@ -24,14 +24,20 @@ module Language.CSPM.AstUtils
   )
 where
 
+import Debug.Trace -- TODO
+
 import Language.CSPM.AST hiding (prologMode)
 import qualified Language.CSPM.SrcLoc as SrcLoc
 
 import qualified Data.IntMap as IntMap
 import Data.Data
 import Data.Maybe
-import Data.Generics.Schemes (everywhere,listify)
-import Data.Generics.Aliases (mkT)
+-- import Data.Generics.Schemes (everywhere,listify)
+-- import Data.Generics.Aliases (mkT)
+
+everywhere = trace "everywhere" undefined --TODO Generics
+listify = trace "listify" undefined --TODO Generics
+mkT = trace "mkT" undefined --TODO Generics
 
 -- | 'removeSourceLocations' sets all locationsInfos to 'NoLocation'
 removeSourceLocations :: Data a => a -> a

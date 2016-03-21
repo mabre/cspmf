@@ -11,8 +11,10 @@
 -- Compute the mapping between the using occurences and the defining occurences of all Identifier in a Module
 -- Also decide whether to use ground or non-ground- representaions for the translation to Prolog.
 
-{-# LANGUAGE EmptyDataDecls, DeriveDataTypeable, ViewPatterns #-}
-{-# LANGUAGE RecordWildCards #-}
+-- {-# LANGUAGE DeriveDataTypeable #-}
+-- {-# LANGUAGE RecordWildCards #-}
+-- EmptyDataDecls
+-- ViewPatterns
 
 module Language.CSPM.Rename
   (
@@ -30,10 +32,10 @@ import qualified Language.CSPM.SrcLoc as SrcLoc
 import Language.CSPM.BuiltIn as BuiltIn
 
 import Data.Generics.Basics (Data(..))
-import Data.Data (mkDataType)
-import Data.Generics.Schemes (everywhere)
-import Data.Generics.Aliases (mkT)
-import Data.Typeable (Typeable)
+-- import Data.Data (mkDataType)
+-- import Data.Generics.Schemes (everywhere)
+-- import Data.Generics.Aliases (mkT)
+-- import Data.Typeable (Typeable)
 import Control.Exception (Exception)
 
 import Control.Monad.Error
@@ -46,17 +48,21 @@ import qualified Data.IntMap as IntMap
 import Data.List as List
 import Data.Maybe
 
-instance Data FromRenaming
-  where
-    gunfold = error "instance Data FromRenaming gunfold"
-    toConstr = error "instance Data FromRenaming toConstr"
-    dataTypeOf _ = mkDataType "Language.CSPM.Rename.FromRenaming" []
+everywhere = undefined --TODO Generics
+mkT= undefined --TODO Generics
+mkDataType = undefined --TODO Generics
+--TODO Generics
+-- instance Data FromRenaming
+--   where
+--     gunfold = error "instance Data FromRenaming gunfold"
+--     toConstr = error "instance Data FromRenaming toConstr"
+--     dataTypeOf _ = mkDataType "Language.CSPM.Rename.FromRenaming" []
 
 -- | A module that has gone through renaming
 type ModuleFromRenaming = Module FromRenaming
 
 -- | Tag that a module has gone through renaming.
-data FromRenaming deriving Typeable
+data FromRenaming --deriving Typeable
 
 -- | 'renameModule' renames a 'Module'.
 -- | (also calls mergeFunBinds)
@@ -89,16 +95,14 @@ data RenameInfo = RenameInfo
   } deriving Show
 
 initialRState :: RenameInfo
-initialRState = RenameInfo {..}
-  where
-    nameSupply    = 0
-    localBindings = Map.empty
-    visible       = Map.empty
-    identDefinition = IntMap.empty
-    identUse        = IntMap.empty
-    usedNames       = Set.empty
-    prologMode      = PrologVariable
-    bindType        = NotLetBound
+initialRState = RenameInfo { nameSupply    = 0,
+                             localBindings = Map.empty,
+                             visible       = Map.empty,
+                             identDefinition = IntMap.empty,
+                             identUse        = IntMap.empty,
+                             usedNames       = Set.empty,
+                             prologMode      = PrologVariable,
+                             bindType        = NotLetBound }
 
 initPrelude :: RM ()
 initPrelude
@@ -109,9 +113,9 @@ data RenameError
   = RenameError {
    renameErrorMsg :: String
   ,renameErrorLoc :: SrcLoc.SrcLoc
-  } deriving (Show,Typeable)
+  } deriving (Show)
 
-instance Exception RenameError
+-- instance Exception RenameError
 
 
 instance Error RenameError where
@@ -375,14 +379,16 @@ rnCompGen g = case unLabel g of
   Guard e -> rnExp e
 
 reRename :: LRename -> RM ()
-reRename (unLabel -> Rename e1 e2) = rnExp e1 >> rnExp e2
+reRename r = case unLabel r of
+  Rename e1 e2 -> rnExp e1 >> rnExp e2
 
 rnLinkList :: LLinkList -> RM ()
 rnLinkList ll = case unLabel ll of
   LinkList l -> mapM_ rnLink l
   LinkListComprehension a b -> inCompGen a (mapM_ rnLink b)
   where
-    rnLink (unLabel -> Link a b) = rnExp a >> rnExp b
+    rnLink l = case unLabel l of
+      Link a b -> rnExp a >> rnExp b
 
 -- rename a recursive binding group
 rnDeclList :: [LDecl] -> RM ()
@@ -410,11 +416,12 @@ declLHS d = case unLabel d of
   Print _ -> nop
   where
     rnConstructorLHS :: LConstructor -> RM ()
-    rnConstructorLHS (unLabel -> Constructor c _)
-      = bindNewTopIdent ConstrID c
+    rnConstructorLHS c = case unLabel c of
+      Constructor c _ -> bindNewTopIdent ConstrID c
 
     rnSubtypeLHS :: LConstructor -> RM ()
-    rnSubtypeLHS (unLabel -> Constructor c _) = useIdent c
+    rnSubtypeLHS c = case unLabel c of
+      (Constructor c _) -> useIdent c
 
 
 declRHS :: LDecl -> RM ()

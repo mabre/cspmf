@@ -11,7 +11,8 @@
 -- This modules defines a Parser for CSP-M
 -- 
 -----------------------------------------------------------------------------
-{-# LANGUAGE DeriveDataTypeable, RecordWildCards #-}
+-- {-# LANGUAGE DeriveDataTypeable #-}
+-- RecordWildCards
 
 module Language.CSPM.Parser
 (
@@ -24,6 +25,7 @@ module Language.CSPM.Parser
  ,parseExp_noProc
 )
 where
+import Debug.Trace -- TODO
 import Language.CSPM.AST
 import Language.CSPM.Token (Token(..),AlexPosn)
 import Language.CSPM.TokenClasses as TokenClasses
@@ -37,9 +39,10 @@ import Text.ParserCombinators.Parsec.ExprM
 
 import Text.ParserCombinators.Parsec
   hiding (parse,eof,notFollowedBy,anyToken,label,ParseError,errorPos,token,newline)
+import qualified Text.ParserCombinators.Parsec.Token(integer)
 import Text.ParserCombinators.Parsec.Pos (newPos)
 import qualified Text.ParserCombinators.Parsec.Error as ParsecError
-import Data.Typeable (Typeable)
+-- import Data.Typeable (Typeable)
 import Control.Monad.State
 import Data.List
 import Data.Maybe
@@ -74,9 +77,9 @@ data ParseError = ParseError {
    parseErrorMsg :: String
   ,parseErrorToken :: Token
   ,parseErrorPos   :: AlexPosn
-  } deriving (Show,Typeable)
+  } deriving (Show)
 
-instance Exception ParseError
+-- instance Exception ParseError
 
 data PState
  = PState {
@@ -97,7 +100,7 @@ initialPState = PState {
 mkLabeledNode :: SrcLoc -> t -> PT (Labeled t)
 mkLabeledNode loc node = do
   i <- getStates nodeIdSupply
-  updateState $ \s -> s { nodeIdSupply = succ $ nodeIdSupply s}
+  updateState $ \s -> s { nodeIdSupply = succ' $ nodeIdSupply s}
   return $ Labeled {
     nodeId = i
    ,srcLoc = loc
@@ -156,7 +159,11 @@ parseModule tokenList = do
     moduleSrcLoc = mkSrcSpan s e
     modulePragmas = mapMaybe getPragma tokenList
     moduleComments = mapMaybe getComment tokenList
-  return $ Module { .. }
+  return $ Module { moduleTokens = moduleTokens,
+                    moduleSrcLoc = moduleSrcLoc,
+                    modulePragmas = modulePragmas,
+                    moduleComments = moduleComments,
+                    moduleDecls = moduleDecls }
   where
     getComment :: Token -> Maybe LocComment
     getComment t = case tokenClass t of
@@ -465,128 +472,130 @@ the expression parser does not accept nested Postfix and Prefix expressions
 -}
 type OpTable = [[Text.ParserCombinators.Parsec.ExprM.Operator Token PState LExp]]
 opTable :: OpTable
-opTable = baseTable ++ procTable
+opTable = trace "opTable" undefined -- baseTable ++ procTable TODO parsec
 
 baseTable :: OpTable
 procTable :: OpTable
-(baseTable, procTable) = (
-   [
-    [ postfixM funApplyImplicit ]
-   ,[ postfixM procRenaming ]
-   ,[ infixM (nfun2 T_hat     F_Concat ) AssocLeft,
-     prefixM (nfun1 T_hash    F_Len2 ) -- different from Roscoe Book
-    ]
-   ,[ infixM (nfun2 T_times   F_Mult ) AssocLeft
-     ,infixM (nfun2 T_slash   F_Div ) AssocLeft
-     ,infixM (nfun2 T_percent F_Mod  ) AssocLeft
-    ]
-   ,[ infixM (nfun2 T_plus    F_Add ) AssocLeft,
-      infixM (nfun2 T_minus   F_Sub ) AssocLeft
-    ]
-   ,[ infixM (nfun2 T_eq      F_Eq ) AssocLeft
-     ,infixM (nfun2 T_neq     F_NEq) AssocLeft
-     ,infixM (nfun2 T_ge      F_GE ) AssocLeft
-     ,infixM (nfun2 T_le      F_LE ) AssocLeft
-     ,infixM (nfun2 T_lt      F_LT ) AssocLeft
-     ,infixM (do
-        s <- getNextPos
-        gtSym
-        e <- getLastPos
-        op <- mkLabeledNode (mkSrcSpan s e) (BuiltIn F_GT)
-        return $ \a b -> mkLabeledNode
-            (mkSrcSpan (SrcLoc.getStartToken $ srcLoc a) (SrcLoc.getEndToken $ srcLoc b))
---            SrcLoc.NoLocation
-            (Fun2 op a b)
-      ) AssocLeft
-    ]
-   ,[ prefixM ( token T_not >> unOp NotExp )]
-   ,[ infixM ( token T_and >> binOp AndExp) AssocLeft ]
-   ,[ infixM ( token T_or >> binOp OrExp) AssocLeft ]
-   ],
-   [[ infixM proc_op_aparallel AssocLeft ]
-   ,[ infixM proc_op_lparallel AssocLeft ]
-
-   ,[infixM procOpSharing AssocLeft ]
-   ,[infixM (nfun2 T_backslash  F_Hiding     ) AssocLeft]
-   ,[infixM (nfun2 T_amp        F_Guard      ) AssocLeft]
-   ,[infixM (nfun2 T_semicolon  F_Sequential ) AssocLeft]
-   ,[infixM (nfun2 T_triangle   F_Interrupt  ) AssocLeft]
-   ,[infixM (nfun2 T_box        F_ExtChoice  ) AssocLeft]
-   ,[infixM (nfun2 T_rhd        F_Timeout    ) AssocLeft]
-   ,[infixM (nfun2 T_sqcap      F_IntChoice  ) AssocLeft]
-   ,[infixM procOpException AssocLeft]
-   ,[infixM (nfun2 T_interleave F_Interleave ) AssocLeft]
-  ]
-  )
-  where
-  nfun1 :: TokenClasses.PrimToken -> Const -> PT (LExp -> PT LExp)
-  nfun1 tok cst = do
-    fkt <- biOp tok cst
-    pos <- getPos
-    return $ \a -> mkLabeledNode pos $ Fun1 fkt a
-
-  nfun2 :: TokenClasses.PrimToken -> Const -> PT (LExp -> LExp -> PT LExp)
-  nfun2 tok cst = do
-    fkt <- biOp tok cst
-    return $ \a b -> mkLabeledNode
---     (mkSrcSpan (SrcLoc.getStartToken $ srcLoc a) (SrcLoc.getEndToken $ srcLoc b))
-     SrcLoc.NoLocation
-     (Fun2 fkt a b)
-
-  binOp :: (LExp -> LExp -> Exp) -> PT (LExp -> LExp -> PT LExp)
-  binOp op = return $ \a b -> mkLabeledNode (posFromTo a b) $ op a b
-
-  unOp :: (LExp -> Exp) -> PT (LExp -> PT LExp )
-  unOp op = do
-    pos<-getLastPos
-    return $ \a -> mkLabeledNode (mkSrcPos pos) $ op a
-
-  biOp :: TokenClasses.PrimToken -> Const -> PT LBuiltIn
-  biOp tok cst = inSpan BuiltIn (token tok >> return cst)
-
-  posFromTo :: LExp -> LExp -> SrcLoc.SrcLoc
-  posFromTo a b = SrcLoc.srcLocFromTo (srcLoc a) (srcLoc b)
-
-  procOpSharing :: PT (LProc -> LProc -> PT LProc)
-  procOpSharing = try $ do
-    spos <- getNextPos
-    al <- between ( token T_openOxBrack) (token T_closeOxBrack) parseExp
-    epos <- getLastPos
-    return $ (\a b  -> mkLabeledNode (mkSrcSpan spos epos) $ ProcSharing al a b)
-
-  procOpException :: PT (LProc -> LProc -> PT LProc)
-  procOpException = do
-    spos <- getNextPos
-    al <- between ( token T_openOxBrack) (token T_exp) parseExp
-    epos <- getLastPos
-    return $ (\a b  -> mkLabeledNode (mkSrcSpan spos epos) $ ProcException al a b)
-
-{-
-We count the occurences of gt-symbols
-and accept it only if it is followed by an expression.
-If a gtLimit is set, we only accept a maximum number of gt symbols
--}
-  gtSym :: PT ()
-  gtSym = try $ do
-    token T_gt
-    updateState (\env -> env {gtCounter = gtCounter env +1 })
-    next <- testFollows parseExp
-    case next of
-      Nothing -> fail "Gt token not followed by an expression"
-      Just _  -> do
-        mode <- getStates gtLimit
-        case mode of
-          Nothing -> return ()
-          Just x  -> do
-            cnt <- getStates gtCounter
-            if cnt < x then return ()
-                       else fail "(Gt token belongs to sequence expression)"
+(baseTable, procTable) = (trace "baseTable" undefined, trace "procTable" undefined) -- ( TODO parsec
+--    [
+--     [ postfixM funApplyImplicit ]
+--    ,[ postfixM procRenaming ]
+--    ,[ infixM (nfun2 T_hat     F_Concat ) AssocLeft,
+--      prefixM (nfun1 T_hash    F_Len2 ) -- different from Roscoe Book
+--     ]
+--    ,[ infixM (nfun2 T_times   F_Mult ) AssocLeft
+--      ,infixM (nfun2 T_slash   F_Div ) AssocLeft
+--      ,infixM (nfun2 T_percent F_Mod  ) AssocLeft
+--     ]
+--    ,[ infixM (nfun2 T_plus    F_Add ) AssocLeft,
+--       infixM (nfun2 T_minus   F_Sub ) AssocLeft
+--     ]
+--    ,[ infixM (nfun2 T_eq      F_Eq ) AssocLeft
+--      ,infixM (nfun2 T_neq     F_NEq) AssocLeft
+--      ,infixM (nfun2 T_ge      F_GE ) AssocLeft
+--      ,infixM (nfun2 T_le      F_LE ) AssocLeft
+--      ,infixM (nfun2 T_lt      F_LT ) AssocLeft
+--      ,infixM (do
+--         s <- getNextPos
+--         gtSym
+--         e <- getLastPos
+--         op <- mkLabeledNode (mkSrcSpan s e) (BuiltIn F_GT)
+--         return $ \a b -> mkLabeledNode
+--             (mkSrcSpan (SrcLoc.getStartToken $ srcLoc a) (SrcLoc.getEndToken $ srcLoc b))
+-- --            SrcLoc.NoLocation
+--             (Fun2 op a b)
+--       ) AssocLeft
+--     ]
+--    ,[ prefixM ( token T_not >> unOp NotExp )]
+--    ,[ infixM ( token T_and >> binOp AndExp) AssocLeft ]
+--    ,[ infixM ( token T_or >> binOp OrExp) AssocLeft ]
+--    ],
+--    [[ infixM proc_op_aparallel AssocLeft ]
+--    ,[ infixM proc_op_lparallel AssocLeft ]
+-- 
+--    ,[infixM procOpSharing AssocLeft ]
+--    ,[infixM (nfun2 T_backslash  F_Hiding     ) AssocLeft]
+--    ,[infixM (nfun2 T_amp        F_Guard      ) AssocLeft]
+--    ,[infixM (nfun2 T_semicolon  F_Sequential ) AssocLeft]
+--    ,[infixM (nfun2 T_triangle   F_Interrupt  ) AssocLeft]
+--    ,[infixM (nfun2 T_box        F_ExtChoice  ) AssocLeft]
+--    ,[infixM (nfun2 T_rhd        F_Timeout    ) AssocLeft]
+--    ,[infixM (nfun2 T_sqcap      F_IntChoice  ) AssocLeft]
+--    ,[infixM procOpException AssocLeft]
+--    ,[infixM (nfun2 T_interleave F_Interleave ) AssocLeft]
+--   ]
+--   )
+--   where
+--   nfun1 :: TokenClasses.PrimToken -> Const -> PT (LExp -> PT LExp)
+--   nfun1 tok cst = do
+--     fkt <- biOp tok cst
+--     pos <- getPos
+--     return $ \a -> mkLabeledNode pos $ Fun1 fkt a
+-- 
+--   nfun2 :: TokenClasses.PrimToken -> Const -> PT (LExp -> LExp -> PT LExp)
+--   nfun2 tok cst = do
+--     fkt <- biOp tok cst
+--     return $ \a b -> mkLabeledNode
+-- --     (mkSrcSpan (SrcLoc.getStartToken $ srcLoc a) (SrcLoc.getEndToken $ srcLoc b))
+--      SrcLoc.NoLocation
+--      (Fun2 fkt a b)
+-- 
+--   binOp :: (LExp -> LExp -> Exp) -> PT (LExp -> LExp -> PT LExp)
+--   binOp op = return $ \a b -> mkLabeledNode (posFromTo a b) $ op a b
+-- 
+--   unOp :: (LExp -> Exp) -> PT (LExp -> PT LExp )
+--   unOp op = do
+--     pos<-getLastPos
+--     return $ \a -> mkLabeledNode (mkSrcPos pos) $ op a
+-- 
+--   biOp :: TokenClasses.PrimToken -> Const -> PT LBuiltIn
+--   biOp tok cst = inSpan BuiltIn (token tok >> return cst)
+-- 
+--   posFromTo :: LExp -> LExp -> SrcLoc.SrcLoc
+--   posFromTo a b = SrcLoc.srcLocFromTo (srcLoc a) (srcLoc b)
+-- 
+--   procOpSharing :: PT (LProc -> LProc -> PT LProc)
+--   procOpSharing = try $ do
+--     spos <- getNextPos
+--     al <- between ( token T_openOxBrack) (token T_closeOxBrack) parseExp
+--     epos <- getLastPos
+--     return $ (\a b  -> mkLabeledNode (mkSrcSpan spos epos) $ ProcSharing al a b)
+-- 
+--   procOpException :: PT (LProc -> LProc -> PT LProc)
+--   procOpException = do
+--     spos <- getNextPos
+--     al <- between ( token T_openOxBrack) (token T_exp) parseExp
+--     epos <- getLastPos
+--     return $ (\a b  -> mkLabeledNode (mkSrcSpan spos epos) $ ProcException al a b)
+-- 
+-- {-
+-- We count the occurences of gt-symbols
+-- and accept it only if it is followed by an expression.
+-- If a gtLimit is set, we only accept a maximum number of gt symbols
+-- -}
+--   gtSym :: PT ()
+--   gtSym = try $ do
+--     token T_gt
+--     updateState (\env -> env {gtCounter = gtCounter env +1 })
+--     next <- testFollows parseExp
+--     case next of
+--       Nothing -> fail "Gt token not followed by an expression"
+--       Just _  -> do
+--         mode <- getStates gtLimit
+--         case mode of
+--           Nothing -> return ()
+--           Just x  -> do
+--             cnt <- getStates gtCounter
+--             if cnt < x then return ()
+--                        else fail "(Gt token belongs to sequence expression)"
 
 -- | Parser for CSP-M expressions
 parseExp :: PT LExp
 parseExp
-  = (parseDotExpOf $ buildExpressionParser procTable parseProcReplicatedExp)
-  <?> "expression"
+  = do
+       pos<-getLastPos
+       mkLabeledNode (mkSrcPos pos) (IntExp 1337){-(parseDotExpOf $ buildExpressionParser procTable parseProcReplicatedExp) TODO parsec
+  <?> "expression"-}
 
 
 -- todo : check if we need parseExp_noPrefix or if we can use parseExp_noProc
@@ -594,7 +603,9 @@ parseExp_noPrefix :: PT LExp
 parseExp_noPrefix = parseDotExpOf parseExp_noPrefix_NoDot
    where
      parseExp_noPrefix_NoDot :: PT LExp
-     parseExp_noPrefix_NoDot = buildExpressionParser opTable parseExpBase
+     parseExp_noPrefix_NoDot = do
+       pos<-getLastPos
+       mkLabeledNode (mkSrcPos pos) (IntExp 1337) --buildExpressionParser opTable parseExpBase TODO parsec
 
 -- todo :: parseExpBase does include STOP and SKIP 
 parseExp_noProc :: PT LExp

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+-- {-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Language.CSPM.ReorderBindings
@@ -39,7 +39,7 @@ data BindError
   {
    bindErrorMsg :: String
   ,bindErrorLoc :: SrcLoc.SrcLoc
-  } deriving (Show,Typeable)
+  } deriving (Show)
 
 instance Exception BindError
 instance Error BindError where
