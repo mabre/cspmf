@@ -18,6 +18,8 @@ module Language.CSPM.Utils
  ,parseFile, benchmarkFrontend, parseString, parseNamedString)
 where
 
+import Debug.Trace -- TODO
+
 import Language.CSPM.Token (Token(..), LexError(..))
 import Language.CSPM.Parser (ParseError(..), parse)
 import Language.CSPM.Rename (RenameError(..), renameModule, ModuleFromRenaming)
@@ -31,24 +33,24 @@ import System.CPUTime
 
 -- | "eitherToExe" returns the Right part of "Either" or throws the Left part as an dynamic exception.
 -- eitherToExc :: Exception a => Either a b -> IO b
--- eitherToExc (Right r) = return r
+eitherToExc (Right r) = return r
 -- eitherToExc (Left e) = throw e
-eitherToExc = undefined --TODO Generic Exception
+eitherToExc (Left e) = trace (show e) undefined --TODO Generic Exception
 
 -- | Handle a dymanic exception of type "LexError".
 handleLexError :: (LexError -> IO a) -> IO a -> IO a
 -- handleLexError handler proc = Exception.catch proc handler
-handleLexError = undefined --TODO Generic Exception
+handleLexError = trace "handleLexError" undefined --TODO Generic Exception
 
 -- | Handle a dymanic exception of type "ParseError".
 handleParseError :: (ParseError -> IO a) -> IO a -> IO a
 -- handleParseError handler proc = Exception.catch proc handler
-handleParseError = undefined --TODO Generic Exception
+handleParseError = trace "handleParseError" undefined --TODO Generic Exception
 
 -- | Handle a dymanic exception of type "RenameError".
 handleRenameError :: (RenameError -> IO a) -> IO a -> IO a
 -- handleRenameError handler proc = Exception.catch proc handler
-handleRenameError = undefined --TODO Generic Exception
+handleRenameError = trace "handleRenameError" undefined --TODO Generic Exception
 
 -- | Lex and parse a file and return a "LModule", throw an exception in case of an error
 parseFile :: FilePath -> IO ModuleFromParser

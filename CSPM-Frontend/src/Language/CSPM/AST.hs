@@ -12,7 +12,7 @@
 -- This is the AST that is computed by the parser.
 -- For historical reasons, it is rather unstructured.
 
---{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 --DeriveGeneric
 -- {-# LANGUAGE EmptyDataDecls, RankNTypes #-}
 -- {-# LANGUAGE RecordWildCards #-}
@@ -24,7 +24,7 @@ import Language.CSPM.Token
 import Language.CSPM.SrcLoc (SrcLoc(..))
 
 import Data.Typeable (Typeable)
-import Data.Generics.Basics (Data)
+-- import Data.Generics.Basics (Data)
 -- import GHC.Generics (Generic)
 import Data.IntMap (IntMap)
 import Data.Map (Map)
@@ -112,7 +112,7 @@ data Module a = Module {
   ,modulePragmas :: [Pragma]
   } deriving (Eq, Ord, Show)
 
-data FromParser --deriving (Typeable)
+data FromParser deriving (Typeable)
 -- instance Data FromParser
 instance Eq FromParser
 
@@ -170,7 +170,7 @@ data Exp
   | LetI [LDecl] FreeNames LExp -- freenames of all localBound names
   | LambdaI FreeNames [LPattern] LExp
   | ExprWithFreeNames FreeNames LExp
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Typeable)
 
 type LRange = Labeled Range
 data Range
