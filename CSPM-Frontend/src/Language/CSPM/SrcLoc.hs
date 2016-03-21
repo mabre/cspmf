@@ -13,16 +13,16 @@
 --
 -- This module contains the datatype for sourcelocations and some utility functions.
 
-module Language.CSPM.SrcLoc
+module SrcLoc
 where
 
-import Language.CSPM.Token as Token
+import Token --as Token
 
 import Data.List
-import Data.Typeable (Typeable)
-import Data.Generics.Basics (Data)
+-- import Data.Typeable (Typeable)
+-- import Data.Generics.Basics (Data)
 -- import GHC.Generics (Generic)
-import Data.Generics.Instances ()
+-- import Data.Generics.Instances ()
 
 {-  todo : simplify this -}
 data SrcLoc
@@ -32,16 +32,18 @@ data SrcLoc
                         -- single token with token x :: TokSpan x x
   | TokPos Token
   | NoLocation
-  | FixedLoc {
-      fixedStartLine   :: !Int
-     ,fixedStartCol    :: !Int
-     ,fixedStartOffset :: !Int
-     ,fixedLen         :: !Int
-     ,fixedEndLine     :: !Int
-     ,fixedEndCol      :: !Int
-     ,fixedEndOffset   :: !Int
+  | ! FixedLoc {
+      fixedStartLine   :: Int
+     ,fixedStartCol    :: Int
+     ,fixedStartOffset :: Int
+     ,fixedLen         :: Int
+     ,fixedEndLine     :: Int
+     ,fixedEndCol      :: Int
+     ,fixedEndOffset   :: Int
    }
-  deriving (Show,Eq,Ord)
+derive Show SrcLoc
+derive Eq SrcLoc
+derive Ord SrcLoc
 
 mkTokSpan :: Token -> Token -> SrcLoc
 mkTokSpan = TokSpan
@@ -55,51 +57,51 @@ type SrcOffset  = Int
 
 getStartLine :: SrcLoc -> SrcLine
 getStartLine x = case x of
-  TokSpan s _e  -> alexLine $ tokenStart s
-  TokPos t      -> alexLine $ tokenStart t
-  FixedLoc {}   -> fixedStartLine x
+  TokSpan s _e  -> s.tokenStart.alexLine
+  TokPos t      -> t.tokenStart.alexLine
+  FixedLoc {}   -> x.fixedStartLine
   _ -> error "no SrcLine Availabel"
 
 getStartCol :: SrcLoc -> SrcCol
 getStartCol x = case x of
-  TokSpan s _e  -> alexCol $ tokenStart s
-  TokPos t      -> alexCol $ tokenStart t
-  FixedLoc {}   -> fixedStartCol x
+  TokSpan s _e  -> s.tokenStart.alexCol
+  TokPos t      -> t.tokenStart.alexCol
+  FixedLoc {}   -> x.fixedStartCol
   _ -> error "no SrcCol Availabel"
 
 getStartOffset :: SrcLoc -> SrcOffset
 getStartOffset x = case x of
-  TokSpan s _e  -> alexPos $ tokenStart s
-  TokPos t      -> alexPos $ tokenStart t
-  FixedLoc {}   -> fixedStartOffset x
+  TokSpan s _e  -> s.tokenStart.alexPos
+  TokPos t      -> t.tokenStart.alexPos
+  FixedLoc {}   -> x.fixedStartOffset
   _ ->  error "no SrcOffset available"
 
 getTokenLen :: SrcLoc -> SrcOffset
 getTokenLen x = case x of
-  TokPos t -> tokenLen t
-  TokSpan s e   -> (alexPos $ tokenStart e) - (alexPos $ tokenStart s) + tokenLen e
-  FixedLoc {}  -> fixedLen x
+  TokPos t -> t.tokenLen
+  TokSpan s e   -> (e.tokenStart.alexPos) - (s.tokenStart.alexPos) + e.tokenLen
+  FixedLoc {}  -> x.fixedLen
   _ -> error "getTokenLen : info not available"
 
 getEndLine :: SrcLoc -> SrcLine
 getEndLine x = case x of
-  TokSpan _s e  -> alexLine $ computeEndPos e
-  TokPos t -> alexLine $ computeEndPos t
-  FixedLoc {}  -> fixedEndLine x
+  TokSpan _s e  -> AlexPosn.alexLine $ computeEndPos e
+  TokPos t -> AlexPosn.alexLine $ computeEndPos t
+  FixedLoc {}  -> SrcLoc.fixedEndLine x
   _ ->   error "no SrcLine available"
 
 getEndCol :: SrcLoc -> SrcCol
 getEndCol x = case x of
-  TokSpan _s e  -> alexCol $ computeEndPos e
-  TokPos t -> alexCol $ computeEndPos t
-  FixedLoc {}  -> fixedEndCol x
+  TokSpan _s e  -> AlexPosn.alexCol $ computeEndPos e
+  TokPos t -> AlexPosn.alexCol $ computeEndPos t
+  FixedLoc {}  -> SrcLoc.fixedEndCol x
   _ ->  error "no SrcCol available"
 
 getEndOffset :: SrcLoc -> SrcOffset
 getEndOffset x = case x of
-  TokSpan _s e  -> (alexPos $ tokenStart e) + tokenLen e
-  TokPos t -> (alexPos $ tokenStart t) + tokenLen t
-  FixedLoc {}  -> fixedEndOffset x
+  TokSpan _s e  -> (e.tokenStart.alexPos) + e.tokenLen
+  TokPos t -> (t.tokenStart.alexPos) + t.tokenLen
+  FixedLoc {}  -> x.fixedEndOffset
   _ ->  error "no SrcOffset available"
 
 getStartTokenId :: SrcLoc -> TokenId
@@ -132,7 +134,7 @@ getEndToken s = case s of
 
 
 computeEndPos :: Token -> AlexPosn
-computeEndPos t = foldl' alexMove (tokenStart t) (tokenString t)
+computeEndPos t = foldl' alexMove (t.tokenStart) (unpacked (t.tokenString)) -- TODO string performance?
 
 
 {-# DEPRECATED srcLocFromTo "sourceLoc arithmetics is not reliable" #-}
