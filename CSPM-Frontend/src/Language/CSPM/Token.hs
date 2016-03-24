@@ -21,11 +21,11 @@ import Data.Typeable (Typeable)
 import Data.Generics.Basics (Data)
 -- import GHC.Generics (Generic)
 import Data.Generics.Instances ()
-import Data.Ix
+--import Data.Ix
 import Control.Exception (Exception)
 
 newtype TokenId = TokenId {unTokenId :: Int}
-  deriving (Show, Eq, Ord, Ix)
+  deriving (Show, Eq, Ord)
 
 mkTokenId :: Int -> TokenId
 mkTokenId = TokenId

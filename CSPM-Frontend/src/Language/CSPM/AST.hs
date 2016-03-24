@@ -35,7 +35,7 @@ type Bindings = Map String UniqueIdent
 type FreeNames = IntMap UniqueIdent
 
 newtype NodeId = NodeId {unNodeId :: Int}
-  deriving (Eq, Ord, Show, Ix)
+  deriving (Eq, Ord, Show)
 succ' :: NodeId -> NodeId
 succ' (NodeId i) = NodeId $ succ i
 
