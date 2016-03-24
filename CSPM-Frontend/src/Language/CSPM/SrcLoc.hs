@@ -13,7 +13,7 @@
 --
 -- This module contains the datatype for sourcelocations and some utility functions.
 
-module SrcLoc
+module SrcLoc -- TODO module names
 where
 
 import Token --as Token

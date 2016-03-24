@@ -17,7 +17,7 @@
 -- {-# LANGUAGE EmptyDataDecls, RankNTypes #-}
 -- {-# LANGUAGE RecordWildCards #-}
 --GeneralizedNewtypeDeriving
-module Language.CSPM.AST
+module AST
 where
 
 import Token
@@ -26,9 +26,15 @@ import SrcLoc --(SrcLoc(..))
 -- import Data.Typeable (Typeable) -- TODO Typeable
 -- import Data.Generics.Basics (Data)
 -- import GHC.Generics (Generic)
-import Data.IntMap (IntMap)
+-- import Data.IntMap (IntMap) -- TODO IntMap efficiency
 import Data.Map (Map)
-import Data.Array.IArray
+-- import Data.Array.IArray
+import Data.Array
+
+data IntMap x = Map Int x
+derive Show (IntMap x)
+derive Eq (IntMap x)
+derive Ord (IntMap x)
 
 type AstAnnotation x = IntMap x
 type Bindings = Map String UniqueIdent
@@ -49,9 +55,9 @@ data Labeled t = Labeled {
    ,srcLoc  :: SrcLoc
    ,unLabel :: t
 }
-derive Eq Labeled
-derive Ord Labeled
-derive Show Labeled
+derive Eq (Labeled t)
+derive Ord (Labeled t)
+derive Show (Labeled t)
 
 -- | Wrap a node with a dummyLabel.
 -- todo: Redo we need a specal case in DataConstructor Labeled.
@@ -81,7 +87,7 @@ unUIdent other = error
   $ "Identifier is not of variant UIdent (missing Renaming) " ++ show other
 
 identId :: LIdent -> Int
-identId = uniqueIdentId . unUIdent . unLabel
+identId = UniqueIdent.uniqueIdentId . unUIdent . Labeled.unLabel
 
 data UniqueIdent = UniqueIdent
   {
@@ -127,14 +133,14 @@ data Module a = Module {
   ,moduleComments :: [LocComment]
   ,modulePragmas :: [Pragma]
 }
-derive Eq Module
-derive Ord Module
-derive Show Module
+derive Eq (Module a)
+derive Ord (Module a)
+derive Show (Module a)
 
 data FromParser = FromParser
 -- derive Typeable FromParser -- TODO Typeable
 -- instance Data FromParser
-instance Eq FromParser
+-- instance Eq FromParser -- TODO
 
 castModule :: Module a -> Module b
 castModule (Module mds mts msrcloc mcs mps) = Module mds mts msrcloc mcs mps
@@ -222,16 +228,25 @@ derive Ord LinkList
 derive Show LinkList
 
 type LLink = Labeled Link
-data Link = Link LExp LExp deriving (Eq, Ord, Show)
+data Link = Link LExp LExp
+derive Eq Link
+derive Ord Link
+derive Show Link
 
 type LRename = Labeled Rename
-data Rename = Rename LExp LExp deriving (Eq, Ord, Show)
+data Rename = Rename LExp LExp
+derive Eq Rename
+derive Ord Rename
+derive Show Rename
 
 type LBuiltIn = Labeled BuiltIn
-data BuiltIn = BuiltIn Const deriving (Eq, Ord, Show)
+data BuiltIn = BuiltIn Const
+derive Eq BuiltIn
+derive Ord BuiltIn
+derive Show BuiltIn
 
 lBuiltInToConst :: LBuiltIn -> Const
-lBuiltInToConst = h . unLabel where
+lBuiltInToConst = h . Labeled.unLabel where
   h (BuiltIn c) = c
 
 type LCompGenList = Labeled [LCompGen]
@@ -356,7 +371,7 @@ derive Ord Constructor
 derive Show Constructor
 
 withLabel :: ( NodeId -> a -> b ) -> Labeled a -> Labeled b
-withLabel f x = x.{unLabel = f (nodeId x) (unLabel x) }
+withLabel f x = x.{unLabel = f (x.nodeId) (x.unLabel) }
 
 type LAssertDecl = Labeled AssertDecl
 data AssertDecl
