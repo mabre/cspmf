@@ -20,14 +20,13 @@ import TokenClasses
 -- import Data.Generics.Basics (Data)
 -- import GHC.Generics (Generic)
 -- import Data.Generics.Instances ()
--- import Data.Ix
+--import Data.Ix
 -- import Control.{-Exception-} (Exception)
 
 data TokenId = TokenId {unTokenId :: Int}
 derive Show TokenId
 derive Eq TokenId
 derive Ord TokenId
--- derive Ix TokenId
 
 mkTokenId :: Int -> TokenId
 mkTokenId = TokenId

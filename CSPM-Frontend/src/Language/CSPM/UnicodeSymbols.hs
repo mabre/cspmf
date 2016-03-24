@@ -16,7 +16,7 @@ import qualified Data.Map as Map
 
 unicodeSymbols :: [(Char, PrimToken, String)]
 unicodeSymbols = [
-      ('\172'    ,T_not               ,"not"     ) --   ¬
+      ('\172'    ,T_not               ,"not"     ) --   ¬ -- TODO watch out with octal!
 --    , ('\964'    ,T_tau               ,"tau"     ) --   τ
 --    , ('\8714'   ,T_member            ,"member"  ) --   ∊
     , ('\8741'   ,T_parallel          ,"||"      ) --   ∥

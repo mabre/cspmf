@@ -38,7 +38,6 @@ data NodeId = NodeId {unNodeId :: Int}
 derive Eq NodeId
 derive Ord NodeId
 derive Show NodeId
-derive Ix NodeId
 succ' :: NodeId -> NodeId
 succ' (NodeId i) = NodeId $ succ i
 
