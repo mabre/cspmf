@@ -17,7 +17,7 @@ where
 -- import Data.Generics.Basics (Data)
 -- import GHC.Generics (Generic)
 -- import Data.Generics.Instances ()
-import Data.Array --(Ix)
+import Data.Ix
 
 -- | The token classes of the CSP-M lexer
 data PrimToken
@@ -157,3 +157,13 @@ derive Eq PrimToken
 derive Ord PrimToken
 derive Enum PrimToken
 derive Bounded PrimToken
+
+instance Ix PrimToken where
+    range (m,n) = [(applyN succ i) minBound | i <- [fromEnum m .. fromEnum n]]
+    unsafeIndex (l,_) i = fromEnum i - fromEnum l
+    index b i | inRange b i =  unsafeIndex b i
+              | otherwise   =  indexError b i "Bool"
+    inRange (l,u) i = fromEnum i >= fromEnum l && fromEnum i <= fromEnum u
+
+applyN :: (a -> a) -> Int -> (a -> a)
+applyN f n = foldr (.) id (replicate n f)
