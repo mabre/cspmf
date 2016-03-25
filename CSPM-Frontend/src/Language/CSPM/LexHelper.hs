@@ -1,5 +1,5 @@
 -- {-# LANGUAGE TupleSections, RecordWildCards #-}
-module Language.CSPM.LexHelper
+module LexHelper
 {-
 (
    lexInclude
@@ -12,16 +12,30 @@ module Language.CSPM.LexHelper
 -}
 where
 
-import qualified Language.CSPM.Lexer as Lexer (scanner)
-import Language.CSPM.Token (Token(..), LexError(..))
-import Language.CSPM.TokenClasses (PrimToken(..))
-import Language.CSPM.UnicodeSymbols (lookupDefaultSymbol)
-import Control.Monad.IO.Class
-import qualified Data.Set as Set
+import Lexer as Lexer (scanner)
+import Token --(Token(..), LexError(..)) TODO import
+import TokenClasses -- (PrimToken(..))
+import UnicodeSymbols (lookupDefaultSymbol)
+-- import Control.Monad.IO.Class
+import frege.control.monad.trans.MonadIO 
+import frege.data.Set (Set)
 
-import qualified Data.DList as DList
-import Control.Monad.Trans.Either
-import System.FilePath(isAbsolute,splitDirectories,normalise,joinPath)
+-- import Data.DList as DList() --TODO performance
+import frege.control.monad.trans.EitherT
+import System.FilePath(FilePath,isAbsolute,splitDirectories,normalise,joinPath)
+
+
+type DList = []
+
+-- https://hackage.haskell.org/package/either-4.4.1/docs/src/Control-Monad-Trans-Either.html
+-- | Given a pair of actions, one to perform in case of failure, and one to perform
+-- in case of success, run an 'EitherT' and get back a monadic result.
+eitherT :: Monad m => (a -> m c) -> (b -> m c) -> EitherT a m b -> m c
+eitherT f g (EitherT m) = m >>= \z -> case z of
+    Left a -> f a
+    Right b -> g b
+{-# INLINE eitherT #-}
+
 
 -- | lex a String .
 lexPlain :: String -> Either LexError [Token]
@@ -31,41 +45,41 @@ lexPlain src = fmap reverse $ Lexer.scanner src
 --   If the tokenClasss has a Unicode symbol return the default Unicode string.
 unicodeTokenString :: Token -> String
 unicodeTokenString token
-  = case lookupDefaultSymbol $ tokenClass token of
-      Just (unicodeSymbol, _) -> [unicodeSymbol]
-      Nothing -> tokenString token
+  = case lookupDefaultSymbol $ token.tokenClass of
+      Just (unicodeSymbol, _) -> packed [unicodeSymbol]
+      Nothing -> token.tokenString
 
 -- | Convert a token to a String.
 --   If the tokenClasss has a Unicode symbol return the default ASCII string.
 asciiTokenString :: Token -> String
 asciiTokenString token
-  = case lookupDefaultSymbol $ tokenClass token of
+  = case lookupDefaultSymbol $ token.tokenClass of
       Just (_, symbol) -> symbol
-      Nothing -> tokenString token
+      Nothing -> token.tokenString
 
 type Chunk = [Token]
-type Chunks = DList.DList Chunk
+type Chunks = DList Chunk
 data FilePart
     = Toks    Chunk
     | Include FilePath
-    deriving Show
+derive Show FilePart
 
 -- | lex input-string and import all includes files
 lexInclude :: FilePath -> String -> IO (Either LexError [Token])
 lexInclude srcName input
-   = eitherT (return . Left) (return . Right . concat . DList.toList) $ lexInclude2 srcName input
+   = eitherT (return . Left) (return . Right . concat {-. DList.toList-}) $ lexInclude2 srcName input
 
 lexInclude2 :: FilePath -> String -> EitherT LexError IO Chunks
 lexInclude2 srcName input = do
         hoistEither $ lexPlain input
     >>= hoistEither . splitIncludes []
     >>= mapM (processPart srcName)
-    >>= return . DList.concat
+    >>= return . {-DList.-}concat
 
 processPart :: FilePath -> FilePart -> EitherT LexError IO Chunks
 processPart srcName part = case part of
-    Toks ch -> return $ DList.singleton $ ch
-    Include fname -> (liftIO $ readFile absolutePath) >>= lexInclude2 absolutePath
+    Toks ch -> return $ {-DList.singleton-} [ch]
+    Include fname -> (MonadIO.liftIO $ readFile absolutePath) >>= lexInclude2 absolutePath
      where
        absolutePath = getAbsoluteIncludeFileName srcName fname 
 
@@ -83,16 +97,16 @@ scanInclude incl (h:rest) = case h of
     Token _ _ _ T_WhiteSpace _ -> scanInclude incl rest
     Token _ _ _ L_String fname -> do
        r <- splitIncludes [] rest
-       let fileName = reverse $ tail $ reverse $ tail fname -- remove quotes
+       let fileName = packed $ reverse $ tail $ reverse $ tail $ toList fname -- remove quotes
        return $ (Include fileName) : r
     _ -> Left $ LexError {
-       lexEPos = tokenStart incl
+       lexEPos = incl.tokenStart
       ,lexEMsg = "Include without filename"
       }
 
 
 scanInclude incl _ = Left $ LexError {
-       lexEPos = tokenStart incl
+       lexEPos = incl.tokenStart
       ,lexEMsg = "Include without filename at end of file"
       }
 
@@ -104,12 +118,12 @@ removeIgnoredToken = soakNewlines . removeComments
     -- | Remove comments from the token stream.
     removeComments :: [Token] -> [Token]
     removeComments = filter (\t -> not (tokenIsComment t || isWhiteSpace t))
-    isWhiteSpace = (==) T_WhiteSpace . tokenClass
+    isWhiteSpace = (==) T_WhiteSpace . Token.tokenClass
 
 -- | Is the token a line-comment, block-comment or a Pragma?
 tokenIsComment :: Token -> Bool
 tokenIsComment t = tc == L_LComment || tc == L_BComment || tc == L_Pragma
-  where tc = tokenClass t
+  where tc = t.tokenClass
 
 
 -- | remove newlines, that do not end a declaration from the token stream.
@@ -119,9 +133,9 @@ soakNewlines :: [Token] -> [Token]
 soakNewlines = worker
   where
     worker [] = []
-    worker [x] | tokenClass x ==L_Newline = []
+    worker [x] | x.tokenClass == L_Newline = []
     worker [x] = [x]
-    worker (h1:h2:t) = case (tokenClass h1, tokenClass h2) of
+    worker (h1:h2:t) = case (h1.tokenClass, h2.tokenClass) of
        (L_Newline, L_Newline) -> worker (h1:t)
        (L_Newline, _) | isH2NewLineConsumer -> worker $ h2:t
        (L_Newline, _) -> h1 : (worker $ h2:t)
@@ -129,8 +143,8 @@ soakNewlines = worker
        (_, L_Newline) -> h1: (worker $ h2:t)
        _   -> h1: (worker $ h2:t)
       where
-        isH2NewLineConsumer = tokenClass h2 `Set.member` consumeNLBeforeToken
-        isH1NewLineConsumer = tokenClass h1 `Set.member` consumeNLAfterToken
+        isH2NewLineConsumer = Set.member h2.tokenClass consumeNLBeforeToken
+        isH1NewLineConsumer = Set.member h1.tokenClass consumeNLAfterToken
 
     binaryOperators =
      [T_is, T_hat, T_hash, T_times, T_slash,
@@ -165,9 +179,14 @@ getAbsoluteIncludeFileName srcFileName inclFileName
   False -> joinPath $ (
     take ((length srcDirSequence)-(countBackDirs fileDirSequence)) srcDirSequence 
       ++ (removeBackDirs fileDirSequence))
-  where
+ where
     fileDirSequence = splitDirectories $ normalise inclFileName
     srcDirSequence  = init $ splitDirectories $ normalise srcFileName
     countBackDirs   = length . filter (".." ==) 
     removeBackDirs  = dropWhile (".." == )
 
+-- http://hackage.haskell.org/package/either-4.4.1/docs/src/Control-Monad-Trans-Either.html
+-- | Lift an 'Either' into an 'EitherT'
+hoistEither :: Monad m => Either e a -> EitherT e m a
+hoistEither = EitherT . return
+{-# INLINE hoistEither #-}
