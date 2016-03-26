@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------
 -- |
--- Module      :  Language.CSPM.Parser
+-- Module      :  Parser
 -- Copyright   :  (c) Fontaine 2008 - 2011
 -- License     :  BSD3
 -- 
@@ -14,34 +14,34 @@
 -- {-# LANGUAGE DeriveDataTypeable #-}
 -- RecordWildCards
 
-module Language.CSPM.Parser
-(
-  parse
- ,ParseError(..)
- ,testParser
- ,parseExp
- ,parsePattern
- ,topDeclList
- ,parseExp_noProc
-)
+module Parser
+-- (
+--   parse
+--  ,ParseError(..)
+--  ,testParser
+--  ,parseExp
+--  ,parsePattern
+--  ,topDeclList
+--  ,parseExp_noProc
+-- )
 where
-import Debug.Trace -- TODO
-import Language.CSPM.AST
-import Language.CSPM.Token (Token(..),AlexPosn)
-import Language.CSPM.TokenClasses as TokenClasses
-import qualified Language.CSPM.Token as Token
+-- import Debug.Trace -- TODO
+import AST
+import Token --(Token(..),AlexPosn)
+import TokenClasses as TokenClasses
+import Token as Token()
 
-import qualified Language.CSPM.SrcLoc as SrcLoc
-import Language.CSPM.SrcLoc (SrcLoc)
+import SrcLoc as SrcLoc()
+import SrcLoc (SrcLoc)
 
-import Language.CSPM.LexHelper (removeIgnoredToken)
+import LexHelper (removeIgnoredToken)
 import Text.ParserCombinators.Parsec.ExprM
 
 import Text.ParserCombinators.Parsec
   hiding (parse,eof,notFollowedBy,anyToken,label,ParseError,errorPos,token,newline)
-import qualified Text.ParserCombinators.Parsec.Token(integer)
+import Text.ParserCombinators.Parsec.Token(integer)
 import Text.ParserCombinators.Parsec.Pos (newPos)
-import qualified Text.ParserCombinators.Parsec.Error as ParsecError
+import Text.ParserCombinators.Parsec.Error as ParsecError
 -- import Data.Typeable (Typeable)
 import Control.Monad.State
 import Data.List
@@ -77,7 +77,8 @@ data ParseError = ParseError {
    parseErrorMsg :: String
   ,parseErrorToken :: Token
   ,parseErrorPos   :: AlexPosn
-  } deriving (Show)
+  }
+derive Show ParseError
 
 -- instance Exception ParseError
 
@@ -87,7 +88,8 @@ data PState
  ,gtCounter      :: Int
  ,gtLimit        :: Maybe Int
  ,nodeIdSupply   :: NodeId
- } deriving Show
+ }
+derive Show ParseError
 
 initialPState :: PState
 initialPState = PState {
@@ -100,7 +102,7 @@ initialPState = PState {
 mkLabeledNode :: SrcLoc -> t -> PT (Labeled t)
 mkLabeledNode loc node = do
   i <- getStates nodeIdSupply
-  updateState $ \s -> s { nodeIdSupply = succ' $ nodeIdSupply s}
+  updateState $ \s -> s.{ nodeIdSupply = succ' $ nodeIdSupply s}
   return $ Labeled {
     nodeId = i
    ,srcLoc = loc
@@ -164,14 +166,14 @@ parseModule tokenList = do
                     modulePragmas = modulePragmas,
                     moduleComments = moduleComments,
                     moduleDecls = moduleDecls }
-  where
+ where
     getComment :: Token -> Maybe LocComment
     getComment t = case tokenClass t of
       L_LComment -> Just (LineComment str, loc)
       L_BComment -> Just (BlockComment str, loc)
       L_Pragma -> Just (PragmaComment str, loc)
       _ -> Nothing
-      where
+     where
         loc = mkSrcPos t
         str = tokenString t
     getPragma :: Token -> Maybe String
@@ -288,7 +290,7 @@ comprehensionRep = withLoc $ do
   l <- sepByComma (repGenerator <|> compGuard)
   token T_at
   return l
-  where
+ where
     repGenerator :: PT LCompGen
     repGenerator = try $ withLoc $ do
       pat <- parsePattern
@@ -470,13 +472,14 @@ Warning :
 the expression parser does not accept nested Postfix and Prefix expressions
  "not not true" does not parse !!
 -}
-type OpTable = [[Text.ParserCombinators.Parsec.ExprM.Operator Token PState LExp]]
+-- type OpTable = [[Text.ParserCombinators.Parsec.ExprM.Operator Token PState LExp]] TODO
+type OpTable = Int
 opTable :: OpTable
-opTable = trace "opTable" undefined -- baseTable ++ procTable TODO parsec
+opTable = traceLn "opTable" == undefined -- baseTable ++ procTable TODO parsec
 
 baseTable :: OpTable
 procTable :: OpTable
-(baseTable, procTable) = (trace "baseTable" undefined, trace "procTable" undefined) -- ( TODO parsec
+(baseTable, procTable) = (traceLn "baseTable" == undefined, traceLn "procTable" == undefined) -- ( TODO parsec
 --    [
 --     [ postfixM funApplyImplicit ]
 --    ,[ postfixM procRenaming ]
@@ -678,8 +681,8 @@ parseWithGtLimit maxGt parser = do
   case res of
     Just p -> return p
     Nothing -> fail "contents of sequence expression"
-  where
-    setGtLimit g = updateState $ \env -> env {gtLimit = g}
+ where
+    setGtLimit g = updateState $ \env -> env.{gtLimit = g}
 
 proc_op_aparallel :: PT (LExp -> LExp -> PT LExp)
 proc_op_aparallel = try $ do
@@ -865,7 +868,7 @@ topDeclList = sepByNewLine topDecl
     token T_closeAssertBrack
     set <- parseExp
     return $ AssertTauPrio negated p1 op p2 set
-     where
+   where
       tauRefineOp :: PT LTauRefineOp
       tauRefineOp = withLoc $ do 
         tok <- tokenPrimExDefault (\t -> Just $ tokenClass t)
@@ -887,7 +890,7 @@ topDeclList = sepByNewLine topDecl
                _    -> fail "More than one model extension."
     token T_closeSpecialBrack
     return $ AssertModelCheck negated p model ext
-      where
+   where
        fdrModel :: PT LFDRModels
        fdrModel = withLoc $ do
         tok <- tokenPrimExDefault (\t -> Just $ tokenClass t)
@@ -915,7 +918,7 @@ topDeclList = sepByNewLine topDecl
     -- get LTL/CTL formula as a string
     s <- lstring
     return $ AssertLTLCTL negated p t s
-      where
+   where
         parseFormulaType :: PT LFormulaType
         parseFormulaType = withLoc $ do
           tok <- tokenPrimExDefault (\t -> Just $ tokenClass t)
@@ -1077,7 +1080,7 @@ parsePrefixExp = do
     Nothing -> return start
     Just (comm,body) -> mkLabeledNode (mkSrcSpan spos epos) $
                            PrefixExp start comm body
-  where 
+ where 
   parsePrefix :: PT (Maybe ([LCommField],LExp))
   parsePrefix = optionMaybe $ do
     commfields <- many parseCommField
@@ -1129,7 +1132,7 @@ primExUpdatePos pos t@(Token {}) _
   = newPos (sourceName pos) (-1) (Token.unTokenId $ Token.tokenId t)
 
 primExUpdateState :: t -> Token -> t1 -> PState -> PState
-primExUpdateState _ tok _ st = st { lastTok =tok}
+primExUpdateState _ tok _ st = st.{ lastTok =tok}
 
 {-
 replicating existing combinators, just to work with our lexer
