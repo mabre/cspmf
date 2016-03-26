@@ -36,6 +36,11 @@ eitherT f g (EitherT m) = m >>= \z -> case z of
     Right b -> g b
 {-# INLINE eitherT #-}
 
+-- | Lift an 'Either' into an 'EitherT'
+hoistEither :: Monad m => Either e a -> EitherT e m a
+hoistEither = EitherT . return
+{-# INLINE hoistEither #-}
+
 
 -- | lex a String .
 lexPlain :: String -> Either LexError [Token]
@@ -184,9 +189,3 @@ getAbsoluteIncludeFileName srcFileName inclFileName
     srcDirSequence  = init $ splitDirectories $ normalise srcFileName
     countBackDirs   = length . filter (".." ==) 
     removeBackDirs  = dropWhile (".." == )
-
--- http://hackage.haskell.org/package/either-4.4.1/docs/src/Control-Monad-Trans-Either.html
--- | Lift an 'Either' into an 'EitherT'
-hoistEither :: Monad m => Either e a -> EitherT e m a
-hoistEither = EitherT . return
-{-# INLINE hoistEither #-}

@@ -56,13 +56,27 @@ tableLine (char,tok,string) = concat
     tab x s = take x $ s ++ repeat ' '
 -}
 
+-- main _ = print $ table'
+
+minbound :: PrimToken
+minbound = minBound
+maxbound :: PrimToken
+maxbound = maxBound
+
+-- table' :: Array.Array PrimToken (Maybe (Char,String))
+-- table' = (Array.listArray (minBound,maxBound) $ replicate (length [minbound..maxbound]) Nothing)
+-- 
+-- table :: Array.Array PrimToken (Maybe (Char,String))
+-- table = (Array.//)
+--               (Array.listArray (minBound,maxBound) $ repeat Nothing)
+--               [(tok,Just (uni,ascii)) | (uni,tok,ascii) <- unicodeSymbols]
 
 lookupDefaultSymbol :: PrimToken -> (Maybe (Char,String))
 lookupDefaultSymbol = (Array.!!) table
   where
     table :: Array.Array PrimToken (Maybe (Char,String))
     table = (Array.//)
-              (Array.listArray (minBound,maxBound) $ repeat Nothing)
+              (Array.listArray (minBound,maxBound) $ replicate (length [minbound..maxbound]) Nothing)
               [(tok,Just (uni,ascii)) | (uni,tok,ascii) <- unicodeSymbols]
 
 lookupToken :: Char -> Maybe PrimToken
