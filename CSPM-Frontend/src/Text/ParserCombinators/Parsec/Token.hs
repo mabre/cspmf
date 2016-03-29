@@ -369,7 +369,7 @@ makeTokenParser languageDef
                       do{ str <- between (char '"')                   
                                          (char '"' <?> "end of string")
                                          (many stringChar) 
-                        ; return (foldr (maybe id (:)) "" str)
+                        ; return (foldr (maybe id (:)) [] str.toList)
                         }
                       <?> "literal string")
 
@@ -544,7 +544,7 @@ makeTokenParser languageDef
           }
 
     operator =
-        fmap packed $ lexeme $ try $
+        lexeme $ try $
         do{ name <- oper
           ; if (isReservedOp name)
              then unexpected ("reserved operator " ++ show name)
@@ -552,14 +552,15 @@ makeTokenParser languageDef
           }
           
     oper =
+        fmap packed (
         do{ c <- (languageDef.opStart)
           ; cs <- many (languageDef.opLetter)
           ; return (c:cs)
           }
-        <?> "operator"
+        <?> "operator" )
         
     isReservedOp name =
-        isReserved (sort (languageDef.reservedOpNames)) name          
+        isReserved (map packed (sort (map toList languageDef.reservedOpNames))) name          
         
         
     -- --------------------------------------------------------
@@ -585,7 +586,7 @@ makeTokenParser languageDef
           
 
     identifier =
-        fmap packed $ lexeme $ try $
+        lexeme $ try $
         do{ name <- ident
           ; if (isReservedName name)
              then unexpected ("reserved word " ++ show name)
@@ -633,6 +634,7 @@ makeTokenParser languageDef
     symbol name
         = lexeme (string name)
 
+    lexeme :: forall a st. CharParser st a -> CharParser st a
     lexeme p       
         = do{ x <- p; whiteSpace; return x  }
       
