@@ -22,10 +22,12 @@ module Text.ParserCombinators.Parsec.Language
                      , javaStyle   
                      , LanguageDef (..)                
                      )-} where
--- import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Token 
 
-           
+import Text.ParserCombinators.Parsec.Char
+import Text.ParserCombinators.Parsec.Prim
+import Text.ParserCombinators.Parsec.Token
+
+
 -----------------------------------------------------------
 -- Styles: haskellStyle, javaStyle
 -----------------------------------------------------------               
@@ -41,7 +43,7 @@ haskellStyle= emptyDef.
                 , nestedComments = True
                 , identStart     = letter
                 , identLetter    = alphaNum <|> oneOf "_'"
-                , opStart        = opLetter haskellStyle
+                , opStart        = haskellStyle.opLetter
                 , opLetter       = oneOf ":!#$%&*+./<=>?@\\^|-~"              
                 , reservedOpNames= []
                 , reservedNames  = []
@@ -75,7 +77,7 @@ emptyDef    = LanguageDef
                , nestedComments = True
                , identStart     = letter <|> char '_'
                , identLetter    = alphaNum <|> oneOf "_'"
-               , opStart        = opLetter emptyDef
+               , opStart        = emptyDef.opLetter
                , opLetter       = oneOf ":!#$%&*+./<=>?@\\^|-~"
                , reservedOpNames= []
                , reservedNames  = []
@@ -95,8 +97,8 @@ haskell      = makeTokenParser haskellDef
 -- | The language definition for the Haskell language.
 haskellDef  :: LanguageDef st
 haskellDef   = haskell98Def.
-                { identLetter    = identLetter haskell98Def <|> char '#'
-                , reservedNames  = reservedNames haskell98Def ++ 
+                { identLetter    = haskell98Def.identLetter <|> char '#'
+                , reservedNames  = haskell98Def.reservedNames ++ 
                                    ["foreign","import","export","primitive"
                                    ,"_ccall_","_casm_"
                                    ,"forall"

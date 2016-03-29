@@ -334,7 +334,7 @@ makeTokenParser languageDef
     braces p        = between (symbol "{") (symbol "}") p
     angles p        = between (symbol "<") (symbol ">") p
     brackets p      = between (symbol "[") (symbol "]") p
-    squares p     = between (symbol "[") (symbol "]") p
+    squares p       = between (symbol "[") (symbol "]") p
 
     semi            = symbol ";" 
     comma           = symbol ","
