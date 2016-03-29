@@ -37,17 +37,21 @@ import SrcLoc (SrcLoc)
 import LexHelper (removeIgnoredToken)
 import Text.ParserCombinators.Parsec.ExprM
 
-import Text.ParserCombinators.Parsec
-  hiding (parse,eof,notFollowedBy,anyToken,label,ParseError,errorPos,token,newline)
-import Text.ParserCombinators.Parsec.Token(integer)
-import Text.ParserCombinators.Parsec.Pos (newPos)
+-- import Text.ParserCombinators.Parsec
+  --hiding (parse,eof,notFollowedBy,anyToken,label,ParseError,errorPos,token,newline)
+import Text.ParserCombinators.Parsec.Prim
+import Text.ParserCombinators.Parsec.Combinator
+import Text.ParserCombinators.Parsec.Char
+import Text.ParserCombinators.Parsec.Token as ParsecToken (TokenParser.integer)
+import Text.ParserCombinators.Parsec.Pos --(newPos)
 import Text.ParserCombinators.Parsec.Error as ParsecError
+import Text.ParserCombinators.Parsec.ExprM
 -- import Data.Typeable (Typeable)
-import Control.Monad.State
+-- import Control.Monad.State
 import Data.List
 import Data.Maybe
-import Prelude hiding (exp)
-import Control.Exception (Exception)
+-- import Prelude hiding (exp) TODO possible?
+-- import Control.Exception (Exception) -- TODO exception
 
 type PT a = GenParser Token PState a
 
@@ -89,7 +93,7 @@ data PState
  ,gtLimit        :: Maybe Int
  ,nodeIdSupply   :: NodeId
  }
-derive Show ParseError
+derive Show PState
 
 initialPState :: PState
 initialPState = PState {
@@ -101,8 +105,8 @@ initialPState = PState {
 
 mkLabeledNode :: SrcLoc -> t -> PT (Labeled t)
 mkLabeledNode loc node = do
-  i <- getStates nodeIdSupply
-  updateState $ \s -> s.{ nodeIdSupply = succ' $ nodeIdSupply s}
+  i <- getStates PState.nodeIdSupply
+  updateState $ \s -> s.{ nodeIdSupply = succ' $ s.nodeIdSupply}
   return $ Labeled {
     nodeId = i
    ,srcLoc = loc
@@ -121,7 +125,7 @@ getNextPos = do
     [] -> return Token.tokenSentinel
 
 getLastPos :: PT Token
-getLastPos = getStates lastTok
+getLastPos = getStates PState.lastTok
 
 getPos :: PT SrcLoc
 getPos = do
@@ -168,23 +172,23 @@ parseModule tokenList = do
                     moduleDecls = moduleDecls }
  where
     getComment :: Token -> Maybe LocComment
-    getComment t = case tokenClass t of
+    getComment t = case t.tokenClass of
       L_LComment -> Just (LineComment str, loc)
       L_BComment -> Just (BlockComment str, loc)
       L_Pragma -> Just (PragmaComment str, loc)
       _ -> Nothing
      where
         loc = mkSrcPos t
-        str = tokenString t
+        str = t.tokenString
     getPragma :: Token -> Maybe String
-    getPragma t = case tokenClass t of
-      L_Pragma -> Just $ take (tokenLen t - 6) $ drop 3 $ tokenString t
+    getPragma t = case t.tokenClass of
+      L_Pragma -> Just $ take (t.tokenLen - 6) $ drop 3 $ t.tokenString
       _ -> Nothing
 
 token :: TokenClasses.PrimToken -> PT ()
 token t = tokenPrimExDefault tokenTest
   where
-    tokenTest tok = if tokenClass tok == t
+    tokenTest tok = if tok.tokenClass == t
       then Just ()
       else Nothing
 
@@ -202,7 +206,7 @@ newline = token L_Newline
 
 refineOp :: PT LRefineOp
 refineOp = withLoc $ do 
-  tok <- tokenPrimExDefault (\t -> Just $ tokenClass t)
+  tok <- tokenPrimExDefault (\t -> Just $ t.tokenClass)
   case tok of
     T_trace  -> return Trace
     T_failure  -> return Failure
@@ -216,7 +220,7 @@ refineOp = withLoc $ do
   
 anyBuiltIn :: PT Const
 anyBuiltIn = do
-  tok <- tokenPrimExDefault (\t -> Just $ tokenClass t)
+  tok <- tokenPrimExDefault (\t -> Just $ t.tokenClass)
   case tok of
     -- T_union  -> return F_union
     -- T_inter  -> return F_inter
@@ -249,8 +253,8 @@ lIdent =
   tokenPrimExDefault testToken
   <?> "identifier"
   where
-    testToken t = case tokenClass t of
-      L_Ident -> Just $ tokenString t
+    testToken t = case t.tokenClass of
+      L_Ident -> Just $ t.tokenString
       _ -> Nothing
 
 ident :: PT LIdent
@@ -353,8 +357,8 @@ intLit =
   where 
     linteger :: PT Integer
     linteger = tokenPrimExDefault testToken
-    testToken t = if tokenClass t == L_Integer
-      then Just $ read $ tokenString t
+    testToken t = if t.tokenClass == L_Integer
+      then Just $ String.aton $ t.tokenString
       else Nothing 
 
 negateExp :: PT LExp
@@ -374,8 +378,8 @@ letExp = withLoc $ do
   token T_let
   declList <- sepByNewLine (funBind <|> patBind)
   token T_within
-  exp <- parseExp
-  return $ Let declList exp
+  expo <- parseExp
+  return $ Let declList expo
 
 ifteExp :: PT LExp
 ifteExp = withLoc $ do
@@ -426,8 +430,8 @@ lambdaExp = withLoc $ do
   token T_backslash
   patList <- sepBy1 parsePattern $ token T_comma
   token T_at
-  exp <- parseExp
-  return $ Lambda patList exp
+  expo <- parseExp
+  return $ Lambda patList expo
 
 parseExpBase :: PT LExp
 parseExpBase =
@@ -472,14 +476,14 @@ Warning :
 the expression parser does not accept nested Postfix and Prefix expressions
  "not not true" does not parse !!
 -}
--- type OpTable = [[Text.ParserCombinators.Parsec.ExprM.Operator Token PState LExp]] TODO
-type OpTable = Int
+type OpTable = [[ExprM.Operator Token PState LExp]] --TODO
+-- type OpTable = Int
 opTable :: OpTable
-opTable = traceLn "opTable" == undefined -- baseTable ++ procTable TODO parsec
+opTable | traceLn "opTable" || true = undefined -- baseTable ++ procTable TODO parsec
 
 baseTable :: OpTable
 procTable :: OpTable
-(baseTable, procTable) = (traceLn "baseTable" == undefined, traceLn "procTable" == undefined) -- ( TODO parsec
+(baseTable, procTable) | traceLn "bpTable" || true = (undefined, undefined) -- ( TODO parsec
 --    [
 --     [ postfixM funApplyImplicit ]
 --    ,[ postfixM procRenaming ]
@@ -655,7 +659,7 @@ betweenLtGt parser = do
   token_lt
   st <- getParserState  -- maybe we need to backtrack
   body <- parser           -- even if this is successfull
-  cnt <- getStates gtCounter
+  cnt <- getStates PState.gtCounter
   endSym <-testFollows token_gt
   case endSym of
     Just () -> do
@@ -674,7 +678,7 @@ attention: this can be nested !!
 
 parseWithGtLimit :: Int -> PT a -> PT a
 parseWithGtLimit maxGt parser = do
-  oldLimit <- getStates gtLimit
+  oldLimit <- getStates PState.gtLimit
   setGtLimit $ Just maxGt
   res <- optionMaybe parser
   setGtLimit oldLimit
@@ -797,8 +801,8 @@ patBind :: PT LDecl
 patBind = withLoc $ do
   pat <- parsePattern
   token_is
-  exp <- parseExp
-  return $ PatBind pat exp
+  expo <- parseExp
+  return $ PatBind pat expo
 
 -- parse a single function-case
 funBind :: PT LDecl
@@ -806,8 +810,8 @@ funBind = try $ do
   fname <- ident
   patl <- parseFktCurryPat
   token_is <?> "rhs of function clause"
-  exp <-parseExp
-  mkLabeledNode (srcLoc fname) $ FunBind fname [FunCase patl exp]
+  expo <-parseExp
+  mkLabeledNode fname.srcLoc $ FunBind fname [FunCase patl expo]
 
 {-
 in CSP f(x)(y), f(x,y) , f((x,y)) are all different
@@ -871,7 +875,7 @@ topDeclList = sepByNewLine topDecl
    where
       tauRefineOp :: PT LTauRefineOp
       tauRefineOp = withLoc $ do 
-        tok <- tokenPrimExDefault (\t -> Just $ tokenClass t)
+        tok <- tokenPrimExDefault (\t -> Just $ t.tokenClass)
         case tok of
          T_trace  -> return TauTrace
          T_Refine -> return TauRefine
@@ -893,7 +897,7 @@ topDeclList = sepByNewLine topDecl
    where
        fdrModel :: PT LFDRModels
        fdrModel = withLoc $ do
-        tok <- tokenPrimExDefault (\t -> Just $ tokenClass t)
+        tok <- tokenPrimExDefault (\t -> Just $ t.tokenClass)
         case tok of 
          T_deadlock  -> token T_free >> return DeadlockFree
          T_deterministic -> return Deterministic
@@ -903,7 +907,7 @@ topDeclList = sepByNewLine topDecl
        extsMode :: PT LFdrExt
        extsMode =  withLoc $ tokenPrimExDefault test
          where 
-          test tok = case tokenClass tok of
+          test tok = case tok.tokenClass of
                   T_F   -> Just F
                   T_FD  -> Just FD
                   T_T   -> Just T
@@ -921,7 +925,7 @@ topDeclList = sepByNewLine topDecl
    where
         parseFormulaType :: PT LFormulaType
         parseFormulaType = withLoc $ do
-          tok <- tokenPrimExDefault (\t -> Just $ tokenClass t)
+          tok <- tokenPrimExDefault (\t -> Just $ t.tokenClass)
           case tok of
             T_LTL -> return LTL
             T_CTL -> return CTL
@@ -930,8 +934,8 @@ topDeclList = sepByNewLine topDecl
         lstring :: PT String
         lstring = tokenPrimExDefault testToken
 
-        testToken t = if tokenClass t == L_String
-                      then Just $ read $ tokenString t
+        testToken t = if t.tokenClass == L_String
+                      then Just $ t.tokenString
                       else Nothing 
 
   parseAssert :: PT LAssertDecl
@@ -1067,7 +1071,7 @@ parsePrefixExp either parses a prefix, or just an regular expression
 
 prefix binds stronger than any operator (except dot-operator)
 either another prefix or an expression without prefix
-exp <-(parsePrefixExp <|> parseExpBase ) <?> "rhs of prefix operation"
+expo <-(parsePrefixExp <|> parseExpBase ) <?> "rhs of prefix operation"
 
 -}
 parsePrefixExp :: PT LExp
@@ -1085,8 +1089,8 @@ parsePrefixExp = do
   parsePrefix = optionMaybe $ do
     commfields <- many parseCommField
     token T_rightarrow
-    exp <- parseProcReplicatedExp <?> "rhs of prefix operation"
-    return (commfields,exp)
+    expo <- parseProcReplicatedExp <?> "rhs of prefix operation"
+    return (commfields,expo)
 
 
 {-
@@ -1128,8 +1132,8 @@ testFollows p = do
   return res
 
 primExUpdatePos :: SourcePos -> Token -> t -> SourcePos
-primExUpdatePos pos t@(Token {}) _
-  = newPos (sourceName pos) (-1) (Token.unTokenId $ Token.tokenId t)
+primExUpdatePos pos (t@(Token {})) _
+  = newPos (sourceName pos) (-1) t.tokenId.unTokenId
 
 primExUpdateState :: t -> Token -> t1 -> PState -> PState
 primExUpdateState _ tok _ st = st.{ lastTok =tok}
@@ -1169,11 +1173,11 @@ wrapParseError _ (Right ast) = Right ast
 wrapParseError tl (Left err) = Left $ ParseError {
    parseErrorMsg = pprintParsecError err
   ,parseErrorToken = errorTok
-  ,parseErrorPos = tokenStart errorTok
+  ,parseErrorPos = errorTok.tokenStart
   }
   where 
     tokId = Token.mkTokenId $ sourceColumn $ ParsecError.errorPos err
-    errorTok = maybe Token.tokenSentinel id  $ find (\t -> tokenId t ==  tokId) tl
+    errorTok = maybe Token.tokenSentinel id  $ find (\t -> t.tokenId ==  tokId) tl
 
 token_is :: PT ()
 token_is = token T_is
