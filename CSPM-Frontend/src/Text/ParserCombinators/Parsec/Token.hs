@@ -315,7 +315,7 @@ makeTokenParser languageDef
                  , braces = braces
                  , angles = angles
                  , brackets = brackets
-                 , squares = brackets
+                 , squares = squares
                  , semi = semi
                  , comma = comma
                  , colon = colon
@@ -334,6 +334,7 @@ makeTokenParser languageDef
     braces p        = between (symbol "{") (symbol "}") p
     angles p        = between (symbol "<") (symbol ">") p
     brackets p      = between (symbol "[") (symbol "]") p
+    squares p     = between (symbol "[") (symbol "]") p
 
     semi            = symbol ";" 
     comma           = symbol ","
@@ -341,6 +342,7 @@ makeTokenParser languageDef
     colon           = symbol ":"
 
     commaSep p      = sepBy p comma
+--     semiSep :: forall a st. CharParser st a -> CharParser st [a]
     semiSep p       = sepBy p semi
 
     commaSep1 p     = sepBy1 p comma
@@ -369,7 +371,7 @@ makeTokenParser languageDef
                       do{ str <- between (char '"')                   
                                          (char '"' <?> "end of string")
                                          (many stringChar) 
-                        ; return (foldr (maybe id (:)) [] str.toList)
+                        ; return $ packed (foldr (maybe id (:)) [] str.toList)
                         }
                       <?> "literal string")
 
@@ -420,7 +422,7 @@ makeTokenParser languageDef
 
 
     -- escape code tables
-    escMap          = zip ("abfnrtv\\\"\'".toList) ("\a\b\f\n\r\t\v\\\"\'".toList)
+    escMap          = zip ("abfnrtv\\\"\'".toList) ("\007\010\f\n\r\t\013\\\"\'".toList)
     asciiMap        = zip (ascii3codes ++ ascii2codes) (ascii3 ++ ascii2) 
 
     ascii2codes     = ["BS","HT","LF","VT","FF","CR","SO","SI","EM",
@@ -430,7 +432,7 @@ makeTokenParser languageDef
                        "CAN","SUB","ESC","DEL"]
 
     ascii2 :: [Char]
-    ascii2          = ['\010','\012','\013','\014','\015','\016','\017','\018',
+    ascii2          = ['\010','\011','\012','\013','\014','\015','\016','\017',
                        '\031','\034','\035','\036','\037','\040']
     ascii3 :: [Char]
     ascii3          = ['\000','\001','\002','\003','\004','\005','\006',
@@ -529,7 +531,7 @@ makeTokenParser languageDef
     -- number :: Integer -> CharParser st Char -> CharParser st Integer
     number base baseDigit
         = do{ digits <- many1 baseDigit
-            ; let n = foldl (\x d -> base*x + toInteger (digitToInt d)) 0 digits
+            ; let n = fold (\x d -> base*x + toInteger (digitToInt d)) 0 digits
             ; seq n (return n)
             }          
 
@@ -632,15 +634,15 @@ makeTokenParser languageDef
     -- White space & symbols
     -- --------------------------------------------------------
     symbol name
-        = lexeme (string name)
+        = fmap packed $ lexeme (string name)
 
     lexeme :: forall a st. CharParser st a -> CharParser st a
     lexeme p       
         = do{ x <- p; whiteSpace; return x  }
       
       
-    --whiteSpace    
-    whiteSpace 
+    whiteSpace :: forall st. CharParser st ()
+    whiteSpace
         | noLine && noMulti  = skipMany (simpleSpace <?> "")
         | noLine             = skipMany (simpleSpace <|> multiLineComment <?> "")
         | noMulti            = skipMany (simpleSpace <|> oneLineComment <?> "")

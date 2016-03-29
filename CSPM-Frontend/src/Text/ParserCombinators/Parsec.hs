@@ -33,7 +33,7 @@ module Text.ParserCombinators.Parsec
                , module Text.ParserCombinators.Parsec.Combinator
                , module Text.ParserCombinators.Parsec.Char
                
-               -- module Text.ParserCombinators.Parsec.Error
+               -- module Text.ParserCombinators.Parsec.Error -- TODO selective export
                , ParseError   
                , errorPos   
                
@@ -46,9 +46,9 @@ module Text.ParserCombinators.Parsec
 
              )-} where
 
-import Text.ParserCombinators.Parsec.Pos            -- textual positions
-import Text.ParserCombinators.Parsec.Error          -- parse errors
-import Text.ParserCombinators.Parsec.Prim           -- primitive combinators
-import Text.ParserCombinators.Parsec.Combinator     -- derived combinators
-import Text.ParserCombinators.Parsec.Char           -- character parsers
+import Text.ParserCombinators.Parsec.Pos public         -- textual positions
+import Text.ParserCombinators.Parsec.Error public       -- parse errors
+import Text.ParserCombinators.Parsec.Prim  public       -- primitive combinators
+import Text.ParserCombinators.Parsec.Combinator public  -- derived combinators
+import Text.ParserCombinators.Parsec.Char public        -- character parsers
 

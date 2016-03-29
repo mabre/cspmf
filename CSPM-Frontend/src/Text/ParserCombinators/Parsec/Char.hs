@@ -136,3 +136,11 @@ satisfy f           = tokenPrim (\c -> show [c])
 -- >              <|> string "mod"
 string :: String -> CharParser st [Char]
 string s            = tokens show updatePosString s.toList
+
+-- | @charlist cs@ parses a sequence of characters given by @cs@. Returns
+-- the parsed character list (i.e. @cs@).
+--
+-- >  divOrMod    =   string "div"
+-- >              <|> string "mod"
+charlist :: [Char] -> CharParser st [Char]
+charlist cs          = tokens show updatePosString cs
