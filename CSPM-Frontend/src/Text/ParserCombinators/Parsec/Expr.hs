@@ -14,9 +14,9 @@
 -----------------------------------------------------------------------------
 
 module Text.ParserCombinators.Parsec.Expr
-                 ( Assoc(..), Operator(..), OperatorTable
+                 {-( Assoc(..), Operator(..), OperatorTable
                  , buildExpressionParser
-                 ) where
+                 )-} where
 
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec.Combinator
@@ -83,7 +83,7 @@ type OperatorTable t st a = [[Operator t st a]]
 -- >  postfix name fun       = Postfix (do{ reservedOp name; return fun })
 buildExpressionParser :: OperatorTable tok st a -> GenParser tok st a -> GenParser tok st a
 buildExpressionParser operators simpleExpr
-    = foldl (makeParser) simpleExpr operators
+    = fold (makeParser) simpleExpr operators
     where
       makeParser term ops
         = let (rassoc,lassoc,nassoc

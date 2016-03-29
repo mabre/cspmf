@@ -14,14 +14,13 @@
 -----------------------------------------------------------------------------
 
 module Text.ParserCombinators.Parsec.ExprM
-                 ( Assoc(..), infixM, prefixM, postfixM
+                 {-( Assoc(..), infixM, prefixM, postfixM
                  , OperatorTable, Operator
                  , buildExpressionParser
-                 ) where
+                 )-} where
 
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec.Combinator
-import Data.List (foldl')
 
 -----------------------------------------------------------
 -- Assoc and OperatorTable
@@ -57,7 +56,7 @@ type OperatorTable t st a = [[Operator t st a]]
 -----------------------------------------------------------
 buildExpressionParser :: OperatorTable tok st a -> GenParser tok st a -> GenParser tok st a
 buildExpressionParser operators simpleExpr
-    = foldl (makeParser) simpleExpr operators
+    = fold (makeParser) simpleExpr operators
     where
       makeParser term ops
         = let (rassoc,lassoc,nassoc

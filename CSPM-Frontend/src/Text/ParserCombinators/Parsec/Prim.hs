@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 
 module Text.ParserCombinators.Parsec.Prim
-                   ( -- operators: label a parser, alternative
+                   {-( -- operators: label a parser, alternative
                      (<?>), (<|>)
 
                    -- basic types
@@ -37,13 +37,10 @@ module Text.ParserCombinators.Parsec.Prim
                    , getPosition, setPosition
                    , getInput, setInput                   
                    , State(..), getParserState, setParserState 
-                 ) where
+                 )-} where
 
-import Prelude
 import Text.ParserCombinators.Parsec.Pos
 import Text.ParserCombinators.Parsec.Error
-import qualified Control.Applicative as A
-import Control.Monad
 
 {-# INLINE parsecMap    #-}
 {-# INLINE parsecReturn #-}
@@ -58,8 +55,8 @@ import Control.Monad
 -- <?>  gives a name to a parser (which is used in error messages)
 -- <|>  is the choice operator
 -----------------------------------------------------------
-infix  0 <?>
-infixr 1 <|>
+infix  1 <?>
+infixr 2 <|>
 
 -- | The parser @p <?> msg@ behaves as parser @p@, but whenever the
 -- parser @p@ fails /without consuming any input/, it replaces expect
@@ -97,7 +94,7 @@ p1 <|> p2           = mplus p1 p2
 -- | Returns the current user state.
 getState :: GenParser tok st st
 getState        = do{ state <- getParserState
-                    ; return (stateUser state)
+                    ; return (state.stateUser)
                     }
 
 -- | @setState st@ set the user state to @st@.
@@ -126,11 +123,11 @@ updateState f   = do{ updateParserState (\(State input pos user) -> State input 
 
 -- | Returns the current source position. See also 'SourcePos'.
 getPosition :: GenParser tok st SourcePos
-getPosition         = do{ state <- getParserState; return (statePos state) }
+getPosition         = do{ state <- getParserState; return (state.statePos) }
 
 -- | Returns the current input
 getInput :: GenParser tok st [tok]
-getInput            = do{ state <- getParserState; return (stateInput state) }
+getInput            = do{ state <- getParserState; return (state.stateInput) }
 
 
 -- | @setPosition pos@ sets the current source position to @pos@.
@@ -164,18 +161,18 @@ setParserState st = updateParserState (const st)
 -----------------------------------------------------------
 type Parser a           = GenParser Char () a
 
-newtype GenParser tok st a = Parser (State tok st -> Consumed (Reply tok st a))
+data GenParser tok st a = Parser (State tok st -> Consumed (Reply tok st a))
 runP (Parser p)            = p
 
 data Consumed a         = Consumed a                --input is consumed
-                        | Empty !a                  --no input is consumed
+                        | !Empty a                  --no input is consumed
                     
-data Reply tok st a     = Ok !a !(State tok st) ParseError    --parsing succeeded with "a"
+data Reply tok st a     = !Ok a (State tok st) ParseError    --parsing succeeded with "a"
                         | Error ParseError                    --parsing failed
 
 data State tok st       = State { stateInput :: [tok]
-                                , statePos   :: !SourcePos
-                                , stateUser  :: !st
+                                , statePos   :: {-!-}SourcePos
+                                , stateUser  :: {-!-}st
                                 }
 
 
@@ -185,7 +182,7 @@ data State tok st       = State { stateInput :: [tok]
 parseFromFile :: Parser a -> SourceName -> IO (Either ParseError a)
 parseFromFile p fname
     = do{ input <- readFile fname
-        ; return (parse p fname input)
+        ; return (parse p fname input.toList)
         }
 
 -- | The expression @parseTest p input@ applies a parser @p@ against
@@ -257,11 +254,14 @@ parsecMap f (Parser p)
             Error err      -> Error err
 
 -----------------------------------------------------------
--- Monad: return, sequence (>>=) and fail
+-- Monad: return, sequence (>>=)
+-- In Frege, MonadFail adds the fail operation, which is
+-- not part of the mathematical definition of a monad.
 -----------------------------------------------------------    
 instance Monad (GenParser tok st) where
   return x   = parsecReturn x  
   p >>= f    = parsecBind p f
+instance MonadFail (GenParser tok st) where
   fail msg   = parsecFail msg
 
 parsecReturn :: a -> GenParser tok st a
@@ -297,7 +297,7 @@ mergeErrorReply err1 reply
 parsecFail :: String -> GenParser tok st a
 parsecFail msg
   = Parser (\state -> 
-      Empty (Error (newErrorMessage (Message msg) (statePos state))))
+      Empty (Error (newErrorMessage (Message msg) (state.statePos))))
 
 
 -----------------------------------------------------------
@@ -346,13 +346,13 @@ parsecPlus (Parser p1) (Parser p2)
 -- Bonus instances
 -----------------------------------------------------------
 
-instance A.Applicative (GenParser tok st) where
+instance Applicative (GenParser tok st) where
   pure x = return x
   mf <*> mx = mf `ap` mx
 
-instance A.Alternative (GenParser tok st) where
-  empty = mzero
-  ma <|> mb = ma `mplus` mb
+-- instance Alternative (GenParser tok st) where -- TODO
+--   empty = mzero
+--   ma <|> mb = ma `mplus` mb
 
 
 -- | The parser @try p@ behaves like parser @p@, except that it
@@ -387,7 +387,7 @@ instance A.Alternative (GenParser tok st) where
 -- >  identifier  = many1 letter
 try :: GenParser tok st a -> GenParser tok st a
 try (Parser p)
-    = Parser (\state@(State input pos user) ->     
+    = Parser (\(state@(State input pos user)) ->
         case (p state) of
           Consumed (Error err)  -> Empty (Error (setErrorPos pos err))
           Consumed ok           -> Consumed ok    -- was: Empty ok
@@ -450,7 +450,7 @@ tokenPrimEx :: (tok -> String) ->
 tokenPrimEx show nextpos mbNextState test
     = case mbNextState of
         Nothing 
-          -> Parser (\state@(State input pos user) -> 
+          -> Parser (\(state@(State input pos user)) ->
               case input of
                 (c:cs) -> case test c of
                             Just x  -> let newpos   = nextpos pos c cs
@@ -461,7 +461,7 @@ tokenPrimEx show nextpos mbNextState test
                 []     -> Empty (sysUnExpectError "" pos)
              )
         Just nextState
-          -> Parser (\state@(State input pos user) -> 
+          -> Parser (\(state@(State input pos user)) ->
               case input of
                 (c:cs) -> case test c of
                             Just x  -> let newpos   = nextpos pos c cs
@@ -506,7 +506,7 @@ updateParserState f
 -- of 'Text.Parsec.Combinator.notFollowedBy'.
 unexpected :: String -> GenParser tok st a
 unexpected msg
-    = Parser (\state -> Empty (Error (newErrorMessage (UnExpect msg) (statePos state))))
+    = Parser (\state -> Empty (Error (newErrorMessage (UnExpect msg) (state.statePos))))
     
 
 setExpectErrors err []         = setErrorMessage (Expect "") err
@@ -515,7 +515,7 @@ setExpectErrors err (msg:msgs) = foldr (\msg err -> addErrorMessage (Expect msg)
                                        (setErrorMessage (Expect msg) err) msgs
 
 sysUnExpectError msg pos  = Error (newErrorMessage (SysUnExpect msg) pos)
-unknownError state        = newErrorUnknown (statePos state)
+unknownError state        = newErrorUnknown (State.statePos state)
 
 -----------------------------------------------------------
 -- Parsers unfolded for space:
@@ -548,7 +548,7 @@ skipMany p
 
 manyAccum :: (a -> [a] -> [a]) -> GenParser tok st a -> GenParser tok st [a]
 manyAccum accum (Parser p)
-  = Parser (\state -> 
+  = Parser $ \state -> 
     let walk xs state r = case r of
                            Empty (Error err)          -> Ok xs state err
                            Empty ok                   -> error "Text.ParserCombinators.Parsec.Prim.many: combinator 'many' is applied to a parser that accepts an empty string."
@@ -559,7 +559,7 @@ manyAccum accum (Parser p)
          Empty reply  -> case reply of
                            Ok x state' err -> error "Text.ParserCombinators.Parsec.Prim.many: combinator 'many' is applied to a parser that accepts an empty string."
                            Error err       -> Empty (Ok [] state err)
-         consumed     -> Consumed $ walk [] state consumed)
+         consumed     -> Consumed $ walk [] state consumed
 
 
 
@@ -581,7 +581,7 @@ tokens showss nextposs s
 
 tokens :: Eq tok => ([tok] -> String) -> (SourcePos -> [tok] -> SourcePos) -> [tok] -> GenParser tok st [tok]
 tokens shows nextposs s
-    = Parser (\state@(State input pos user) -> 
+    = Parser (\(state@(State input pos user)) -> 
        let
         ok cs             = let newpos   = nextposs pos s
                                 newstate = State cs newpos user

@@ -13,15 +13,19 @@
 -----------------------------------------------------------------------------
 
 module Text.ParserCombinators.Parsec.Token
-                  ( LanguageDef (..)
+                  {-( LanguageDef (..)
                   , TokenParser (..)
                   , makeTokenParser
-                  ) where
+                  ) -}where
 
-import Data.Char (isAlpha,toLower,toUpper,isSpace,digitToInt)
+import Data.Char as C(isAlpha,toLower,toUpper,isSpace,digitToInt)
 import Data.List (nub,sort)
-import Text.ParserCombinators.Parsec
-
+-- import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec.Pos            -- textual positions
+import Text.ParserCombinators.Parsec.Error          -- parse errors
+import Text.ParserCombinators.Parsec.Prim           -- primitive combinators
+import Text.ParserCombinators.Parsec.Combinator     -- derived combinators
+import Text.ParserCombinators.Parsec.Char           -- character parsers
 
 -----------------------------------------------------------
 -- Language Definition
@@ -323,9 +327,9 @@ makeTokenParser languageDef
                  }
     where
      
-    -----------------------------------------------------------
+    -- --------------------------------------------------------
     -- Bracketing
-    -----------------------------------------------------------
+    -- --------------------------------------------------------
     parens p        = between (symbol "(") (symbol ")") p
     braces p        = between (symbol "{") (symbol "}") p
     angles p        = between (symbol "<") (symbol ">") p
@@ -343,9 +347,9 @@ makeTokenParser languageDef
     semiSep1 p      = sepBy1 p semi
 
 
-    -----------------------------------------------------------
+    -- --------------------------------------------------------
     -- Chars & Strings
-    -----------------------------------------------------------
+    -- --------------------------------------------------------
     -- charLiteral :: CharParser st Char
     charLiteral     = lexeme (between (char '\'') 
                                       (char '\'' <?> "end of character")
@@ -416,7 +420,7 @@ makeTokenParser languageDef
 
 
     -- escape code tables
-    escMap          = zip ("abfnrtv\\\"\'") ("\a\b\f\n\r\t\v\\\"\'")
+    escMap          = zip ("abfnrtv\\\"\'".toList) ("\a\b\f\n\r\t\v\\\"\'".toList)
     asciiMap        = zip (ascii3codes ++ ascii2codes) (ascii3 ++ ascii2) 
 
     ascii2codes     = ["BS","HT","LF","VT","FF","CR","SO","SI","EM",
@@ -425,16 +429,18 @@ makeTokenParser languageDef
                        "DLE","DC1","DC2","DC3","DC4","NAK","SYN","ETB",
                        "CAN","SUB","ESC","DEL"]
 
-    ascii2          = ['\BS','\HT','\LF','\VT','\FF','\CR','\SO','\SI',
-                       '\EM','\FS','\GS','\RS','\US','\SP']
-    ascii3          = ['\NUL','\SOH','\STX','\ETX','\EOT','\ENQ','\ACK',
-                       '\BEL','\DLE','\DC1','\DC2','\DC3','\DC4','\NAK',
-                       '\SYN','\ETB','\CAN','\SUB','\ESC','\DEL']
+    ascii2 :: [Char]
+    ascii2          = ['\010','\012','\013','\014','\015','\016','\017','\018',
+                       '\031','\034','\035','\036','\037','\040']
+    ascii3 :: [Char]
+    ascii3          = ['\000','\001','\002','\003','\004','\005','\006',
+                       '\007','\020','\021','\022','\023','\024','\025',
+                       '\026','\027','\030','\032','\033','\177']
 
 
-    -----------------------------------------------------------
+    -- --------------------------------------------------------
     -- Numbers
-    -----------------------------------------------------------
+    -- --------------------------------------------------------
     -- naturalOrFloat :: CharParser st (Either Integer Double)
     naturalOrFloat  = lexeme (natFloat) <?> "number"
 
@@ -527,17 +533,18 @@ makeTokenParser languageDef
             ; seq n (return n)
             }          
 
-    -----------------------------------------------------------
+    -- --------------------------------------------------------
     -- Operators & reserved ops
-    -----------------------------------------------------------
+    -- --------------------------------------------------------
+--  reservedOp :: String -> CharParser st ()
     reservedOp name =   
         lexeme $ try $
         do{ string name
-          ; notFollowedBy (opLetter languageDef) <?> ("end of " ++ show name)
+          ; notFollowedBy (languageDef.opLetter) <?> ("end of " ++ show name)
           }
 
     operator =
-        lexeme $ try $
+        fmap packed $ lexeme $ try $
         do{ name <- oper
           ; if (isReservedOp name)
              then unexpected ("reserved operator " ++ show name)
@@ -545,28 +552,28 @@ makeTokenParser languageDef
           }
           
     oper =
-        do{ c <- (opStart languageDef)
-          ; cs <- many (opLetter languageDef)
+        do{ c <- (languageDef.opStart)
+          ; cs <- many (languageDef.opLetter)
           ; return (c:cs)
           }
         <?> "operator"
         
     isReservedOp name =
-        isReserved (sort (reservedOpNames languageDef)) name          
+        isReserved (sort (languageDef.reservedOpNames)) name          
         
         
-    -----------------------------------------------------------
+    -- --------------------------------------------------------
     -- Identifiers & Reserved words
-    -----------------------------------------------------------
+    -- --------------------------------------------------------
     reserved name =
         lexeme $ try $
         do{ caseString name
-          ; notFollowedBy (identLetter languageDef) <?> ("end of " ++ show name)
+          ; notFollowedBy (languageDef.identLetter) <?> ("end of " ++ show name)
           }
 
     caseString name
-        | caseSensitive languageDef  = string name
-        | otherwise               = do{ walk name; return name }
+        | languageDef.caseSensitive = string name
+        | otherwise                 = do{ walk name.toList; return name.toList }
         where
           walk []     = return ()
           walk (c:cs) = do{ caseChar c <?> msg; walk cs }
@@ -578,7 +585,7 @@ makeTokenParser languageDef
           
 
     identifier =
-        lexeme $ try $
+        fmap packed $ lexeme $ try $
         do{ name <- ident
           ; if (isReservedName name)
              then unexpected ("reserved word " ++ show name)
@@ -587,39 +594,42 @@ makeTokenParser languageDef
         
         
     ident           
-        = do{ c <- identStart languageDef
-            ; cs <- many (identLetter languageDef)
-            ; return (c:cs)
+        = do{ c <- languageDef.identStart
+            ; cs <- many (languageDef.identLetter)
+            ; return $ packed (c:cs)
             }
         <?> "identifier"
 
+    isReservedName :: String -> Bool
     isReservedName name
         = isReserved theReservedNames caseName
         where
-          caseName      | caseSensitive languageDef  = name
-                        | otherwise               = map toLower name
+          caseName      | languageDef.caseSensitive = name
+                        | otherwise                 = name.toLowerCase
 
         
+    isReserved :: [String] -> String -> Bool
     isReserved names name    
         = scan names
         where
           scan []       = False
           scan (r:rs)   = case (compare r name) of
                             LT  -> scan rs
-                            EQ  -> True
-                            GT  -> False
+                            EQ  -> true
+                            GT  -> false
 
+    theReservedNames :: [String]
     theReservedNames
-        | caseSensitive languageDef = sort names
-        | otherwise                 = sort (map (map toLower) names)
+        | languageDef.caseSensitive = sort names
+        | otherwise                 = sort (map (String.toLowerCase) names)
         where
-          names = reservedNames languageDef
+          names = languageDef.reservedNames
                                  
 
 
-    -----------------------------------------------------------
+    -- --------------------------------------------------------
     -- White space & symbols
-    -----------------------------------------------------------
+    -- --------------------------------------------------------
     symbol name
         = lexeme (string name)
 
@@ -634,42 +644,42 @@ makeTokenParser languageDef
         | noMulti            = skipMany (simpleSpace <|> oneLineComment <?> "")
         | otherwise          = skipMany (simpleSpace <|> oneLineComment <|> multiLineComment <?> "")
         where
-          noLine  = null (commentLine languageDef)
-          noMulti = null (commentStart languageDef)   
+          noLine  = null (languageDef.commentLine)
+          noMulti = null (languageDef.commentStart)
           
           
     simpleSpace =
         skipMany1 (satisfy isSpace)    
         
     oneLineComment =
-        do{ try (string (commentLine languageDef))
+        do{ try (string (languageDef.commentLine))
           ; skipMany (satisfy (/= '\n'))
           ; return ()
           }
 
     multiLineComment =
-        do { try (string (commentStart languageDef))
+        do { try (string (languageDef.commentStart))
            ; inComment
            }
 
     inComment 
-        | nestedComments languageDef  = inCommentMulti
-        | otherwise                = inCommentSingle
+        | languageDef.nestedComments = inCommentMulti
+        | otherwise                  = inCommentSingle
         
     inCommentMulti 
-        =   do{ try (string (commentEnd languageDef)) ; return () }
-        <|> do{ multiLineComment                     ; inCommentMulti }
-        <|> do{ skipMany1 (noneOf startEnd)          ; inCommentMulti }
-        <|> do{ oneOf startEnd                       ; inCommentMulti }
+        =   do{ try (string (languageDef.commentEnd)) ; return () }
+        <|> do{ multiLineComment                      ; inCommentMulti }
+        <|> do{ skipMany1 (noneOf startEnd)           ; inCommentMulti }
+        <|> do{ oneOf startEnd                        ; inCommentMulti }
         <?> "end of comment"  
         where
-          startEnd   = nub (commentEnd languageDef ++ commentStart languageDef)
+          startEnd   = packed $ nub (languageDef.commentEnd ++ languageDef.commentStart).toList
 
     inCommentSingle
-        =   do{ try (string (commentEnd languageDef)); return () }
-        <|> do{ skipMany1 (noneOf startEnd)         ; inCommentSingle }
-        <|> do{ oneOf startEnd                      ; inCommentSingle }
+        =   do{ try (string (languageDef.commentEnd)); return () }
+        <|> do{ skipMany1 (noneOf startEnd)          ; inCommentSingle }
+        <|> do{ oneOf startEnd                       ; inCommentSingle }
         <?> "end of comment"
         where
-          startEnd   = nub (commentEnd languageDef ++ commentStart languageDef)
+          startEnd   = packed $ nub (languageDef.commentEnd ++ languageDef.commentStart).toList
 

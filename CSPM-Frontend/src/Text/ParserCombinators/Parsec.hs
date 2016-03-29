@@ -28,7 +28,7 @@
 -----------------------------------------------------------------------------
 
 module Text.ParserCombinators.Parsec
-               ( -- complete modules
+               {-( -- complete modules
                  module Text.ParserCombinators.Parsec.Prim
                , module Text.ParserCombinators.Parsec.Combinator
                , module Text.ParserCombinators.Parsec.Char
@@ -44,7 +44,7 @@ module Text.ParserCombinators.Parsec
                , incSourceLine, incSourceColumn
                , setSourceLine, setSourceColumn, setSourceName
 
-             ) where
+             )-} where
 
 import Text.ParserCombinators.Parsec.Pos            -- textual positions
 import Text.ParserCombinators.Parsec.Error          -- parse errors

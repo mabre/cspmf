@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 
 module Text.ParserCombinators.Parsec.Char
-                  ( CharParser
+                  {-( CharParser
                   , spaces, space
                   , newline, tab
                   , upper, lower, alphaNum, letter
@@ -21,10 +21,9 @@ module Text.ParserCombinators.Parsec.Char
                   , char, string
                   , anyChar, oneOf, noneOf
                   , satisfy
-                  ) where
+                  )-} where
 
-import Prelude
-import Data.Char
+import Data.Char as C( isAlpha, isAlphaNum, isDigit, isHexDigit, isLower, isOctDigit, isSpace, isUpper )
 import Text.ParserCombinators.Parsec.Pos( updatePosChar, updatePosString )
 import Text.ParserCombinators.Parsec.Prim
 
@@ -42,16 +41,16 @@ type CharParser st a    = GenParser Char st a
 -- 'satisfy'.
 --
 -- >   vowel  = oneOf "aeiou"
-oneOf :: [Char] -> CharParser st Char
-oneOf cs            = satisfy (\c -> elem c cs)
+oneOf :: String -> CharParser st Char
+oneOf cs            = satisfy (\c -> elem c cs.toList)
 
 -- | As the dual of 'oneOf', @noneOf cs@ succeeds if the current
 -- character /not/ in the supplied list of characters @cs@. Returns the
 -- parsed character.
 --
 -- >  consonant = noneOf "aeiou"
-noneOf :: [Char] -> CharParser st Char
-noneOf cs           = satisfy (\c -> not (elem c cs))
+noneOf :: String -> CharParser st Char
+noneOf cs           = satisfy (\c -> not (elem c cs.toList))
 
 -- | Skips /zero/ or more white space characters. See also 'skipMany'.
 spaces :: CharParser st ()
@@ -135,5 +134,5 @@ satisfy f           = tokenPrim (\c -> show [c])
 --
 -- >  divOrMod    =   string "div"
 -- >              <|> string "mod"
-string :: String -> CharParser st String
-string s            = tokens show updatePosString s
+string :: String -> CharParser st [Char]
+string s            = tokens show updatePosString s.toList

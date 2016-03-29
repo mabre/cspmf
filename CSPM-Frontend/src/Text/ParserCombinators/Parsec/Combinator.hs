@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 
 module Text.ParserCombinators.Parsec.Combinator
-                        ( choice
+                       {- ( choice
                         , count
                         , between
                         , option, optionMaybe, optional
@@ -28,9 +28,8 @@ module Text.ParserCombinators.Parsec.Combinator
                         
                         -- tricky combinators
                         , manyTill, lookAhead, anyToken
-                        ) where
+                        )-} where
 
-import Control.Monad
 import Text.ParserCombinators.Parsec.Prim
 
 

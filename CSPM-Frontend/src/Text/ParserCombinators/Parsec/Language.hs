@@ -14,15 +14,15 @@
 -----------------------------------------------------------------------------
 
 module Text.ParserCombinators.Parsec.Language
-                     ( haskellDef, haskell
+                     {-( haskellDef, haskell
                      , mondrianDef, mondrian
                    
                      , emptyDef
                      , haskellStyle
                      , javaStyle   
                      , LanguageDef (..)                
-                     ) where
-import Text.ParserCombinators.Parsec
+                     )-} where
+-- import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Token 
 
            
@@ -34,7 +34,7 @@ import Text.ParserCombinators.Parsec.Token
 -- defines the style of comments, valid identifiers and case
 -- sensitivity. It does not define any reserved words or operators.
 haskellStyle :: LanguageDef st
-haskellStyle= emptyDef                      
+haskellStyle= emptyDef.                      
                 { commentStart   = "{-"
                 , commentEnd     = "-}"
                 , commentLine    = "--"
@@ -52,7 +52,7 @@ haskellStyle= emptyDef
 -- defines the style of comments, valid identifiers and case
 -- sensitivity. It does not define any reserved words or operators.
 javaStyle  :: LanguageDef st
-javaStyle   = emptyDef
+javaStyle   = emptyDef.
                 { commentStart   = "/*"
                 , commentEnd     = "*/"
                 , commentLine    = "//"
@@ -94,7 +94,7 @@ haskell      = makeTokenParser haskellDef
 
 -- | The language definition for the Haskell language.
 haskellDef  :: LanguageDef st
-haskellDef   = haskell98Def
+haskellDef   = haskell98Def.
                 { identLetter    = identLetter haskell98Def <|> char '#'
                 , reservedNames  = reservedNames haskell98Def ++ 
                                    ["foreign","import","export","primitive"
@@ -105,7 +105,7 @@ haskellDef   = haskell98Def
 
 -- | The language definition for the language Haskell98.
 haskell98Def :: LanguageDef st
-haskell98Def = haskellStyle
+haskell98Def = haskellStyle.
                 { reservedOpNames= ["::","..","=","\\","|","<-","->","@","~","=>"]
                 , reservedNames  = ["let","in","case","of","if","then","else",
                                     "data","type",
@@ -128,7 +128,7 @@ mondrian    = makeTokenParser mondrianDef
 
 -- | The language definition for the language Mondrian.
 mondrianDef :: LanguageDef st
-mondrianDef = javaStyle
+mondrianDef = javaStyle.
                 { reservedNames = [ "case", "class", "default", "extends"
                                   , "import", "in", "let", "new", "of", "package"
                                   ]

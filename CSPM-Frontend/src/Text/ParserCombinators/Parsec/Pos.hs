@@ -13,14 +13,14 @@
 -----------------------------------------------------------------------------
 
 module Text.ParserCombinators.Parsec.Pos
-                  ( SourceName, Line, Column                 
+                  {-( SourceName, Line, Column                 
                   , SourcePos
                   , sourceLine, sourceColumn, sourceName
                   , incSourceLine, incSourceColumn
                   , setSourceLine, setSourceColumn, setSourceName
                   , newPos, initialPos
                   , updatePosChar, updatePosString
-                  ) where
+                  )-} where
 
 -----------------------------------------------------------
 -- Source Positions, a file name, a line and a column.
@@ -34,8 +34,9 @@ type Column         = Int
 -- contains the name of the source (i.e. file name), a line number and
 -- a column number. @SourcePos@ is an instance of the 'Show', 'Eq' and
 -- 'Ord' class.
-data SourcePos      = SourcePos SourceName !Line !Column
-                    deriving (Eq,Ord)
+data SourcePos      = !SourcePos SourceName Line Column
+derive Eq SourcePos
+derive Ord SourcePos
 
 -- | Create a new 'SourcePos' with the given source name,
 -- line number and column number.
@@ -84,12 +85,12 @@ setSourceColumn (SourcePos name line column) n = SourcePos name line n
 -- | The expression @updatePosString pos s@ updates the source position
 -- @pos@ by calling 'updatePosChar' on every character in @s@, ie.
 -- @foldl updatePosChar pos string@.
-updatePosString :: SourcePos -> String -> SourcePos
+updatePosString :: SourcePos -> [Char] -> SourcePos
 updatePosString pos string
-    = forcePos (foldl updatePosChar pos string)
+    = forcePos (fold updatePosChar pos string)
 
 updatePosChar   :: SourcePos -> Char -> SourcePos
-updatePosChar pos@(SourcePos name line column) c   
+updatePosChar (pos@(SourcePos name line column)) c
     = forcePos $
       case c of
         '\n' -> SourcePos name (line+1) 1
@@ -98,7 +99,7 @@ updatePosChar pos@(SourcePos name line column) c
         
 
 forcePos :: SourcePos -> SourcePos      
-forcePos pos@(SourcePos name line column)
+forcePos (pos@(SourcePos name line column))
     = seq line (seq column (pos))
 
 -----------------------------------------------------------
