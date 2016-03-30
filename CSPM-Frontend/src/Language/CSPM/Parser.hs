@@ -28,6 +28,7 @@ where
 -- import Debug.Trace -- TODO
 import AST
 import Token --(Token(..),AlexPosn)
+import Token (Token,AlexPosn)
 import TokenClasses as TokenClasses
 import Token as Token()
 
@@ -42,7 +43,7 @@ import Text.ParserCombinators.Parsec.ExprM
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec.Combinator
 import Text.ParserCombinators.Parsec.Char
-import Text.ParserCombinators.Parsec.Token as ParsecToken (TokenParser.integer)
+-- import Text.ParserCombinators.Parsec.Token as ParsecToken (TokenParser.integer)
 import Text.ParserCombinators.Parsec.Pos --(newPos)
 import Text.ParserCombinators.Parsec.Error as ParsecError
 import Text.ParserCombinators.Parsec.ExprM
