@@ -47,7 +47,7 @@ import Control.Monad.State
 import Data.List
 import Data.Maybe
 import Prelude hiding (exp)
-import Control.Exception (Exception)
+-- import Control.Exception (Exception)
 
 type PT a = GenParser Token PState a
 

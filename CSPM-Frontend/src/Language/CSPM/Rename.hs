@@ -38,7 +38,7 @@ import Data.Generics.Basics (Data(..))
 -- import Data.Typeable (Typeable)
 import Control.Exception (Exception)
 
-import Control.Monad.Error
+-- import Control.Monad.Error
 import Control.Monad.State
 import Data.Set (Set)
 import qualified Data.Map as Map
@@ -118,9 +118,11 @@ data RenameError
 -- instance Exception RenameError
 
 
-instance Error RenameError where
-  noMsg = RenameError { renameErrorMsg = "no Messsage", renameErrorLoc = SrcLoc.NoLocation }
-  strMsg m = RenameError { renameErrorMsg = m, renameErrorLoc = SrcLoc.NoLocation }
+-- instance Error RenameError where
+--   noMsg = RenameError { renameErrorMsg = "no Messsage", renameErrorLoc = SrcLoc.NoLocation }
+--   strMsg m = RenameError { renameErrorMsg = m, renameErrorLoc = SrcLoc.NoLocation }
+
+throwError = undefined -- TODO Error
 
 lookupVisible :: LIdent -> RM (Maybe UniqueIdent)
 lookupVisible i = do
