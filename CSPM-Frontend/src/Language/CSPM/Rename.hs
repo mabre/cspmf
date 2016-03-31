@@ -16,37 +16,39 @@
 -- EmptyDataDecls
 -- ViewPatterns
 
-module Language.CSPM.Rename
-  (
-   renameModule
-  ,RenameError (..)
-  ,RenameInfo (..)
-  ,ModuleFromRenaming
-  ,FromRenaming
-  )
+module Rename
+--   (
+--    renameModule
+--   ,RenameError (..)
+--   ,RenameInfo (..)
+--   ,ModuleFromRenaming
+--   ,FromRenaming
+--   )
 where
 
-import Language.CSPM.AST hiding (prologMode, bindType)
-import qualified Language.CSPM.AST as AST
-import qualified Language.CSPM.SrcLoc as SrcLoc
-import Language.CSPM.BuiltIn as BuiltIn
+import AST --hiding (prologMode, bindType)
+import AST as AST()
+import SrcLoc as SrcLoc()
+import BuiltIn as BuiltIn
 
-import Data.Generics.Basics (Data(..))
+-- import Data.Generics.Basics (Data(..))
 -- import Data.Data (mkDataType)
 -- import Data.Generics.Schemes (everywhere)
 -- import Data.Generics.Aliases (mkT)
 -- import Data.Typeable (Typeable)
-import Control.Exception (Exception)
+-- import Control.Exception (Exception)
 
 -- import Control.Monad.Error
-import Control.Monad.State
+import frege.control.monad.State
 import Data.Set (Set)
-import qualified Data.Map as Map
+import Data.Map as Map()
 import Data.Map (Map)
-import qualified Data.Set as Set
-import qualified Data.IntMap as IntMap
-import Data.List as List
+import Data.Set as Set()
+-- import Data.IntMap as IntMap()
+import Data.List as List()
 import Data.Maybe
+
+data IntMap x = Map Int x -- TODO make (pseudo) module?
 
 everywhere = undefined --TODO Generics
 mkT= undefined --TODO Generics
@@ -62,7 +64,7 @@ mkDataType = undefined --TODO Generics
 type ModuleFromRenaming = Module FromRenaming
 
 -- | Tag that a module has gone through renaming.
-data FromRenaming --deriving Typeable
+data FromRenaming = FromRenaming--deriving Typeable
 
 -- | 'renameModule' renames a 'Module'.
 -- | (also calls mergeFunBinds)
@@ -74,7 +76,7 @@ renameModule m = do
   st <- execStateT (initPrelude >> rnModule m') initialRState
   return
     (
-     applyRenaming m' (identDefinition st) (identUse st)
+     applyRenaming m' (st.identDefinition) (st.identUse)
     ,st)
 
 type RM x = StateT RenameInfo (Either RenameError) x
@@ -92,14 +94,15 @@ data RenameInfo = RenameInfo
    ,usedNames :: Set String
    ,prologMode :: PrologMode -- could use a readermonad for prologMode and bindType
    ,bindType   :: BindType
-  } deriving Show
+  }
+derive Show RenameInfo
 
 initialRState :: RenameInfo
 initialRState = RenameInfo { nameSupply    = 0,
                              localBindings = Map.empty,
                              visible       = Map.empty,
-                             identDefinition = IntMap.empty,
-                             identUse        = IntMap.empty,
+                             identDefinition = Map.empty, -- TODO IntMap
+                             identUse        = Map.empty, -- TODO IntMap
                              usedNames       = Set.empty,
                              prologMode      = PrologVariable,
                              bindType        = NotLetBound }
@@ -113,7 +116,8 @@ data RenameError
   = RenameError {
    renameErrorMsg :: String
   ,renameErrorLoc :: SrcLoc.SrcLoc
-  } deriving (Show)
+  }
+derive Show RenameError
 
 -- instance Exception RenameError
 
@@ -127,10 +131,10 @@ throwError = undefined -- TODO Error
 lookupVisible :: LIdent -> RM (Maybe UniqueIdent)
 lookupVisible i = do
   vis <- gets visible
-  return $ Map.lookup (unIdent $ unLabel i) vis
+  return $ Map.lookup (i.unLabel.unIdent) vis
 
 getOrigName :: LIdent -> String
-getOrigName = unIdent . unLabel
+getOrigName l = l.unLabel.unIdent
 
 bindNewTopIdent :: IDType -> LIdent -> RM ()
 bindNewTopIdent t i = do
@@ -139,7 +143,7 @@ bindNewTopIdent t i = do
     Nothing -> bindNewUniqueIdent t i
     Just _ -> throwError $ RenameError {
       renameErrorMsg = "Redefinition of toplevel name " ++ getOrigName i
-     ,renameErrorLoc = srcLoc i }
+     ,renameErrorLoc = i.srcLoc }
 
 bindNewUniqueIdent :: IDType -> LIdent -> RM ()
 bindNewUniqueIdent iType lIdent = do
@@ -149,7 +153,7 @@ bindNewUniqueIdent iType lIdent = do
   when (isJust $ Map.lookup origName local) $
     throwError $ RenameError {
        renameErrorMsg = "Redefinition of " ++ origName
-       ,renameErrorLoc = srcLoc lIdent }
+       ,renameErrorLoc = lIdent.srcLoc }
   vis <- lookupVisible lIdent
   case vis of
    Nothing -> addNewBinding
@@ -164,23 +168,23 @@ bindNewUniqueIdent iType lIdent = do
       {- We throw an error if the csp-code tries to rebind a constructor or a channel ID -}
       (_    , ConstrID) -> throwError $ RenameError {
           renameErrorMsg = "Illigal reuse of Contructor " ++ origName
-         ,renameErrorLoc = srcLoc lIdent }
+         ,renameErrorLoc = lIdent.srcLoc }
       (_    , ChannelID) -> throwError $ RenameError {
           renameErrorMsg = "Illigal reuse of Channel " ++ origName
-         ,renameErrorLoc = srcLoc lIdent }
+         ,renameErrorLoc = lIdent.srcLoc }
 
       (_, _) -> addNewBinding
-  where
+ where
     useExistingBinding :: UniqueIdent -> RM ()
     useExistingBinding ident = do
-      let ptr = unNodeId $ nodeId $ lIdent
-      modify $ \s -> s
-        { identDefinition = IntMap.insert ptr ident $ identDefinition s }
+      let ptr = lIdent.nodeId.unNodeId
+      modify $ \s -> s.
+        { identDefinition = IntMap.insert ptr ident $ s.identDefinition }
 
     addNewBinding :: RM ()
     addNewBinding = do
-      let origName = unIdent $ unLabel lIdent
-          nodeID = nodeId lIdent
+      let origName = lIdent.unLabel.unIdent
+          nodeID = lIdent.nodeId
     
       (nameNew,unique) <- nextUniqueName origName
       plMode <- gets prologMode
@@ -188,38 +192,38 @@ bindNewUniqueIdent iType lIdent = do
       let uIdent = UniqueIdent {
          uniqueIdentId = unique
         ,bindingSide = nodeID
-        ,bindingLoc  = srcLoc lIdent
+        ,bindingLoc  = lIdent.srcLoc
         ,idType = iType
         ,realName = origName
         ,newName = nameNew
-        ,AST.prologMode = plMode
-        ,AST.bindType   = bType  }
-      modify $ \s -> s 
-        { localBindings = Map.insert origName uIdent $ localBindings s
-        , visible       = Map.insert origName uIdent $ visible s
+        ,prologMode = plMode
+        ,bindType   = bType  }
+      modify $ \s -> s.
+        { localBindings = Map.insert origName uIdent $ s.localBindings
+        , visible       = Map.insert origName uIdent $ s.visible
         , identDefinition = IntMap.insert
-            (unNodeId nodeID) uIdent $ identDefinition s }
+            (unNodeId nodeID) s.identDefinition.uIdent }
 
 
     nextUniqueName :: String -> RM (String,UniqueName)
     nextUniqueName oldName = do
       n <- gets nameSupply
-      modify $ \s -> s {nameSupply = succ n}
+      modify $ \s -> s.{nameSupply = succ n}
       occupied <- gets usedNames
       let
          suffixes = "" : map show ([2..9] ++ [n + 10 .. ])
          candidates = map ((++) oldName) suffixes
          nextName = head $ filter (\x -> not $ Set.member x occupied) candidates
-      modify $ \s -> s {usedNames = Set.insert nextName $ usedNames s}
+      modify $ \s -> s.{usedNames = Set.insert nextName $ s.usedNames}
       return (nextName,n)
 
 localScope :: RM x -> RM x
 localScope h = do 
   vis <- gets visible
   localBind <- gets localBindings
-  modify $ \s -> s {localBindings = Map.empty}
+  modify $ \s -> s.{localBindings = Map.empty}
   res <- h                 
-  modify $ \e -> e {
+  modify $ \e -> e.{
      visible = vis
     ,localBindings = localBind }
   return res
@@ -232,31 +236,31 @@ useIdent lIdent = do
                  True ->  addBuiltInBinding lIdent
                  False -> throwError $ RenameError {
                       renameErrorMsg = "Unbound Identifier :" ++ getOrigName lIdent
-                     ,renameErrorLoc = srcLoc lIdent }
-    Just defIdent -> modify $ \s -> s
+                     ,renameErrorLoc = lIdent.srcLoc }
+    Just defIdent -> modify $ \s -> s.
          { identUse =  IntMap.insert 
-             (unNodeId $ nodeId lIdent) defIdent $ identUse s }
+             (lIdent.nodeId.unNodeId) defIdent $ s.identUse }
 
 addBuiltInBinding :: LIdent -> RM ()
 addBuiltInBinding lIdent = do
-    let origName = unIdent $ unLabel lIdent
-        nodeID = nodeId lIdent
+    let origName = lIdent.unLabel.unIdent
+        nodeID = lIdent.nodeId
     plMode <- gets prologMode
     bType  <- gets bindType
     let uIdent = UniqueIdent {
                      uniqueIdentId = -1
                      ,bindingSide = nodeID
-                     ,bindingLoc  = srcLoc lIdent
+                     ,bindingLoc  = lIdent.srcLoc
                      ,idType = BuiltInID
                      ,realName = origName
                      ,newName = origName
-                     ,AST.prologMode = plMode
-                     ,AST.bindType   = bType  }
-    modify $ \s -> s 
+                     ,prologMode = plMode
+                     ,bindType   = bType  }
+    modify $ \s -> s.
         { localBindings = Map.insert origName uIdent $ localBindings s
                          , visible       = Map.insert origName uIdent $ visible s
                          , identDefinition = IntMap.insert
-                              (unNodeId nodeID) uIdent $ identDefinition s }
+                              (nodeID.unNodeId) uIdent $ s.identDefinition }
 
 {-
 rn just walks through the AST, without modifing it.
@@ -274,7 +278,7 @@ rnExpList = mapM_ rnExp
 
 -- rename an expression
 rnExp :: LExp -> RM ()
-rnExp expression = case unLabel expression of
+rnExp expression = case n.unLabel of
   Var ident -> useIdent ident
   IntExp _ -> nop
   SetExp a Nothing -> rnRange a
@@ -333,7 +337,7 @@ These Constructors may only appear in later stages.
   PrefixI {} -> error "Rename.hs : no match for PrefixI"
 
 rnRange :: LRange -> RM ()
-rnRange r = case unLabel r of
+rnRange r = case r.unLabel of
   RangeEnum l -> rnExpList l
   RangeOpen a -> rnExp a
   RangeClosed a b -> rnExp a >> rnExp b
@@ -342,7 +346,7 @@ rnPatList :: [LPattern] -> RM ()
 rnPatList = mapM_ rnPattern
 
 rnPattern :: LPattern -> RM ()
-rnPattern p = case unLabel p of
+rnPattern p = case p.unLabel of
   IntPat _ -> nop
   TruePat -> nop
   FalsePat -> nop
@@ -361,13 +365,13 @@ rnPattern p = case unLabel p of
   Selector {} -> error "Rename.hs : no match for Selector"
 
 rnCommField :: LCommField -> RM ()
-rnCommField f = case unLabel f of
+rnCommField f = case f.unLabel of
   InComm pat -> rnPattern pat
   InCommGuarded p g -> rnExp g >> rnPattern p
   OutComm e -> rnExp e
 
 inCompGenL :: LCompGenList -> RM () -> RM ()
-inCompGenL l r = inCompGen (unLabel l) r
+inCompGenL l r = inCompGen (l.unLabel) r
 
 inCompGen :: [LCompGen] -> RM () -> RM ()
 inCompGen (h:t) ret = localScope $ do
@@ -376,32 +380,32 @@ inCompGen (h:t) ret = localScope $ do
 inCompGen [] ret = ret 
 
 rnCompGen :: LCompGen -> RM ()
-rnCompGen g = case unLabel g of
+rnCompGen g = case g.unLabel of
   Generator pat e -> rnExp e >> rnPattern pat
   Guard e -> rnExp e
 
 reRename :: LRename -> RM ()
-reRename r = case unLabel r of
+reRename r = case r.unLabel of
   Rename e1 e2 -> rnExp e1 >> rnExp e2
 
 rnLinkList :: LLinkList -> RM ()
-rnLinkList ll = case unLabel ll of
+rnLinkList ll = case l.unLabel of
   LinkList l -> mapM_ rnLink l
   LinkListComprehension a b -> inCompGen a (mapM_ rnLink b)
-  where
-    rnLink l = case unLabel l of
+ where
+    rnLink l = case l.unLabel of
       Link a b -> rnExp a >> rnExp b
 
 -- rename a recursive binding group
 rnDeclList :: [LDecl] -> RM ()
 rnDeclList declList = do
-  modify $ \s -> s {prologMode = PrologGround ,bindType   = LetBound}
+  modify $ \s -> s.{prologMode = PrologGround ,bindType   = LetBound}
   forM_ declList declLHS
-  modify $ \s -> s {prologMode = PrologVariable ,bindType   = NotLetBound}
+  modify $ \s -> s.{prologMode = PrologVariable ,bindType   = NotLetBound}
   forM_ declList declRHS
 
 declLHS :: LDecl -> RM ()
-declLHS d = case unLabel d of
+declLHS d = case d.unLabel of
   PatBind pat _ -> rnPattern pat
    --todo : proper type-checking/counting number of Funargs
   FunBind i _ -> bindNewUniqueIdent FunID i 
@@ -416,21 +420,21 @@ declLHS d = case unLabel d of
   NameType i _ -> bindNewTopIdent NameTypeID i
   Channel chList _ -> mapM_ (bindNewTopIdent ChannelID) chList
   Print _ -> nop
-  where
+ where
     rnConstructorLHS :: LConstructor -> RM ()
-    rnConstructorLHS c = case unLabel c of
+    rnConstructorLHS c = case c.unLabel of
       Constructor c _ -> bindNewTopIdent ConstrID c
 
     rnSubtypeLHS :: LConstructor -> RM ()
-    rnSubtypeLHS c = case unLabel c of
+    rnSubtypeLHS c = case c.unLabel of
       (Constructor c _) -> useIdent c
 
 
 declRHS :: LDecl -> RM ()
-declRHS d = case unLabel d of
+declRHS d = case d.unLabel of
   PatBind _ e -> rnExp e
   FunBind _ cases -> mapM_ rnFunCase cases
-  Assert a -> case unLabel a of
+  Assert a -> case a.unLabel of
       AssertBool e -> rnExp e
       AssertRefine _ p1 _ p2 -> rnExp p1 >> rnExp p2
       AssertLTLCTL _ p _ _ -> rnExp p
@@ -443,7 +447,7 @@ declRHS d = case unLabel d of
   Channel _ Nothing -> nop
   Channel _ (Just td) -> rnTypeDef td
   Print e -> rnExp e
-  where
+ where
     rnFunCase c = case c of  --todo:uses Labeled version
       FunCase pat e -> localScope (mapM_ rnPatList pat >> rnExp e)
       FunCaseI {} -> error "Rename.hs : no match for FunCaseI"
@@ -453,7 +457,7 @@ declRHS d = case unLabel d of
       rc (Constructor _ (Just t)) = rnTypeDef t
 
 rnTypeDef :: LTypeDef -> RM ()
-rnTypeDef t = case unLabel t of
+rnTypeDef t = case t.unLabel of
   TypeDot na_tuples -> rnDotArgs na_tuples
 
 rnDotArgs :: [LNATuples] -> RM ()
@@ -466,7 +470,7 @@ rnDotArgs na_tuples = mapM_ rnNATuples na_tuples
 
 {-
 rnTypeDef :: LTypeDef -> RM ()
-rnTypeDef t = case unLabel t of
+rnTypeDef t = case t.unLabel of
   TypeTuple l -> rnExpList l
   TypeDot l -> rnExpList l
 -}
@@ -491,7 +495,7 @@ applyRenaming ast defIdent usedIdent
             "internal error: patchIdent nodeId is defining and using:" ++ show nodeID
 
     patchVarPat :: Pattern -> Pattern
-    patchVarPat p@(VarPat x) = case idType $ unUIdent $ unLabel x of
+    patchVarPat p@(VarPat x) = case idType $ unUIdent $ x.unLabel of
         VarID -> p
         _ -> ConstrPat x
     patchVarPat x = x
@@ -503,7 +507,7 @@ mergeFunBinds :: ModuleFromParser -> ModuleFromParser
 mergeFunBinds = everywhere (mkT patchModule . mkT patchLet)
   where
     patchModule :: ModuleFromParser -> ModuleFromParser
-    patchModule m = m {moduleDecls = mergeDecls $ moduleDecls m}
+    patchModule m = m.{moduleDecls = mergeDecls $ moduleDecls m}
 
     patchLet :: Exp -> Exp
     patchLet (Let decls expr) = Let (mergeDecls decls) expr
@@ -512,18 +516,18 @@ mergeFunBinds = everywhere (mkT patchModule . mkT patchLet)
     mergeDecls :: [LDecl] -> [LDecl]
     mergeDecls = map joinGroup . List.groupBy sameFunction
 
-    sameFunction a b = case (unLabel a, unLabel b) of
-       (FunBind n1 _, FunBind n2 _) -> unLabel n1 == unLabel n2
+    sameFunction a b = case (a.unLabel, b.unLabel) of
+       (FunBind n1 _, FunBind n2 _) -> n1.unLabel == n2.unLabel
        _ -> False
 
     joinGroup :: [LDecl] -> LDecl
-    joinGroup l@(firstCase : _) = case unLabel firstCase of
+    joinGroup l@(firstCase : _) = case e.unLabel of
       FunBind fname _ -> setNode firstCase $ FunBind fname $ map getFunCase l
       _ -> firstCase
     joinGroup [] = error "unreachable : groupBy empty group ?"
 
     getFunCase :: LDecl -> FunCase
-    getFunCase d = case unLabel d of
+    getFunCase d = case d.unLabel of
       FunBind _ [funCase] -> funCase
       FunBind _ _ -> error "mergeFunBinds: function already has several cases !"
       _ -> error "mergeFunBinds : internal error"
