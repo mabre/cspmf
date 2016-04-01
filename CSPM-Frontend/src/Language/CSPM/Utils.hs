@@ -10,47 +10,49 @@
 --
 -- Some Utilities
 
-module Language.CSPM.Utils
- (eitherToExc
- ,handleLexError
- ,handleParseError
- ,handleRenameError
- ,parseFile, benchmarkFrontend, parseString, parseNamedString)
+module Utils
+--  (eitherToExc
+--  ,handleLexError
+--  ,handleParseError
+--  ,handleRenameError
+--  ,parseFile, benchmarkFrontend, parseString, parseNamedString)
 where
 
-import Debug.Trace -- TODO
+-- import Debug.Trace -- TODO
 
-import Language.CSPM.Token (Token(..), LexError(..))
-import Language.CSPM.Parser (ParseError(..), parse)
-import Language.CSPM.Rename (RenameError(..), renameModule, ModuleFromRenaming)
-import Language.CSPM.Token (LexError(..))
-import Language.CSPM.AST (ModuleFromParser)
-import Language.CSPM.PrettyPrinter(pPrint)
-import qualified Language.CSPM.LexHelper as Lexer (lexInclude,lexPlain)
+import Token --(Token(..), LexError(..))
+import Parser --(ParseError(..), parse)
+-- import Language.CSPM.Rename (RenameError(..), renameModule, ModuleFromRenaming) -- TODO
+-- import Language.CSPM.Token (LexError(..))
+import AST --(ModuleFromParser)
+-- import Language.CSPM.PrettyPrinter(pPrint) -- TODO
+import LexHelper as Lexer (lexInclude,lexPlain)
 
-import Control.Exception as Exception
-import System.CPUTime
+type FilePath = String
+
+-- import Control.Exception as Exception
+-- import System.CPUTime
 
 -- | "eitherToExe" returns the Right part of "Either" or throws the Left part as an dynamic exception.
 -- eitherToExc :: Exception a => Either a b -> IO b
 eitherToExc (Right r) = return r
 -- eitherToExc (Left e) = throw e
-eitherToExc (Left e) = trace (show e) undefined --TODO Generic Exception
+eitherToExc (Left e) | traceLn (show e) || true = undefined --TODO Generic Exception
 
 -- | Handle a dymanic exception of type "LexError".
 handleLexError :: (LexError -> IO a) -> IO a -> IO a
 -- handleLexError handler proc = Exception.catch proc handler
-handleLexError = trace "handleLexError" undefined --TODO Generic Exception
+handleLexError | traceLn "handleLexError" || true = undefined --TODO Generic Exception
 
 -- | Handle a dymanic exception of type "ParseError".
 handleParseError :: (ParseError -> IO a) -> IO a -> IO a
 -- handleParseError handler proc = Exception.catch proc handler
-handleParseError = trace "handleParseError" undefined --TODO Generic Exception
+handleParseError | traceLn "handleParseError" || true = undefined --TODO Generic Exception
 
 -- | Handle a dymanic exception of type "RenameError".
-handleRenameError :: (RenameError -> IO a) -> IO a -> IO a
+-- handleRenameError :: (RenameError -> IO a) -> IO a -> IO a
 -- handleRenameError handler proc = Exception.catch proc handler
-handleRenameError = trace "handleRenameError" undefined --TODO Generic Exception
+-- handleRenameError | traceLn "handleRenameError" || true = undefined --TODO Generic Exception
 
 -- | Lex and parse a file and return a "LModule", throw an exception in case of an error
 parseFile :: FilePath -> IO ModuleFromParser
@@ -68,34 +70,34 @@ parseNamedString name str = do
   eitherToExc $ parse name tokenList
 
 -- | Test function that parses a string and then pretty prints the produced AST
-parseAndPrettyPrint :: String -> IO String
-parseAndPrettyPrint str = do
-  ast <- parseString str
-  return $ show $ pPrint ast
+-- parseAndPrettyPrint :: String -> IO String -- TODO
+-- parseAndPrettyPrint str = do
+--   ast <- parseString str
+--   return $ show $ pPrint ast
 
 -- | Lex and parse File.
 -- | Return the module and print some timing infos
-benchmarkFrontend :: FilePath -> IO (ModuleFromParser, ModuleFromRenaming)
-benchmarkFrontend fileName = do
-  src <- readFile fileName
-
-  putStrLn $ "Reading File " ++ fileName
-  startTime <- (return $ length src) >> getCPUTime
-  tokenList <- Lexer.lexInclude fileName src >>= eitherToExc
-  time_have_tokens <- getCPUTime
-
-  ast <- eitherToExc $ parse fileName tokenList
-  time_have_ast <- getCPUTime
-
-  (astNew, _renaming) <- eitherToExc $ renameModule ast
-  time_have_renaming <- getCPUTime
-
-  putStrLn $ "Parsing OK"
-  putStrLn $ "lextime : " ++ showTime (time_have_tokens - startTime)
-  putStrLn $ "parsetime : " ++ showTime(time_have_ast - time_have_tokens)
-  putStrLn $ "renamingtime : " ++ showTime (time_have_renaming - time_have_ast)
-  putStrLn $ "total : " ++ showTime(time_have_ast - startTime)
-  return (ast,astNew)
-  where
-    showTime :: Integer -> String
-    showTime a = show (div a 1000000000) ++ "ms"
+-- benchmarkFrontend :: FilePath -> IO (ModuleFromParser, ModuleFromRenaming)
+benchmarkFrontend fileName = undefined -- do TODO
+--   src <- readFile fileName
+-- 
+--   putStrLn $ "Reading File " ++ fileName
+--   startTime <- (return $ length src) >> getCPUTime
+--   tokenList <- Lexer.lexInclude fileName src >>= eitherToExc
+--   time_have_tokens <- getCPUTime
+-- 
+--   ast <- eitherToExc $ parse fileName tokenList
+--   time_have_ast <- getCPUTime
+-- 
+--   (astNew, _renaming) <- eitherToExc $ renameModule ast
+--   time_have_renaming <- getCPUTime
+-- 
+--   putStrLn $ "Parsing OK"
+--   putStrLn $ "lextime : " ++ showTime (time_have_tokens - startTime)
+--   putStrLn $ "parsetime : " ++ showTime(time_have_ast - time_have_tokens)
+--   putStrLn $ "renamingtime : " ++ showTime (time_have_renaming - time_have_ast)
+--   putStrLn $ "total : " ++ showTime(time_have_ast - startTime)
+--   return (ast,astNew)
+--  where
+--     showTime :: Integer -> String
+--     showTime a = show (div a 1000000000) ++ "ms"

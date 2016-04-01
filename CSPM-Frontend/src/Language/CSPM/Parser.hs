@@ -53,8 +53,6 @@ import Data.List
 import Data.Maybe
 -- import Prelude hiding (exp) TODO possible?
 -- import Control.Exception (Exception) -- TODO exception
-import Prelude hiding (exp)
--- import Control.Exception (Exception)
 
 type PT a = GenParser Token PState a
 
