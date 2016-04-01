@@ -1,0 +1,3 @@
+-- Simple demonstration of FDR2
+datatype FRUIT = apples | oranges
+
