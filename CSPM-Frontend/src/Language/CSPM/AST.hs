@@ -138,6 +138,8 @@ derive Ord (Module a)
 derive Show (Module a)
 
 data FromParser = FromParser
+derive Eq FromParser
+derive Show FromParser
 -- derive Typeable FromParser -- TODO Typeable
 -- instance Data FromParser
 -- instance Eq FromParser -- TODO

@@ -509,7 +509,7 @@ procTable :: OpTable
         e <- getLastPos
         op <- mkLabeledNode (mkSrcSpan s e) (BuiltIn F_GT)
         return $ \a b -> mkLabeledNode
-            (mkSrcSpan (SrcLoc.getStartToken $ srcLoc a) (SrcLoc.getEndToken $ srcLoc b))
+            (mkSrcSpan (SrcLoc.getStartToken $ a.srcLoc) (SrcLoc.getEndToken $ b.srcLoc))
 --            SrcLoc.NoLocation
             (Fun2 op a b)
       ) AssocLeft
@@ -560,7 +560,7 @@ procTable :: OpTable
   biOp tok cst = inSpan BuiltIn (token tok >> return cst)
 
   posFromTo :: LExp -> LExp -> SrcLoc.SrcLoc
-  posFromTo a b = SrcLoc.srcLocFromTo (srcLoc a) (srcLoc b)
+  posFromTo a b = SrcLoc.srcLocFromTo (a.srcLoc) (b.srcLoc)
 
   procOpSharing :: PT (LProc -> LProc -> PT LProc)
   procOpSharing = try $ do
@@ -584,16 +584,16 @@ If a gtLimit is set, we only accept a maximum number of gt symbols
   gtSym :: PT ()
   gtSym = try $ do
     token T_gt
-    updateState (\env -> env {gtCounter = gtCounter env +1 })
+    updateState (\env -> env.{gtCounter = env.gtCounter +1 })
     next <- testFollows parseExp
     case next of
       Nothing -> fail "Gt token not followed by an expression"
       Just _  -> do
-        mode <- getStates gtLimit
+        mode <- getStates PState.gtLimit
         case mode of
           Nothing -> return ()
           Just x  -> do
-            cnt <- getStates gtCounter
+            cnt <- getStates PState.gtCounter
             if cnt < x then return ()
                        else fail "(Gt token belongs to sequence expression)"
 
