@@ -1,0 +1,617 @@
+module FilePathTest where
+
+import System.FilePath
+import Data.Maybe
+import Data.List
+
+main = do 
+    unix
+    win
+
+unix = do
+  putStrLn "\npathSeparator: "
+  print $ pathSeparator ==  '/'
+  putStrLn "\nisPathSeparator: "
+  print $ isPathSeparator pathSeparator
+  putStrLn "\npathSeparators: "
+  print $ pathSeparators == ['/']
+  putStrLn "\npathSeparator: "
+  print $ pathSeparator `elem` pathSeparators
+  putStrLn "\nisPathSeparator: "
+  print $ isPathSeparator '/' == ('/' `elem` pathSeparators)
+  putStrLn "\nsearchPathSeparator: "
+  print $ searchPathSeparator == ':'
+  putStrLn "\nisSearchPathSeparator: "
+  print $ isSearchPathSeparator '/' == ('/' == searchPathSeparator)
+  putStrLn "\nisSearchPathSeparator: "
+  print $ isSearchPathSeparator '}' == ('}' == searchPathSeparator)
+  putStrLn "\nextSeparator: "
+  print $ extSeparator == '.'
+  putStrLn "\nisExtSeparator: "
+  print $ isExtSeparator '/' == ('/' == extSeparator)
+  putStrLn "\nsplitSearchPath: "
+  print $ splitSearchPath "File1:File2:File3"  == ["File1","File2","File3"]
+  putStrLn "\nsplitSearchPath: "
+  print $ splitSearchPath "File1::File2:File3" == ["File1",".","File2","File3"]
+  putStrLn "\nsplitExtension: "
+  print $ splitExtension "/directory/path.ext" == ("/directory/path",".ext")
+  putStrLn "\nuncurry: "
+  print $ uncurry (++) (splitExtension "/tmp/../var/foo.bar") == "/tmp/../var/foo.bar"
+  putStrLn "\naddExtension: "
+  print $ uncurry addExtension (splitExtension "/tmp/../var/foo.bar") == "/tmp/../var/foo.bar"
+  putStrLn "\nsplitExtension: "
+  print $ splitExtension "file.txt" == ("file",".txt")
+  putStrLn "\nsplitExtension: "
+  print $ splitExtension "file" == ("file","")
+  putStrLn "\nsplitExtension: "
+  print $ splitExtension "file/file.txt" == ("file/file",".txt")
+  putStrLn "\nsplitExtension: "
+  print $ splitExtension "file.txt/boris" == ("file.txt/boris","")
+  putStrLn "\nsplitExtension: "
+  print $ splitExtension "file.txt/boris.ext" == ("file.txt/boris",".ext")
+  putStrLn "\nsplitExtension: "
+  print $ splitExtension "file/path.txt.bob.fred" == ("file/path.txt.bob",".fred")
+  putStrLn "\nsplitExtension: "
+  print $ splitExtension "file/path.txt/" == ("file/path.txt/","")
+  putStrLn "\ntakeExtension: "
+  print $ takeExtension "/directory/path.ext" == ".ext"
+  putStrLn "\ntakeExtension: "
+  print $ takeExtension "/tmp/../var/foo.bar" == snd (splitExtension "/tmp/../var/foo.bar")
+  putStrLn "\nValid: "
+  print $ takeExtension (addExtension "/tmp/../var/foo.bar" "ext") == ".ext"
+  putStrLn "\nValid: "
+  print $ takeExtension (replaceExtension "/tmp/../var/foo.bar" "ext") == ".ext"
+  putStrLn "\n(/directory/path.txt: "
+  print $ ("/directory/path.txt" -<.> "ext") == "/directory/path.ext"
+  putStrLn "\n(/directory/path.txt: "
+  print $ ("/directory/path.txt" -<.> ".ext") == "/directory/path.ext"
+  putStrLn "\n(foo.o: "
+  print $ ("foo.o" -<.> "c") == "foo.c"
+  next
+
+next = do
+  putStrLn "\nreplaceExtension: "
+  print $ replaceExtension "/directory/path.txt" "ext" == "/directory/path.ext"
+  putStrLn "\nreplaceExtension: "
+  print $ replaceExtension "/directory/path.txt" ".ext" == "/directory/path.ext"
+  putStrLn "\nreplaceExtension: "
+  print $ replaceExtension "file.txt" ".bob" == "file.bob"
+  putStrLn "\nreplaceExtension: "
+  print $ replaceExtension "file.txt" "bob" == "file.bob"
+  putStrLn "\nreplaceExtension: "
+  print $ replaceExtension "file" ".bob" == "file.bob"
+  putStrLn "\nreplaceExtension: "
+  print $ replaceExtension "file.txt" "" == "file"
+  putStrLn "\nreplaceExtension: "
+  print $ replaceExtension "file.fred.bob" "txt" == "file.fred.txt"
+  putStrLn "\nreplaceExtension: "
+  print $ replaceExtension "/tmp/../var/foo.bar" ".ext" == addExtension (dropExtension "/tmp/../var/foo.bar") ".ext"
+  putStrLn "\n(/directory/path: "
+  print $ ("/directory/path" <.> "ext") == "/directory/path.ext"
+  putStrLn "\n(/directory/path: "
+  print $ ("/directory/path" <.> ".ext") == "/directory/path.ext"
+  putStrLn "\ndropExtension: "
+  print $ dropExtension "/directory/path.ext" == "/directory/path"
+  putStrLn "\ndropExtension: "
+  print $ dropExtension "/tmp/../var/foo.bar" == fst (splitExtension "/tmp/../var/foo.bar")
+  putStrLn "\naddExtension: "
+  print $ addExtension "/directory/path" "ext" == "/directory/path.ext"
+  putStrLn "\naddExtension: "
+  print $ addExtension "file.txt" "bib" == "file.txt.bib"
+  putStrLn "\naddExtension: "
+  print $ addExtension "file." ".bib" == "file..bib"
+  putStrLn "\naddExtension: "
+  print $ addExtension "file" ".bib" == "file.bib"
+  putStrLn "\naddExtension: "
+  print $ addExtension "/" "x" == "/.x"
+  putStrLn "\nValid: "
+  print $ takeFileName (addExtension (addTrailingPathSeparator "/tmp/../var/foo.bar") "ext") == ".ext"
+  putStrLn "\nhasExtension: "
+  print $ hasExtension "/directory/path.ext" == True
+  putStrLn "\nhasExtension: "
+  print $ hasExtension "/directory/path" == False
+  putStrLn "\nnull: "
+  print $ null (takeExtension "/tmp/../var/foo.bar") == not (hasExtension "/tmp/../var/foo.bar")
+  putStrLn "\nstripExtension: "
+  print $ stripExtension "hs.o" "foo.x.hs.o" == Just "foo.x"
+  putStrLn "\nstripExtension: "
+  print $ stripExtension "hi.o" "foo.x.hs.o" == Nothing
+  putStrLn "\ndropExtension: "
+  print $ dropExtension "/tmp/../var/foo.bar" == fromJust (stripExtension (takeExtension "/tmp/../var/foo.bar") "/tmp/../var/foo.bar")
+  putStrLn "\ndropExtensions: "
+  print $ dropExtensions "/tmp/../var/foo.bar" == fromJust (stripExtension (takeExtensions "/tmp/../var/foo.bar") "/tmp/../var/foo.bar")
+  putStrLn "\nstripExtension: "
+  print $ stripExtension ".c.d" "a.b.c.d"  == Just "a.b"
+  putStrLn "\nstripExtension: "
+  print $ stripExtension ".c.d" "a.b..c.d" == Just "a.b."
+  putStrLn "\nstripExtension: "
+  print $ stripExtension "baz"  "foo.bar"  == Nothing
+  putStrLn "\nstripExtension: "
+  print $ stripExtension "bar"  "foobar"   == Nothing
+  putStrLn "\nstripExtension: "
+  print $ stripExtension ""     "/tmp/../var/foo.bar"          == Just "/tmp/../var/foo.bar"
+  putStrLn "\nsplitExtensions: "
+  print $ splitExtensions "/directory/path.ext" == ("/directory/path",".ext")
+  next''
+  
+next'' = do
+  putStrLn "\nsplitExtensions: "
+  print $ splitExtensions "file.tar.gz" == ("file",".tar.gz")
+  putStrLn "\nuncurry: "
+  print $ uncurry (++) (splitExtensions "/tmp/../var/foo.bar") == "/tmp/../var/foo.bar"
+  putStrLn "\nValid: "
+  print $ uncurry addExtension (splitExtensions "/tmp/../var/foo.bar") == "/tmp/../var/foo.bar"
+  putStrLn "\nsplitExtensions: "
+  print $ splitExtensions "file.tar.gz" == ("file",".tar.gz")
+  putStrLn "\ndropExtensions: "
+  print $ dropExtensions "/directory/path.ext" == "/directory/path"
+  putStrLn "\ndropExtensions: "
+  print $ dropExtensions "file.tar.gz" == "file"
+  putStrLn "\nnot: "
+  print $ not $ hasExtension $ dropExtensions "/tmp/../var/foo.bar"
+  putStrLn "\nnot: "
+  print $ not $ any isExtSeparator $ toList $ takeFileName $ dropExtensions "/tmp/../var/foo.bar" -- TODO modified
+  putStrLn "\ntakeExtensions: "
+  print $ takeExtensions "/directory/path.ext" == ".ext"
+  putStrLn "\ntakeExtensions: "
+  print $ takeExtensions "file.tar.gz" == ".tar.gz"
+  putStrLn "\nreplaceExtensions: "
+  print $ replaceExtensions "file.fred.bob" "txt" == "file.txt"
+  putStrLn "\nreplaceExtensions: "
+  print $ replaceExtensions "file.fred.bob" "tar.gz" == "file.tar.gz"
+  putStrLn "\nuncurry: "
+  print $ uncurry (++) (splitDrive "/tmp/../var/foo.bar") == "/tmp/../var/foo.bar"
+  putStrLn "\nsplitDrive: "
+  print $ splitDrive "/test" == ("/","test")
+  putStrLn "\nsplitDrive: "
+  print $ splitDrive "//test" == ("//","test")
+  putStrLn "\nsplitDrive: "
+  print $ splitDrive "test/file" == ("","test/file")
+  putStrLn "\nsplitDrive: "
+  print $ splitDrive "file" == ("","file")
+  putStrLn "\nValid: "
+  print $ uncurry joinDrive (splitDrive "/tmp/../var/foo.bar") == "/tmp/../var/foo.bar"
+  putStrLn "\ntakeDrive: "
+  print $ takeDrive "/tmp/../var/foo.bar" == fst (splitDrive "/tmp/../var/foo.bar")
+  putStrLn "\ndropDrive: "
+  print $ dropDrive "/tmp/../var/foo.bar" == snd (splitDrive "/tmp/../var/foo.bar")
+  putStrLn "\nnot: "
+  print $ not (hasDrive "/tmp/../var/foo.bar") == null (takeDrive "/tmp/../var/foo.bar")
+  putStrLn "\nhasDrive: "
+  print $ hasDrive "/foo" == True
+  putStrLn "\nisDrive: "
+  print $ isDrive "/" == True
+  putStrLn "\nisDrive: "
+  print $ isDrive "/foo" == False
+  putStrLn "\nsplitFileName: "
+  print $ splitFileName "/directory/file.ext" == ("/directory/","file.ext")
+  putStrLn "\nValid: "
+  print $ uncurry (</>) (splitFileName "/tmp/../var/foo.bar") == "/tmp/../var/foo.bar" || fst (splitFileName "/tmp/../var/foo.bar") == "./"
+  putStrLn "\nValid: "
+  print $ isValid (fst (splitFileName "/tmp/../var/foo.bar"))
+  putStrLn "\nsplitFileName: "
+  print $ splitFileName "file/bob.txt" == ("file/", "bob.txt")
+  putStrLn "\nsplitFileName: "
+  print $ splitFileName "file/" == ("file/", "")
+  next'''
+  
+next''' = do
+  putStrLn "\nsplitFileName: "
+  print $ splitFileName "bob" == ("./", "bob")
+  putStrLn "\nsplitFileName: "
+  print $ splitFileName "/" == ("/","")
+  putStrLn "\nreplaceFileName: "
+  print $ replaceFileName "/directory/other.txt" "file.ext" == "/directory/file.ext"
+  putStrLn "\nValid: "
+  print $ replaceFileName "/tmp/../var/foo.bar" (takeFileName "/tmp/../var/foo.bar") == "/tmp/../var/foo.bar"
+  putStrLn "\ndropFileName: "
+  print $ dropFileName "/directory/file.ext" == "/directory/"
+  putStrLn "\ndropFileName: "
+  print $ dropFileName "/tmp/../var/foo.bar" == fst (splitFileName "/tmp/../var/foo.bar")
+  putStrLn "\ntakeFileName: "
+  print $ takeFileName "/directory/file.ext" == "file.ext"
+  putStrLn "\ntakeFileName: "
+  print $ takeFileName "test/" == ""
+  putStrLn "\ntakeFileName: "
+  print $ toList (takeFileName "/tmp/../var/foo.bar") `isSuffixOf` "/tmp/../var/foo.bar".toList
+  putStrLn "\ntakeFileName: "
+  print $ takeFileName "/tmp/../var/foo.bar" == snd (splitFileName "/tmp/../var/foo.bar")
+  putStrLn "\nValid: "
+  print $ takeFileName (replaceFileName "/tmp/../var/foo.bar" "fred") == "fred"
+  putStrLn "\nValid: "
+  print $ takeFileName ("/tmp/" </> "fred") == "fred"
+  putStrLn "\nValid: "
+  print $ isRelative (takeFileName "/tmp/../var/foo.bar")
+  putStrLn "\ntakeBaseName: "
+  print $ takeBaseName "/directory/file.ext" == "file"
+  putStrLn "\ntakeBaseName: "
+  print $ takeBaseName "file/test.txt" == "test"
+  putStrLn "\ntakeBaseName: "
+  print $ takeBaseName "dave.ext" == "dave"
+  putStrLn "\ntakeBaseName: "
+  print $ takeBaseName "" == ""
+  putStrLn "\ntakeBaseName: "
+  print $ takeBaseName "test" == "test"
+  putStrLn "\ntakeBaseName: "
+  print $ takeBaseName (addTrailingPathSeparator "/tmp/../var/foo.bar") == ""
+  putStrLn "\ntakeBaseName: "
+  print $ takeBaseName "file/file.tar.gz" == "file.tar"
+  putStrLn "\nreplaceBaseName: "
+  print $ replaceBaseName "/directory/other.ext" "file" == "/directory/file.ext"
+  putStrLn "\nreplaceBaseName: "
+  print $ replaceBaseName "file/test.txt" "bob" == "file/bob.txt"
+  putStrLn "\nreplaceBaseName: "
+  print $ replaceBaseName "fred" "bill" == "bill"
+  putStrLn "\nreplaceBaseName: "
+  print $ replaceBaseName "/dave/fred/bob.gz.tar" "new" == "/dave/fred/new.tar"
+  putStrLn "\nValid: "
+  print $ replaceBaseName "/tmp/../var/foo.bar" (takeBaseName "/tmp/../var/foo.bar") == "/tmp/../var/foo.bar"
+  putStrLn "\nhasTrailingPathSeparator1: "
+  print $ hasTrailingPathSeparator "test" == False
+  putStrLn "\nhasTrailingPathSeparator2: "
+  print $ hasTrailingPathSeparator "test/" == True
+  putStrLn "\nhasTrailingPathSeparator3: "
+  print $ hasTrailingPathSeparator (addTrailingPathSeparator "/tmp/../var/foo.bar")
+  putStrLn "\nhasTrailingPathSeparator4: "
+  print $ addTrailingPathSeparator "/tmp/../var/foo.bar" == "/tmp/../var/foo.bar/"
+  putStrLn "\naddTrailingPathSeparator5: "
+  print $ addTrailingPathSeparator "test/rest" == "test/rest/"
+  putStrLn "\ndropTrailingPathSeparator6: "
+  print $ dropTrailingPathSeparator "file/test/" == "file/test"
+  next''''
+  
+next'''' = do
+  putStrLn "\ndropTrailingPathSeparator7: "
+  print $ dropTrailingPathSeparator "/" == "/"
+  putStrLn "\nnot: "
+  print $ not (hasTrailingPathSeparator (dropTrailingPathSeparator "/tmp/../var/foo.bar")) || isDrive "/tmp/../var/foo.bar"
+  putStrLn "\ntakeDirectory: "
+  print $ takeDirectory "/directory/other.ext" == "/directory"
+  putStrLn "\ntakeDirectory: "
+  print $ toList (takeDirectory "/tmp/../var/foo.bar") `isPrefixOf` "/tmp/../var/foo.bar".toList || takeDirectory "/tmp/../var/foo.bar" == "."
+  putStrLn "\ntakeDirectory: "
+  print $ takeDirectory "foo" == "."
+  putStrLn "\ntakeDirectory: "
+  print $ takeDirectory "/" == "/"
+  putStrLn "\ntakeDirectory: "
+  print $ takeDirectory "/foo" == "/"
+  putStrLn "\ntakeDirectory: "
+  print $ takeDirectory "/foo/bar/baz" == "/foo/bar"
+  putStrLn "\ntakeDirectory: "
+  print $ takeDirectory "/foo/bar/baz/" == "/foo/bar/baz"
+  putStrLn "\ntakeDirectory: "
+  print $ takeDirectory "foo/bar/baz" == "foo/bar"
+  putStrLn "\nreplaceDirectory: "
+  print $ replaceDirectory "root/file.ext" "/directory/" == "/directory/file.ext"
+  putStrLn "\nValid: "
+  print $ replaceDirectory "/tmp/../var/foo.bar" (takeDirectory "/tmp/../var/foo.bar") `equalFilePath` "/tmp/../var/foo.bar"
+  putStrLn "\n(/directory: "
+  print $ ("/directory" </> "file.ext") == "/directory/file.ext"
+  putStrLn "\nValid: "
+  print $ (takeDirectory "/tmp/../var/foo.bar" </> takeFileName "/tmp/../var/foo.bar") `equalFilePath` "/tmp/../var/foo.bar"
+  putStrLn "\n(/: "
+  print $ ("/" </> "test") == "/test" -- TODO modified
+  putStrLn "\n(home: "
+  print $ ("home" </> "bob") == "home/bob"
+  putStrLn "\n(x:: "
+  print $ ("x:" </> "foo") == "x:/foo"
+  putStrLn "\n(home: "
+  print $ ("home" </> "/bob") == "/bob"
+  putStrLn "\nsplitPath: "
+  print $ splitPath "/directory/file.ext" == ["/","directory/","file.ext"]
+  putStrLn "\nconcat: "
+  print $ concat (splitPath "/tmp/../var/foo.bar") == "/tmp/../var/foo.bar"
+  putStrLn "\nsplitPath: "
+  print $ splitPath "test//item/" == ["test//","item/"]
+  putStrLn "\nsplitPath: "
+  print $ splitPath "test/item/file" == ["test/","item/","file"]
+  putStrLn "\nsplitPath: "
+  print $ splitPath "" == []
+  putStrLn "\nsplitPath: "
+  print $ splitPath "/file/test" == ["/","file/","test"]
+  putStrLn "\nsplitDirectories: "
+  print $ splitDirectories "/directory/file.ext" == ["/","directory","file.ext"]
+  putStrLn "\nsplitDirectories: "
+  print $ splitDirectories "test/file" == ["test","file"]
+  putStrLn "\nsplitDirectories: "
+  print $ splitDirectories "/test/file" == ["/","test","file"]
+  next'''''
+
+next''''' = do
+  putStrLn "\njoinPath: "
+  print $ joinPath ["/","directory/","file.ext"] == "/directory/file.ext"
+  putStrLn "\nValid: "
+  print $ joinPath (splitPath "/tmp/../var/foo.bar") == "/tmp/../var/foo.bar"
+  putStrLn "\njoinPath: "
+  print $ joinPath [] == ""
+  putStrLn "\njoinPath: "
+  print $ joinPath ["test","file","path"] == "test/file/path"
+  putStrLn "\n/tmp/../var/foo.bar: "
+  print $ equalFilePath "/var/foo.bar" "/var/foo.bar"
+  putStrLn "\nnormalise: "
+  print $ equalFilePath (normalise "/./var/foo.bar") (normalise "/var/./foo.bar")
+  putStrLn "\nequalFilePath: "
+  print $ equalFilePath "foo" "foo/"
+  putStrLn "\nnot: "
+  print $ not (equalFilePath "foo" "/foo")
+  putStrLn "\nnot: "
+  print $ not (equalFilePath "foo" "FOO")
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "/Home" "/home/bob" == "/home/bob"
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "/home/" "/home/bob/foo/bar" == "bob/foo/bar"
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "/fred" "bob" == "bob"
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "/file/test" "/file/test/fred" == "fred"
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "/file/test" "/file/test/fred/" == "fred/"
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "some/path" "some/path/a/b/c" == "a/b/c"
+  putStrLn "\nnormalise: "
+  print $ normalise "/file/\\test////" == "/file/\\test/"
+  putStrLn "\nnormalise: "
+  print $ normalise "/file/./test" == "/file/test"
+  putStrLn "\nnormalise: "
+  print $ normalise "/test/file/../bob/fred/" == "/test/file/../bob/fred/"
+  putStrLn "\nnormalise: "
+  print $ normalise "../bob/fred/" == "../bob/fred/"
+  putStrLn "\nnormalise: "
+  print $ normalise "./bob/fred/" == "bob/fred/"
+  putStrLn "\nnormalise: "
+  print $ normalise "./" == "./"
+  putStrLn "\nnormalise: "
+  print $ normalise "./." == "./"
+  putStrLn "\nnormalise: "
+  print $ normalise "/./" == "/"
+  putStrLn "\nnormalise: "
+  print $ normalise "/" == "/"
+  putStrLn "\nnormalise: "
+  print $ normalise "bob/fred/." == "bob/fred/"
+  putStrLn "\nnormalise: "
+  print $ normalise "//home" == "/home"
+  putStrLn "\nisValid: "
+  print $ isValid "" == False
+  putStrLn "\nisValid: "
+  print $ isValid "\0" == False
+  putStrLn "\nisValid: "
+  print $ isValid "/random_ path:*" == True
+  putStrLn "\nisValid: "
+  print $ isValid "/tmp/../var/foo.bar" == not (null "/tmp/../var/foo.bar")
+  next_
+
+next_ = do
+  putStrLn "\nisValid: "
+  print $ isValid (makeValid "/tmp/../var/foo.bar")
+  putStrLn "\nisValid: "
+  print $ makeValid "/tmp/../var/foo.bar" == "/tmp/../var/foo.bar"
+  putStrLn "\nmakeValid: "
+  print $ makeValid "" == "_"
+  putStrLn "\nmakeValid: "
+  print $ makeValid "file\0name" == "file_name"
+  putStrLn "\nisRelative: "
+  print $ isRelative "test/path" == True
+  putStrLn "\nisRelative: "
+  print $ isRelative "/test" == False
+  putStrLn "\nisRelative: "
+  print $ isRelative "/" == False
+  putStrLn "\nisAbsolute: "
+  print $ isAbsolute "/tmp/../var/foo.bar" == not (isRelative "/tmp/../var/foo.bar")
+  
+win = do
+  -- Windows
+  putStrLn "\npathSeparator: "
+  print $ pathSeparator == '\\'
+  putStrLn "\npathSeparators: "
+  print $ pathSeparators == ['\\', '/']
+  putStrLn "\nsearchPathSeparator: "
+  print $ searchPathSeparator == ';'
+  putStrLn "\nsplitSearchPath: "
+  print $ splitSearchPath "File1;File2;File3"  == ["File1","File2","File3"]
+  putStrLn "\nsplitSearchPath: "
+  print $ splitSearchPath "File1;;File2;File3" == ["File1","File2","File3"]
+  putStrLn "\nsplitSearchPath: "
+  print $ splitSearchPath "File1;\"File2\";File3" == ["File1","File2","File3"]
+  putStrLn "\naddExtension: "
+  print $ addExtension "\\\\share" ".txt" == "\\\\share\\.txt"
+  putStrLn "\nsplitDrive: "
+  print $ splitDrive "file" == ("","file")
+  putStrLn "\nsplitDrive: "
+  print $ splitDrive "c:/file" == ("c:/","file")
+  putStrLn "\nsplitDrive: "
+  print $ splitDrive "c:\\file" == ("c:\\","file")
+  putStrLn "\nsplitDrive: "
+  print $ splitDrive "\\\\shared\\test" == ("\\\\shared\\","test")
+  putStrLn "\nsplitDrive: "
+  print $ splitDrive "\\\\shared" == ("\\\\shared","")
+  putStrLn "\nsplitDrive: "
+  print $ splitDrive "\\\\?\\UNC\\shared\\file" == ("\\\\?\\UNC\\shared\\","file")
+  putStrLn "\nsplitDrive: "
+  print $ splitDrive "\\\\?\\UNCshared\\file" == ("\\\\?\\","UNCshared\\file")
+  putStrLn "\nsplitDrive: "
+  print $ splitDrive "\\\\?\\d:\\file" == ("\\\\?\\d:\\","file")
+  putStrLn "\nsplitDrive: "
+  print $ splitDrive "/d" == ("","/d")
+  putStrLn "\njoinDrive: "
+  print $ joinDrive "C:" "foo" == "C:foo"
+  putStrLn "\njoinDrive: "
+  print $ joinDrive "C:\\" "bar" == "C:\\bar"
+  putStrLn "\njoinDrive: "
+  print $ joinDrive "\\\\share" "foo" == "\\\\share\\foo"
+  putStrLn "\njoinDrive: "
+  print $ joinDrive "/:" "foo" == "/:\\foo"
+  putStrLn "\nhasDrive: "
+  print $ hasDrive "C:\\foo" == True
+  putStrLn "\nhasDrive: "
+  print $ hasDrive "C:foo" == True
+  putStrLn "\nhasDrive: "
+  print $ hasDrive "foo" == False
+  putStrLn "\nhasDrive: "
+  print $ hasDrive "" == False
+  putStrLn "\nisDrive: "
+  print $ isDrive "C:\\" == True
+  putStrLn "\nisDrive: "
+  print $ isDrive "C:\\foo" == False
+  putStrLn "\nisDrive: "
+  print $ isDrive "" == False
+  putStrLn "\nsplitFileName: "
+  print $ splitFileName "c:" == ("c:","")
+  next''''''
+
+next'''''' = do
+  putStrLn "\ndropTrailingPathSeparator: "
+  print $ dropTrailingPathSeparator "\\" == "\\"
+  putStrLn "\ntakeDirectory: "
+  print $ takeDirectory "foo\\bar" == "foo"
+  putStrLn "\ntakeDirectory: "
+  print $ takeDirectory "foo\\bar\\\\" == "foo\\bar"
+  putStrLn "\ntakeDirectory: "
+  print $ takeDirectory "C:\\" == "C:\\"
+  putStrLn "\n(/directory: "
+  print $ ("/directory" </> "file.ext") == "/directory\\file.ext" -- TODO modified
+  putStrLn "\n(directory: "
+  print $ ("directory" </> "/file.ext") == "/file.ext"
+  putStrLn "\n(C:\\foo: "
+  print $ ("C:\\foo" </> "bar") == "C:\\foo\\bar"
+  putStrLn "\n(home: "
+  print $ ("home" </> "bob") == "home\\bob"
+  putStrLn "\n(home: "
+  print $ ("home" </> "C:\\bob") == "C:\\bob"
+  putStrLn "\n(home: "
+  print $ ("home" </> "/bob") == "/bob"
+  putStrLn "\n(home: "
+  print $ ("home" </> "\\bob") == "\\bob"
+  putStrLn "\n(C:\\home: "
+  print $ ("C:\\home" </> "\\bob") == "\\bob"
+  putStrLn "\n(D:\\foo: "
+  print $ ("D:\\foo" </> "C:bar") == "C:bar"
+  putStrLn "\n(C:\\foo: "
+  print $ ("C:\\foo" </> "C:bar") == "C:bar"
+  putStrLn "\nsplitPath: "
+  print $ splitPath "c:\\test\\path" == ["c:\\","test\\","path"]
+  putStrLn "\nsplitDirectories: "
+  print $ splitDirectories "C:\\test\\file" == ["C:\\", "test", "file"]
+  putStrLn "\nValid: "
+  print $ joinPath (splitDirectories "/tmp/../var/foo.bar") `equalFilePath` "/tmp/../var/foo.bar"
+  putStrLn "\nsplitDirectories: "
+  print $ splitDirectories "" == []
+  putStrLn "\nsplitDirectories: "
+  print $ splitDirectories "C:\\test\\\\\\file" == ["C:\\", "test", "file"]
+  putStrLn "\nsplitDirectories: "
+  print $ splitDirectories "/test///file" == ["/","test","file"]
+  putStrLn "\nequalFilePath: "
+  print $ equalFilePath "foo" "FOO"
+  putStrLn "\nnot: "
+  print $ not (equalFilePath "C:" "C:/")
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "/directory" "/directory/file.ext" == "file.ext"
+  putStrLn "\nValid: "
+  print $ makeRelative (takeDirectory "/tmp/../var/foo.bar") "/tmp/../var/foo.bar" `equalFilePath` takeFileName "/tmp/../var/foo.bar"
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "/tmp/../var/foo.bar" "/tmp/../var/foo.bar" == "."
+  putStrLn "\nValid: "
+  print $ equalFilePath "/tmp/../var/foo.bar" ".ext" || (isRelative "/tmp/../var/foo.bar" && makeRelative ".ext" "/tmp/../var/foo.bar" == "/tmp/../var/foo.bar") || equalFilePath ("tmp" </> makeRelative ".ext" "/tmp/../var/foo.bar") "/tmp/../var/foo.bar"
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "C:\\Home" "c:\\home\\bob" == "bob"
+  next'''''''
+
+next''''''' = do
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "C:\\Home" "c:/home/bob" == "bob"
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "C:\\Home" "D:\\Home\\Bob" == "D:\\Home\\Bob"
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "C:\\Home" "C:Home\\Bob" == "C:Home\\Bob"
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "/Home" "/home/bob" == "bob"
+  putStrLn "\nmakeRelative: "
+  print $ makeRelative "/" "//" == "//"
+  putStrLn "\nnormalise: "
+  print $ normalise "c:\\file/bob\\" == "C:\\file\\bob\\"
+  putStrLn "\nnormalise: "
+  print $ normalise "c:\\" == "C:\\"
+  putStrLn "\nnormalise: "
+  print $ normalise "C:.\\" == "C:"
+  putStrLn "\nnormalise: "
+  print $ normalise "\\\\server\\test" == "\\\\server\\test"
+  putStrLn "\nnormalise: "
+  print $ normalise "//server/test" == "\\\\server\\test"
+  putStrLn "\nnormalise: "
+  print $ normalise "c:/file" == "C:\\file"
+  putStrLn "\nnormalise: "
+  print $ normalise "/file" == "\\file"
+  putStrLn "\nnormalise: "
+  print $ normalise "\\" == "\\"
+  putStrLn "\nnormalise: "
+  print $ normalise "/./" == "\\"
+  putStrLn "\nnormalise: "
+  print $ normalise "." == "."
+  putStrLn "\nisValid: "
+  print $ isValid "c:\\test" == True
+  putStrLn "\nisValid: "
+  print $ isValid "c:\\test:of_test" == False
+  putStrLn "\nisValid: "
+  print $ isValid "test*" == False
+  putStrLn "\nisValid: "
+  print $ isValid "c:\\test\\nul" == False
+  putStrLn "\nisValid: "
+  print $ isValid "c:\\test\\prn.txt" == False
+  putStrLn "\nisValid: "
+  print $ isValid "c:\\nul\\file" == False
+  putStrLn "\nisValid: "
+  print $ isValid "\\\\" == False
+  putStrLn "\nisValid: "
+  print $ isValid "\\\\\\foo" == False
+  putStrLn "\nisValid: "
+  print $ isValid "\\\\?\\D:file" == False
+  putStrLn "\nisValid: "
+  print $ isValid "foo\tbar" == False
+  putStrLn "\nisValid: "
+  print $ isValid "nul .txt" == False
+  putStrLn "\nisValid: "
+  print $ isValid " nul.txt" == True
+  putStrLn "\nmakeValid: "
+  print $ makeValid "c:\\already\\/valid" == "c:\\already\\/valid"
+  putStrLn "\nmakeValid: "
+  print $ makeValid "c:\\test:of_test" == "c:\\test_of_test"
+  putStrLn "\nmakeValid: "
+  print $ makeValid "test*" == "test_"
+  putStrLn "\nmakeValid: "
+  print $ makeValid "c:\\test\\nul" == "c:\\test\\nul_"
+  next''''''''
+  
+next'''''''' = do
+  putStrLn "\nmakeValid: "
+  print $ makeValid "c:\\test\\prn.txt" == "c:\\test\\prn_.txt"
+  putStrLn "\nmakeValid: "
+  print $ makeValid "c:\\test/prn.txt" == "c:\\test/prn_.txt"
+  putStrLn "\nmakeValid: "
+  print $ makeValid "c:\\nul\\file" == "c:\\nul_\\file"
+  putStrLn "\nmakeValid: "
+  print $ makeValid "\\\\\\foo" == "\\\\drive"
+  putStrLn "\nmakeValid: "
+  print $ makeValid "\\\\?\\D:file" == "\\\\?\\D:\\file"
+  putStrLn "\nmakeValid: "
+  print $ makeValid "nul .txt" == "nul _.txt"
+  putStrLn "\nisRelative: "
+  print $ isRelative "path\\test" == True
+  putStrLn "\nisRelative: "
+  print $ isRelative "c:\\test" == False
+  putStrLn "\nisRelative: "
+  print $ isRelative "c:test" == True
+  putStrLn "\nisRelative: "
+  print $ isRelative "c:\\" == False
+  putStrLn "\nisRelative: "
+  print $ isRelative "c:/" == False
+  putStrLn "\nisRelative: "
+  print $ isRelative "c:" == True
+  putStrLn "\nisRelative: "
+  print $ isRelative "\\\\foo" == False
+  putStrLn "\nisRelative: "
+  print $ isRelative "\\\\?\\foo" == False
+  putStrLn "\nisRelative: "
+  print $ isRelative "\\\\?\\UNC\\foo" == False
+  putStrLn "\nisRelative: "
+  print $ isRelative "/foo" == True
+  putStrLn "\nisRelative: "
+  print $ isRelative "\\foo" == True

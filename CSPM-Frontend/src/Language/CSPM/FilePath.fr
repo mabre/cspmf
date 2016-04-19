@@ -120,13 +120,12 @@ type FilePath = String
 
 
 -- | Is the operating system Unix or Linux like
-isPosix :: Bool
-isPosix = not isWindows
+private isPosix :: Bool
+private isPosix = not isWindows
 
 -- | Is the operating system Windows like
-isWindows :: Bool
-isWindows = false -- TODO win
-
+private isWindows :: Bool
+private isWindows = File.separator == "\\"
 
 ---------------------------------------------------------------------
 -- The basic functions
@@ -210,7 +209,7 @@ splitSearchPath s = map packed $ f (toList s)
 
     g :: [Char] -> [[Char]]
     g [] = [['.'] | isPosix]
---     g ('\"':x@(_:_)) | isWindows && last x == '\"' = [init x] -- TODO win
+    g (x@('\"':(_:_))) | isWindows && last (drop 1 x) == '\"' = [init (drop 1 x)]
     g x = [x]
 
 
@@ -385,8 +384,8 @@ replaceExtensions x y = dropExtensions x <.> y
 
 -- | Is the given character a valid drive letter?
 -- only a-z and A-Z are letters, not isAlpha which is more unicodey
-isLetter :: Char -> Bool
-isLetter x = isAsciiLower x || isAsciiUpper x
+private isLetter :: Char -> Bool
+private isLetter x = isAsciiLower x || isAsciiUpper x
 
 
 -- | Split a path into a drive and a path.
@@ -408,48 +407,52 @@ isLetter x = isAsciiLower x || isAsciiUpper x
 -- > Posix:   splitDrive "file" == ("","file")
 splitDrive :: FilePath -> (FilePath, FilePath)
 splitDrive x | isPosix = toStr $ span (== '/') (toList x)
--- splitDrive x | Just y <- readDriveLetter x = y --TODO windows
--- splitDrive x | Just y <- readDriveUNC x = y
--- splitDrive x | Just y <- readDriveShare x = y
--- splitDrive x = ("",x)
-    where toStr (a,b) = (packed a, packed b)
+splitDrive x | Just y <- readDriveLetter (toList x) = toStr y
+splitDrive x | Just y <- readDriveUNC (toList x)    = toStr y
+splitDrive x | Just y <- readDriveShare (toList x)  = toStr y
+splitDrive x = ("",x)
 
-addSlash :: FilePath -> FilePath -> (FilePath, FilePath)
-addSlash a xs = (a++packed c,packed d)
+private addSlash :: FilePath -> FilePath -> (FilePath, FilePath)
+private addSlash a xs = (a++packed c,packed d)
     where (c,d) = span isPathSeparator xs.toList
 
 -- See [1].
 -- "\\?\D:\<path>" or "\\?\UNC\<server>\<share>"
--- readDriveUNC :: FilePath -> Maybe (FilePath, FilePath)
--- readDriveUNC (s1:s2:'?':s3:xs) | all isPathSeparator [s1,s2,s3] =
---     case map toUpper xs of
---         ('U':'N':'C':s4:_) | isPathSeparator s4 ->
---             let (a,b) = readDriveShareName (drop 4 xs)
---             in Just (s1:s2:'?':s3:take 4 xs ++ a, b)
---         _ -> case readDriveLetter xs of
---                  -- Extended-length path.
---                  Just (a,b) -> Just (s1:s2:'?':s3:a,b)
---                  Nothing -> Nothing
--- readDriveUNC _ = Nothing
+private readDriveUNC :: [Char] -> Maybe ([Char], [Char])
+private readDriveUNC (s1:s2:'?':s3:xs) | all isPathSeparator [s1,s2,s3] =
+    case map toUpper xs of
+        ('U':'N':'C':s4:_) | isPathSeparator s4 ->
+            let (a,b) = readDriveShareName (drop 4 xs)
+            in Just (s1:s2:'?':s3:take 4 xs ++ a, b)
+        _ -> case readDriveLetter xs of
+                 -- Extended-length path.
+                 Just (a,b) -> Just (s1:s2:'?':s3:a,b)
+                 Nothing -> Nothing
+private readDriveUNC _ = Nothing
 
 {- c:\ -}
--- readDriveLetter :: String -> Maybe (FilePath, FilePath)
--- readDriveLetter (x:':':y:xs) | isLetter x && isPathSeparator y = Just $ addSlash [x,':'] (y:xs)
--- readDriveLetter (x:':':xs) | isLetter x = Just ([x,':'], xs)
--- readDriveLetter _ = Nothing
+private readDriveLetter :: [Char] -> Maybe ([Char], [Char])
+private readDriveLetter (x:':':y:xs) | isLetter x && isPathSeparator y = Just $ toL $ addSlash (packed [x,':']) (packed (y:xs))
+private readDriveLetter (x:':':xs) | isLetter x = Just ([x,':'], xs)
+private readDriveLetter _ = Nothing
 
 {- \\sharename\ -}
--- readDriveShare :: String -> Maybe (FilePath, FilePath)
--- readDriveShare (s1:s2:xs) | isPathSeparator s1 && isPathSeparator s2 =
---         Just (s1:s2:a,b)
---     where (a,b) = readDriveShareName xs
--- readDriveShare _ = Nothing
+private readDriveShare :: [Char] -> Maybe ([Char], [Char])
+private readDriveShare (s1:s2:xs) | isPathSeparator s1 && isPathSeparator s2 =
+        let (a,b) = readDriveShareName xs in Just (s1:s2:a,b)
+private readDriveShare _ = Nothing
 
 {- assume you have already seen \\ -}
 {- share\bob -> "share\", "bob" -}
--- readDriveShareName :: String -> (FilePath, FilePath)
--- readDriveShareName name = addSlash a b
---     where (a,b) = break isPathSeparator name
+private readDriveShareName :: [Char] -> ([Char], [Char])
+private readDriveShareName name = toL $ addSlash (packed a) (packed b)
+    where (a,b) = break isPathSeparator name
+
+private toL :: (String, String) -> ([Char], [Char])
+private toL (a,b) = (toList a, toList b)
+
+private toStr :: ([Char], [Char]) -> (String, String)
+private toStr (a,b) = (packed a, packed b)
 
 
 
@@ -523,8 +526,8 @@ splitFileName x = (if null dir then "./" else dir, name)
 -- directory to make a valid FilePath, and having a "./" appear would
 -- look strange and upset simple equality properties.  See
 -- e.g. replaceFileName.
-splitFileName_ :: FilePath -> (String, String)
-splitFileName_ x = (drv ++ packed dir, packed file)
+private splitFileName_ :: FilePath -> (String, String)
+private splitFileName_ x = (drv ++ packed dir, packed file)
     where
         (drv,pth) = splitDrive x
         (dir,file) = breakEnd isPathSeparator (toList pth)
@@ -591,9 +594,9 @@ hasTrailingPathSeparator "" = False
 hasTrailingPathSeparator x = isPathSeparator (last $ toList x)
 
 
-hasLeadingPathSeparator :: FilePath -> Bool
-hasLeadingPathSeparator "" = False
-hasLeadingPathSeparator x = isPathSeparator (head x)
+private hasLeadingPathSeparator :: FilePath -> Bool
+private hasLeadingPathSeparator "" = False
+private hasLeadingPathSeparator x = isPathSeparator (head x)
 
 
 -- | Add a trailing file path separator if one is not already present.
@@ -649,12 +652,12 @@ combine a b | hasLeadingPathSeparator b || hasDrive b = b
             | otherwise = combineAlways a b
 
 -- | Combine two paths, assuming rhs is NOT absolute.
-combineAlways :: FilePath -> FilePath -> FilePath
-combineAlways a b | null a = b
+private combineAlways :: FilePath -> FilePath -> FilePath
+private combineAlways a b | null a = b
                   | null b = a
                   | hasTrailingPathSeparator a = a ++ b
-                  | otherwise = case a of
---                       [a1,':'] | isWindows && isLetter a1 -> a ++ b -- TODO windows
+                  | otherwise = case a.toList of
+                      [a1,':'] | isWindows && isLetter a1 -> a ++ b
                       _ -> a ++ packed [pathSeparator] ++ b
 
 
@@ -881,23 +884,23 @@ normalise path = result ++ packed [pathSeparator | addPathSeparator]
 
         dropDots = filter (['.'] /=)
 
-normaliseDrive :: FilePath -> FilePath
-normaliseDrive "" = ""
-normaliseDrive _ | isPosix = packed [pathSeparator]
--- normaliseDrive drive = if isJust $ readDriveLetter x2 -- TODO win
---                        then map toUpper x2
---                        else x2
---     where
---         x2 = map repSlash drive
--- 
---         repSlash x = if isPathSeparator x then pathSeparator else x
+private normaliseDrive :: FilePath -> FilePath
+private normaliseDrive "" = ""
+private normaliseDrive _ | isPosix = packed [pathSeparator]
+private normaliseDrive drive = packed $ if isJust $ readDriveLetter x2
+                       then map toUpper x2
+                       else x2
+    where
+        x2 = map repSlash drive.toList
+
+        repSlash x = if isPathSeparator x then pathSeparator else x
 
 -- Information for validity functions on Windows. See [1].
-isBadCharacter :: Char -> Bool
-isBadCharacter x = x >= '\0' && x <= '\31' || x `elem` (toList ":*?><|\"")
+private isBadCharacter :: Char -> Bool
+private isBadCharacter x = x >= '\0' && x <= '\31' || x `elem` (toList ":*?><|\"")
 
-badElements :: [FilePath]
-badElements =
+private badElements :: [FilePath]
+private badElements =
     ["CON","PRN","AUX","NUL","CLOCK$"
     ,"COM1","COM2","COM3","COM4","COM5","COM6","COM7","COM8","COM9"
     ,"LPT1","LPT2","LPT3","LPT4","LPT5","LPT6","LPT7","LPT8","LPT9"]
@@ -927,14 +930,15 @@ isValid :: FilePath -> Bool
 isValid "" = False
 isValid x | '\0' `elem` (toList x) = False
 isValid _ | isPosix = True
--- isValid path = -- TODO windows
---         not (any isBadCharacter x2) &&
---         not (any f $ splitDirectories x2) &&
---         not (isJust (readDriveShare x1) && all isPathSeparator x1) &&
---         not (isJust (readDriveUNC x1) && not (hasTrailingPathSeparator x1))
---     where
---         (x1,x2) = splitDrive path
---         f x = map toUpper (dropWhileEnd (== ' ') $ dropExtensions x) `elem` badElements
+isValid path =
+        not (any isBadCharacter x2.toList) &&
+        not (any f $ splitDirectories x2) &&
+        not (isJust (readDriveShare x1.toList) && all isPathSeparator x1.toList) &&
+        not (isJust (readDriveUNC x1.toList) && not (hasTrailingPathSeparator x1))
+    where
+        (x1,x2) = splitDrive path
+        f :: FilePath -> Bool
+        f x = (packed $ map toUpper (dropWhileEnd (== ' ') $ toList (dropExtensions x))) `elem` badElements
 
 
 -- | Take a FilePath and make it valid; does not change already valid FilePaths.
@@ -957,21 +961,28 @@ makeValid :: FilePath -> FilePath
 makeValid "" = "_"
 makeValid path
         | isPosix = packed $ map (\x -> if x == '\0' then '_' else x) (toList path)
---         | isJust (readDriveShare drv) && all isPathSeparator drv = take 2 drv ++ "drive" -- TODO windows
---         | isJust (readDriveUNC drv) && not (hasTrailingPathSeparator drv) =
---             makeValid (drv ++ [pathSeparator] ++ pth)
---         | otherwise = joinDrive drv $ validElements $ validChars pth
---     where
---         (drv,pth) = splitDrive path
--- 
---         validChars = map f
---         f x = if isBadCharacter x then '_' else x
--- 
---         validElements x = joinPath $ map g $ splitPath x
---         g x = h a ++ b
---             where (a,b) = break isPathSeparator x
---         h x = if map toUpper (dropWhileEnd (== ' ') a) `elem` badElements then a ++ "_" <.> b else x
---             where (a,b) = splitExtensions x
+        | isJust (readDriveShare drv) && all isPathSeparator drv = packed (take 2 drv) ++ "drive"
+        | isJust (readDriveUNC drv) && not (hasTrailingPathSeparator (packed drv)) =
+            makeValid $ packed (drv ++ [pathSeparator] ++ pth)
+        | otherwise = joinDrive (packed drv) $ packed $ validElements $ validChars pth
+    where
+        (drv,pth) = toL $ splitDrive path
+
+        validChars :: [Char] -> [Char]
+        validChars = map f
+        f :: Char -> Char
+        f x = if isBadCharacter x then '_' else x
+
+        validElements :: [Char] -> [Char]
+        validElements x = toList $ joinPath $ map packed $ map g $ map toList $ splitPath (packed x)
+        g :: [Char] -> [Char]
+        g x = h a ++ b
+            where (a,b) = break isPathSeparator x
+        h :: [Char] -> [Char]
+        h x = if map toUpper (dropWhileEnd (== ' ') a) `elem` (map toList badElements)
+                 then toList $ packed(a ++ ['_']) <.> (packed b)
+                 else x
+            where (a,b) = toL $ splitExtensions $ packed x
 
 
 -- | Is a path relative, or is it fixed to the root?
@@ -1006,8 +1017,8 @@ isRelative x = null drive || isRelativeDrive drive
 -- backslash after the colon, it is interpreted as a relative path to the
 -- current directory on the drive with the specified letter."
 isRelativeDrive :: String -> Bool
-isRelativeDrive x = false
-    --maybe False (not . hasTrailingPathSeparator . fst) (readDriveLetter x) TODO windows
+isRelativeDrive x =
+    maybe False (not . hasTrailingPathSeparator . fst) $ fmap toStr (readDriveLetter x.toList)
 
 
 -- | @not . 'isRelative'@
@@ -1020,23 +1031,23 @@ isAbsolute = not . isRelative
 -----------------------------------------------------------------------------
 -- dropWhileEnd (>2) [1,2,3,4,1,2,3,4] == [1,2,3,4,1,2])
 -- Note that Data.List.dropWhileEnd is only available in base >= 4.5.
-dropWhileEnd :: (a -> Bool) -> [a] -> [a]
-dropWhileEnd p = reverse . dropWhile p . reverse
+private dropWhileEnd :: (a -> Bool) -> [a] -> [a]
+private dropWhileEnd p = reverse . dropWhile p . reverse
 
 -- takeWhileEnd (>2) [1,2,3,4,1,2,3,4] == [3,4])
-takeWhileEnd :: (a -> Bool) -> [a] -> [a]
-takeWhileEnd p = reverse . takeWhile p . reverse
+private takeWhileEnd :: (a -> Bool) -> [a] -> [a]
+private takeWhileEnd p = reverse . takeWhile p . reverse
 
 -- spanEnd (>2) [1,2,3,4,1,2,3,4] = ([1,2,3,4,1,2], [3,4])
-spanEnd :: (a -> Bool) -> [a] -> ([a], [a])
-spanEnd p xs = (dropWhileEnd p xs, takeWhileEnd p xs)
+private spanEnd :: (a -> Bool) -> [a] -> ([a], [a])
+private spanEnd p xs = (dropWhileEnd p xs, takeWhileEnd p xs)
 
 -- breakEnd (< 2) [1,2,3,4,1,2,3,4] == ([1,2,3,4,1],[2,3,4])
-breakEnd :: (a -> Bool) -> [a] -> ([a], [a])
-breakEnd p = spanEnd (not . p)
+private breakEnd :: (a -> Bool) -> [a] -> ([a], [a])
+private breakEnd p = spanEnd (not . p)
 
 -- | The stripSuffix function drops the given suffix from a list. It returns
 -- Nothing if the list did not end with the suffix given, or Just the list
 -- before the suffix, if it does.
-stripSuffix :: Eq a => [a] -> [a] -> Maybe [a]
-stripSuffix xs ys = fmap reverse $ stripPrefix (reverse xs) (reverse ys)
+private stripSuffix :: Eq a => [a] -> [a] -> Maybe [a]
+private stripSuffix xs ys = fmap reverse $ stripPrefix (reverse xs) (reverse ys)
