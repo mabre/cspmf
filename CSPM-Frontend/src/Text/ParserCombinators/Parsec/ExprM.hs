@@ -14,11 +14,10 @@
 -----------------------------------------------------------------------------
 
 module Text.ParserCombinators.Parsec.ExprM
-                 {-( Assoc(..), infixM, prefixM, postfixM
-                 , OperatorTable, Operator
-                 , buildExpressionParser
-                 )-} where
 
+where
+
+import frege.Prelude hiding (try, pzero, <|>)
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec.Combinator
 

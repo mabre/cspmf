@@ -7,14 +7,14 @@
 --
 -- Wrapper functions for Alex
 
-{-# LANGUAGE RecordWildCards, CPP #-}
-module AlexWrapper
+module Language.CSPM.AlexWrapper
 where
 
-import Token
-import TokenClasses
+import frege.Prelude hiding (Byte)
+import Language.CSPM.Token
+import Language.CSPM.TokenClasses
 
-import Data.Char
+import Data.Char hiding (isNumber)
 -- import Data.Word (Word8)
 import Data.Bits
 import Data.List

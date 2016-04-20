@@ -15,7 +15,7 @@
 -- FDR-style built-ins.
 --
 --
-module BuiltIn
+module Language.CSPM.BuiltIn
 where
 
 {-

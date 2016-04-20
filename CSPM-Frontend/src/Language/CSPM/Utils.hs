@@ -10,7 +10,7 @@
 --
 -- Some Utilities
 
-module Utils
+module Language.CSPM.Utils
 --  (eitherToExc
 --  ,handleLexError
 --  ,handleParseError
@@ -20,11 +20,11 @@ where
 
 -- import Debug.Trace -- TODO
 
-import Token --(Token(..), LexError(..))
-import Parser --(ParseError(..), parse)
--- import Language.CSPM.Rename (RenameError(..), renameModule, ModuleFromRenaming) -- TODO
--- import Language.CSPM.Token (LexError(..))
-import AST --(ModuleFromParser)
+import Language.CSPM.Token (Token, LexError)
+import Language.CSPM.Parser (ParseError, parse)
+import Language.CSPM.Rename (RenameError, renameModule, ModuleFromRenaming)
+import Language.CSPM.Token (LexError)
+import AST (ModuleFromParser)
 -- import Language.CSPM.PrettyPrinter(pPrint) -- TODO
 import LexHelper as Lexer (lexInclude,lexPlain)
 

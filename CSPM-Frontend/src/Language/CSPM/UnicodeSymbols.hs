@@ -7,10 +7,10 @@
 --
 -- Unicode symbols for CPSM operators
 
-module UnicodeSymbols
+module Language.CSPM.UnicodeSymbols
 where
 
-import TokenClasses
+import Language.CSPM.TokenClasses
 import Data.Array (Array)
 import Data.Map (Map)
 
@@ -56,21 +56,6 @@ tableLine (char,tok,string) = concat
     tab x s = take x $ s ++ repeat ' '
 -}
 
--- main _ = print $ table'
-
-minbound :: PrimToken
-minbound = minBound
-maxbound :: PrimToken
-maxbound = maxBound
-
--- table' :: Array.Array PrimToken (Maybe (Char,String))
--- table' = (Array.listArray (minBound,maxBound) $ replicate (length [minbound..maxbound]) Nothing)
--- 
--- table :: Array.Array PrimToken (Maybe (Char,String))
--- table = (Array.//)
---               (Array.listArray (minBound,maxBound) $ repeat Nothing)
---               [(tok,Just (uni,ascii)) | (uni,tok,ascii) <- unicodeSymbols]
-
 lookupDefaultSymbol :: PrimToken -> (Maybe (Char,String))
 lookupDefaultSymbol = (Array.!!) table
   where
@@ -78,6 +63,11 @@ lookupDefaultSymbol = (Array.!!) table
     table = (Array.//)
               (Array.listArray (minBound,maxBound) $ replicate (length [minbound..maxbound]) Nothing)
               [(tok,Just (uni,ascii)) | (uni,tok,ascii) <- unicodeSymbols]
+      where
+        minbound :: PrimToken
+        minbound = minBound
+        maxbound :: PrimToken
+        maxbound = maxBound
 
 lookupToken :: Char -> Maybe PrimToken
 lookupToken = flip (Map.lookup) symbolMap

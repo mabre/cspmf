@@ -14,14 +14,12 @@
 
 {-# LANGUAGE DeriveDataTypeable #-}
 --DeriveGeneric
--- {-# LANGUAGE EmptyDataDecls, RankNTypes #-}
--- {-# LANGUAGE RecordWildCards #-}
 --GeneralizedNewtypeDeriving
-module AST
+module Language.CSPM.AST
 where
 
-import Token
-import SrcLoc --(SrcLoc(..))
+import Language.CSPM.Token
+import Language.CSPM.SrcLoc
 
 -- import Data.Typeable (Typeable) -- TODO Typeable
 -- import Data.Generics.Basics (Data)

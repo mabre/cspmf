@@ -10,10 +10,10 @@
 --
 -- This module contains the data type PrimToken.
 
-module TokenClasses
+module Language.CSPM.TokenClasses
 where
 
--- import Data.Typeable (Typeable)
+-- import Data.Typeable (Typeable) TODO
 -- import Data.Generics.Basics (Data)
 -- import GHC.Generics (Generic)
 -- import Data.Generics.Instances ()

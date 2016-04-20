@@ -14,44 +14,32 @@
 -- {-# LANGUAGE DeriveDataTypeable #-}
 -- RecordWildCards
 
-module Parser
--- (
---   parse
---  ,ParseError(..)
---  ,testParser
---  ,parseExp
---  ,parsePattern
---  ,topDeclList
---  ,parseExp_noProc
--- )
+module Language.CSPM.Parser
+
 where
--- import Debug.Trace -- TODO
-import AST
-import Token --(Token(..),AlexPosn)
-import Token (Token,AlexPosn)
-import TokenClasses as TokenClasses
-import Token as Token()
 
-import SrcLoc as SrcLoc()
-import SrcLoc (SrcLoc)
+import frege.Prelude hiding (try, pzero, <|>)
 
-import LexHelper (removeIgnoredToken)
+import Language.CSPM.AST
+import Language.CSPM.Token (Token,AlexPosn)
+import Language.CSPM.TokenClasses as TokenClasses
+import Language.CSPM.Token as Token()
+
+import Language.CSPM.SrcLoc
+
+import Language.CSPM.LexHelper (removeIgnoredToken)
 import Text.ParserCombinators.Parsec.ExprM
 
--- import Text.ParserCombinators.Parsec
-  --hiding (parse,eof,notFollowedBy,anyToken,label,ParseError,errorPos,token,newline)
-import Text.ParserCombinators.Parsec.Prim
-import Text.ParserCombinators.Parsec.Combinator
-import Text.ParserCombinators.Parsec.Char
+import Text.ParserCombinators.Parsec.Prim hiding (parse, token)
+import Text.ParserCombinators.Parsec.Combinator hiding (anyToken, notFollowedBy, eof)
+import Text.ParserCombinators.Parsec.Char hiding (newline)
 -- import Text.ParserCombinators.Parsec.Token as ParsecToken (TokenParser.integer)
-import Text.ParserCombinators.Parsec.Pos --(newPos)
-import Text.ParserCombinators.Parsec.Error as ParsecError
-import Text.ParserCombinators.Parsec.ExprM
+import Text.ParserCombinators.Parsec.Pos
+import Text.ParserCombinators.Parsec.Error as ParsecError hiding (ParseError, Show_ParseError)
 -- import Data.Typeable (Typeable)
 -- import Control.Monad.State
 import Data.List
 import Data.Maybe
--- import Prelude hiding (exp) TODO possible?
 -- import Control.Exception (Exception) -- TODO exception
 
 type PT a = GenParser Token PState a
@@ -87,7 +75,7 @@ derive Show ParseError
 
 -- instance Exception ParseError
 
-data PState
+private data PState
  = PState {
   lastTok        :: Token
  ,gtCounter      :: Int
@@ -96,16 +84,16 @@ data PState
  }
 derive Show PState
 
-initialPState :: PState
-initialPState = PState {
+private initialPState :: PState
+private initialPState = PState {
    lastTok = Token.tokenSentinel 
   ,gtCounter = 0
   ,gtLimit = Nothing
   ,nodeIdSupply = mkNodeId 0
   }
 
-mkLabeledNode :: SrcLoc -> t -> PT (Labeled t)
-mkLabeledNode loc node = do
+private mkLabeledNode :: SrcLoc -> t -> PT (Labeled t)
+private mkLabeledNode loc node = do
   i <- getStates PState.nodeIdSupply
   updateState $ \s -> s.{ nodeIdSupply = succ' $ s.nodeIdSupply}
   return $ Labeled {
@@ -113,49 +101,49 @@ mkLabeledNode loc node = do
    ,srcLoc = loc
    ,unLabel = node }
 
-getStates :: (PState -> x) -> PT x
-getStates sel = do
+private getStates :: (PState -> x) -> PT x
+private getStates sel = do
   st <- getState
   return $ sel st
 
-getNextPos :: PT Token
-getNextPos = do
+private getNextPos :: PT Token
+private getNextPos = do
   tokenList <-getInput
   case tokenList of
     (hd:_) -> return hd
     [] -> return Token.tokenSentinel
 
-getLastPos :: PT Token
-getLastPos = getStates PState.lastTok
+private getLastPos :: PT Token
+private getLastPos = getStates PState.lastTok
 
-getPos :: PT SrcLoc
-getPos = do
+private getPos :: PT SrcLoc
+private getPos = do
   t<-getNextPos 
   return $ mkSrcPos t
 
-mkSrcSpan :: Token -> Token -> SrcLoc
-mkSrcSpan b e = SrcLoc.mkTokSpan b e
+private mkSrcSpan :: Token -> Token -> SrcLoc
+private mkSrcSpan b e = SrcLoc.mkTokSpan b e
 
 {-# DEPRECATED mkSrcPos "simplify alternatives for sourcelocations" #-}
-mkSrcPos :: Token -> SrcLoc
-mkSrcPos l = SrcLoc.mkTokPos l
+private mkSrcPos :: Token -> SrcLoc
+private mkSrcPos l = SrcLoc.mkTokPos l
 
-withLoc :: PT a -> PT (Labeled a)
-withLoc a = do
+private withLoc :: PT a -> PT (Labeled a)
+private withLoc a = do
   s <- getNextPos
   av <- a
   e <- getLastPos
   mkLabeledNode (mkSrcSpan s e) av
 
-inSpan :: (a -> b) -> PT a -> PT (Labeled b) 
-inSpan constr exp = do
+private inSpan :: (a -> b) -> PT a -> PT (Labeled b) 
+private inSpan constr exp = do
   s <- getNextPos
   l <- exp
   e <- getLastPos
   mkLabeledNode (mkSrcSpan s e) $ constr l
 
-parseModule :: [Token] -> PT ModuleFromParser
-parseModule tokenList = do
+private parseModule :: [Token] -> PT ModuleFromParser
+private parseModule tokenList = do
   s <- getNextPos
   skipMany newline
   moduleDecls <- topDeclList
@@ -186,27 +174,27 @@ parseModule tokenList = do
       L_Pragma -> Just $ take (t.tokenLen - 6) $ drop 3 $ t.tokenString
       _ -> Nothing
 
-token :: TokenClasses.PrimToken -> PT ()
-token t = tokenPrimExDefault tokenTest
+private token :: TokenClasses.PrimToken -> PT ()
+private token t = tokenPrimExDefault tokenTest
   where
     tokenTest tok = if tok.tokenClass == t
       then Just ()
       else Nothing
 
 {-
-builtInFunctions :: Set TokenClasses.PrimToken
-builtInFunctions = Set.fromList
+private builtInFunctions :: Set TokenClasses.PrimToken
+private builtInFunctions = Set.fromList
       [ T_union ,T_inter, T_diff, T_Union, T_Inter,
         T_member, T_card, T_empty, T_set, T_Set,
         T_Seq, T_null, T_head, T_tail, T_concat,
         T_elem, T_length, T_CHAOS ]
 -}
 
-newline :: PT ()
-newline = token L_Newline
+private newline :: PT ()
+private newline = token L_Newline
 
-refineOp :: PT LRefineOp
-refineOp = withLoc $ do 
+private refineOp :: PT LRefineOp
+private refineOp = withLoc $ do 
   tok <- tokenPrimExDefault (\t -> Just $ t.tokenClass)
   case tok of
     T_trace  -> return Trace
@@ -219,8 +207,8 @@ refineOp = withLoc $ do
     T_tauPriorityOp -> return TauPriorityOp
     _              -> fail "Unexpected Token"
   
-anyBuiltIn :: PT Const
-anyBuiltIn = do
+private anyBuiltIn :: PT Const
+private anyBuiltIn = do
   tok <- tokenPrimExDefault (\t -> Just $ t.tokenClass)
   case tok of
     -- T_union  -> return F_union
@@ -244,13 +232,13 @@ anyBuiltIn = do
     T_CHAOS  -> return F_CHAOS
     _        -> fail "not a built-in function"
 
-blockBuiltIn :: PT a
-blockBuiltIn = do
+private blockBuiltIn :: PT a
+private blockBuiltIn = do
   bi <- try anyBuiltIn
   fail $ "can not use built-in '"++ show bi ++ "' here" -- todo fix: better error -message
 
-lIdent :: PT String
-lIdent =
+private lIdent :: PT String
+private lIdent =
   tokenPrimExDefault testToken
   <?> "identifier"
   where
@@ -258,40 +246,40 @@ lIdent =
       L_Ident -> Just $ t.tokenString
       _ -> Nothing
 
-ident :: PT LIdent
-ident = withLoc (lIdent >>= return . Ident)
+private ident :: PT LIdent
+private ident = withLoc (lIdent >>= return . Ident)
 
-varExp :: PT LExp
-varExp= withLoc (ident >>= return . Var)
+private varExp :: PT LExp
+private varExp= withLoc (ident >>= return . Var)
 
-commaSeperator :: PT ()
-commaSeperator = token T_comma
+private commaSeperator :: PT ()
+private commaSeperator = token T_comma
 
-sepByComma :: PT x -> PT [x]
-sepByComma a = sepBy a commaSeperator
+private sepByComma :: PT x -> PT [x]
+private sepByComma a = sepBy a commaSeperator
 
-sepBy1Comma :: PT x -> PT [x]
-sepBy1Comma a = sepBy1 a commaSeperator
+private sepBy1Comma :: PT x -> PT [x]
+private sepBy1Comma a = sepBy1 a commaSeperator
 
-sepByNewLine :: PT x -> PT [x]
-sepByNewLine d = sepBy d newline
+private sepByNewLine :: PT x -> PT [x]
+private sepByNewLine d = sepBy d newline
 
-parseComprehension :: PT [LCompGen]
-parseComprehension = token T_mid >> sepByComma (compGenerator <|> compGuard )
+private parseComprehension :: PT [LCompGen]
+private parseComprehension = token T_mid >> sepByComma (compGenerator <|> compGuard )
 
-compGuard :: PT LCompGen
-compGuard= withLoc (parseExp_noPrefix >>= return . Guard)
+private compGuard :: PT LCompGen
+private compGuard= withLoc (parseExp_noPrefix >>= return . Guard)
 
-compGenerator :: PT LCompGen
-compGenerator = try $ withLoc $ do
+private compGenerator :: PT LCompGen
+private compGenerator = try $ withLoc $ do
   pat <- parsePattern
   token T_leftarrow
   exp <- parseExp_noPrefix
   return $ Generator pat exp
 
 -- replicated operations use comprehensions with a differen Syntax
-comprehensionRep :: PT LCompGenList
-comprehensionRep = withLoc $ do
+private comprehensionRep :: PT LCompGenList
+private comprehensionRep = withLoc $ do
   l <- sepByComma (repGenerator <|> compGuard)
   token T_at
   return l
@@ -303,24 +291,24 @@ comprehensionRep = withLoc $ do
       exp <- parseExp_noPrefix
       return $ Generator pat exp
 
-inBraces :: PT x -> PT x
-inBraces = between (token T_openBrace) (token T_closeBrace)
+private inBraces :: PT x -> PT x
+private inBraces = between (token T_openBrace) (token T_closeBrace)
 
-inParens :: PT x -> PT x
-inParens = between (token T_openParen) (token T_closeParen)
+private inParens :: PT x -> PT x
+private inParens = between (token T_openParen) (token T_closeParen)
 
-setExp :: PT LExp
-setExp = withLoc $ inBraces $ do
+private setExp :: PT LExp
+private setExp = withLoc $ inBraces $ do
   (range,comp) <- lsBody
   return $ SetExp range comp
 
-listExp :: PT LExp
-listExp = withLoc $ betweenLtGt $ do
+private listExp :: PT LExp
+private listExp = withLoc $ betweenLtGt $ do
   (range,comp) <- lsBody
   return $ ListExp range comp
 
-lsBody :: PT (LRange, Maybe [LCompGen])
-lsBody = liftM2 (,) parseRangeExp (optionMaybe parseComprehension)
+private lsBody :: PT (LRange, Maybe [LCompGen])
+private lsBody = liftM2 (,) parseRangeExp (optionMaybe parseComprehension)
   where
     parseRangeExp :: PT LRange
     parseRangeExp = withLoc (rangeClosed <|> rangeOpen <|> rangeEnum)
@@ -340,8 +328,8 @@ lsBody = liftM2 (,) parseRangeExp (optionMaybe parseComprehension)
       token T_dotdot
       return $ RangeOpen s
 
-closureExp :: PT LExp
-closureExp = withLoc $ do
+private closureExp :: PT LExp
+private closureExp = withLoc $ do
   token T_openPBrace
   expList <- sepByComma parseExp
   gens <- optionMaybe $ parseComprehension
@@ -350,8 +338,8 @@ closureExp = withLoc $ do
     Nothing -> return $ Closure expList
     Just l -> return  $ ClosureComprehension (expList,l)
 
-intLit :: PT Integer
-intLit =
+private intLit :: PT Integer
+private intLit =
    -- " - {-comment-} 10 " is parsed as Integer(-10) "
       (token T_minus >> linteger >>= return . negate)
   <|> linteger
@@ -362,28 +350,28 @@ intLit =
       then Just $ String.aton $ t.tokenString
       else Nothing 
 
-negateExp :: PT LExp
-negateExp = withLoc $ do
+private negateExp :: PT LExp
+private negateExp = withLoc $ do
   token T_minus
   body <- parseExp
   return $ NegExp body
 
-litExp :: PT LExp
-litExp = inSpan IntExp intLit
+private litExp :: PT LExp
+private litExp = inSpan IntExp intLit
 
-litPat :: PT LPattern
-litPat = inSpan IntPat intLit
+private litPat :: PT LPattern
+private litPat = inSpan IntPat intLit
 
-letExp :: PT LExp
-letExp = withLoc $ do
+private letExp :: PT LExp
+private letExp = withLoc $ do
   token T_let
   declList <- sepByNewLine (funBind <|> patBind)
   token T_within
   expo <- parseExp
   return $ Let declList expo
 
-ifteExp :: PT LExp
-ifteExp = withLoc $ do
+private ifteExp :: PT LExp
+private ifteExp = withLoc $ do
   token T_if
   cond <- parseExp
   token T_then
@@ -393,8 +381,8 @@ ifteExp = withLoc $ do
   return $ Ifte cond thenExp elseExp
 
 
-funCall :: PT LExp
-funCall = try (funCallFkt <|> funCallBi)
+private funCall :: PT LExp
+private funCall = try (funCallFkt <|> funCallBi)
   where
     funCallFkt :: PT LExp
     funCallFkt = withLoc $ do
@@ -408,8 +396,8 @@ funCall = try (funCallFkt <|> funCallBi)
       args <- parseFunArgs
       return $ CallBuiltIn fkt args
 
-parseFunArgs :: PT [[LExp]]
-parseFunArgs =  do
+private parseFunArgs :: PT [[LExp]]
+private parseFunArgs =  do
   argsL <- many1 funArgsT
   return argsL
 
@@ -420,22 +408,22 @@ g = h
 (a,b) = (1,2)
 -}
 
-funArgsT :: PT [LExp]
-funArgsT = try $ do
+private funArgsT :: PT [LExp]
+private funArgsT = try $ do
    tArgs <- inParens $ sepByComma parseExp
    notFollowedBy' token_is
    return tArgs
 
-lambdaExp :: PT LExp
-lambdaExp = withLoc $ do
+private lambdaExp :: PT LExp
+private lambdaExp = withLoc $ do
   token T_backslash
   patList <- sepBy1 parsePattern $ token T_comma
   token T_at
   expo <- parseExp
   return $ Lambda patList expo
 
-parseExpBase :: PT LExp
-parseExpBase =
+private parseExpBase :: PT LExp
+private parseExpBase =
          parenExpOrTupleEnum 
      <|> funCall
      <|> withLoc ( token T_STOP >> return Stop)
@@ -463,8 +451,8 @@ maybe need a Ast-node for parenExp for prettyPrint-Printing
 parenExps are now a special case of TupleExps
 -}
 
-parenExpOrTupleEnum :: PT LExp
-parenExpOrTupleEnum = withLoc $ do
+private parenExpOrTupleEnum :: PT LExp
+private parenExpOrTupleEnum = withLoc $ do
   body <- inParens $ sepByComma parseExp
   case body of
     [] -> return $ TupleExp []
@@ -477,14 +465,14 @@ Warning :
 the expression parser does not accept nested Postfix and Prefix expressions
  "not not true" does not parse !!
 -}
-type OpTable = [[ExprM.Operator Token PState LExp]] --TODO
+private type OpTable = [[ExprM.Operator Token PState LExp]] --TODO
 -- type OpTable = Int
-opTable :: OpTable
-opTable = baseTable ++ procTable
+private opTable :: OpTable
+private opTable = baseTable ++ procTable
 
-baseTable :: OpTable
-procTable :: OpTable
-(baseTable, procTable) = (
+private baseTable :: OpTable
+private procTable :: OpTable
+private (baseTable, procTable) = (
    [
     [ postfixM funApplyImplicit ]
    ,[ postfixM procRenaming ]
@@ -612,12 +600,12 @@ parseExp_noPrefix = parseDotExpOf parseExp_noPrefix_NoDot
      parseExp_noPrefix_NoDot = buildExpressionParser opTable parseExpBase
 
 -- todo :: parseExpBase does include STOP and SKIP 
-parseExp_noProc :: PT LExp
-parseExp_noProc
+private parseExp_noProc :: PT LExp
+private parseExp_noProc
   = parseDotExpOf $ buildExpressionParser baseTable parseExpBase
 
-parseDotExpOf :: PT LExp -> PT LExp
-parseDotExpOf baseExp = do
+private parseDotExpOf :: PT LExp -> PT LExp
+private parseDotExpOf baseExp = do
   sPos <-getNextPos
   dotExp <- sepBy1 baseExp $ token T_dot
   ePos <-getLastPos
@@ -633,8 +621,8 @@ notice : we do not destict between f(a,b,c) and f(a)(b)(c) or f(a,b)(c)
 this is buggy for f(a)(b)(c)
 this may interact with normal function -application !
 -}
-funApplyImplicit :: PT (LExp -> PT LExp)
-funApplyImplicit = do
+private funApplyImplicit :: PT (LExp -> PT LExp)
+private funApplyImplicit = do
   args <- parseFunArgs
   pos <-getPos
   return $ (\fkt -> mkLabeledNode pos $ CallFunction fkt args )
@@ -645,14 +633,14 @@ we have to be carefull not to parse the end of sequence ">"
 as comparision
 -}
 
-token_gt :: PT ()
-token_gt = token T_gt
+private token_gt :: PT ()
+private token_gt = token T_gt
 
-token_lt :: PT ()
-token_lt = token T_lt
+private token_lt :: PT ()
+private token_lt = token T_lt
 
-betweenLtGt :: PT a -> PT a
-betweenLtGt parser = do
+private betweenLtGt :: PT a -> PT a
+private betweenLtGt parser = do
   token_lt
   st <- getParserState  -- maybe we need to backtrack
   body <- parser           -- even if this is successfull
@@ -673,8 +661,8 @@ the last ">" is left as end of sequence
 attention: this can be nested !!
 -}
 
-parseWithGtLimit :: Int -> PT a -> PT a
-parseWithGtLimit maxGt parser = do
+private parseWithGtLimit :: Int -> PT a -> PT a
+private parseWithGtLimit maxGt parser = do
   oldLimit <- getStates PState.gtLimit
   setGtLimit $ Just maxGt
   res <- optionMaybe parser
@@ -685,8 +673,8 @@ parseWithGtLimit maxGt parser = do
  where
     setGtLimit g = updateState $ \env -> env.{gtLimit = g}
 
-proc_op_aparallel :: PT (LExp -> LExp -> PT LExp)
-proc_op_aparallel = try $ do
+private proc_op_aparallel :: PT (LExp -> LExp -> PT LExp)
+private proc_op_aparallel = try $ do
   s <- getNextPos
   token T_openBrack
   a1 <- parseExp_noPrefix
@@ -696,19 +684,19 @@ proc_op_aparallel = try $ do
   e <- getLastPos
   return $ (\p1 p2 -> mkLabeledNode (mkSrcSpan s e ) $ ProcAParallel a1 a2 p1 p2 )
 
-proc_op_lparallel :: PT (LExp -> LExp -> PT LExp)
-proc_op_lparallel = try $ do
+private proc_op_lparallel :: PT (LExp -> LExp -> PT LExp)
+private proc_op_lparallel = try $ do
   ren <- parseLinkList
   p <- getPos
   return $ (\p1 p2 -> mkLabeledNode p $ ProcLinkParallel ren p1 p2)
 
-procRenaming :: PT (LExp -> PT LExp)
-procRenaming = do
+private procRenaming :: PT (LExp -> PT LExp)
+private procRenaming = do
   rens <- many1 procOneRenaming
   return $ (\x -> foldl' (>>=) (return x) rens)
 
-procOneRenaming :: PT (LExp -> PT LExp )
-procOneRenaming = try $ do
+private procOneRenaming :: PT (LExp -> PT LExp )
+private procOneRenaming = try $ do
   s <- getNextPos
   token T_openBrackBrack
   ren<-(sepBy parseRename commaSeperator)
@@ -717,8 +705,8 @@ procOneRenaming = try $ do
   e<-getLastPos
   return $ (\p1 -> mkLabeledNode (mkSrcSpan s e ) $ ProcRenaming ren gens p1 )
 
-parseLinkList :: PT LLinkList
-parseLinkList = withLoc $ do
+private parseLinkList :: PT LLinkList
+private parseLinkList = withLoc $ do
   token T_openBrack
   linkList<-(sepBy parseLink commaSeperator)
   gens <- optionMaybe parseComprehension
@@ -727,15 +715,15 @@ parseLinkList = withLoc $ do
     Nothing -> return $ LinkList linkList
     Just g -> return $ LinkListComprehension g linkList
 
-parseLink :: PT LLink
-parseLink= withLoc $ do
+private parseLink :: PT LLink
+private parseLink= withLoc $ do
   e1<-parseExp_noPrefix
   token T_leftrightarrow
   e2<-parseExp_noPrefix
   return $ Link e1 e2
 
-parseRename :: PT LRename
-parseRename= withLoc $ do
+private parseRename :: PT LRename
+private parseRename= withLoc $ do
   e1<-parseExp_noPrefix
   token T_leftarrow
   e2<-parseExp_noPrefix
@@ -751,8 +739,8 @@ parsePattern = (<?> "pattern")  $ do
     [x] -> return x
     l -> mkLabeledNode  (mkSrcSpan sPos ePos) $ Also l
 
-parsePatternAppend :: PT LPattern
-parsePatternAppend = do
+private parsePatternAppend :: PT LPattern
+private parsePatternAppend = do
   sPos <- getNextPos
   concList <- sepBy1 parsePatternCore $ token T_hat
   ePos <- getLastPos
@@ -760,8 +748,8 @@ parsePatternAppend = do
     [x] -> return x
     l -> mkLabeledNode (mkSrcSpan sPos ePos) $ Append l
 
-parsePatternDot :: PT LPattern
-parsePatternDot = do
+private parsePatternDot :: PT LPattern
+private parsePatternDot = do
   s <- getNextPos
   dList <- sepBy1 parsePatternAppend $ token T_dot
   e <- getLastPos
@@ -769,8 +757,8 @@ parsePatternDot = do
       [p] -> return p
       l -> mkLabeledNode (mkSrcSpan s e) $ DotPat l
 
-parsePatternCore :: PT LPattern
-parsePatternCore =
+private parsePatternCore :: PT LPattern
+private parsePatternCore =
       nestedPattern
   <|> withLoc ( token T_true >> return TruePat)
   <|> withLoc ( token T_false >> return FalsePat)
@@ -794,16 +782,16 @@ parsePatternCore =
 
 -- FixMe: do not use patBind to parse variable bindings ?
 
-patBind :: PT LDecl
-patBind = withLoc $ do
+private patBind :: PT LDecl
+private patBind = withLoc $ do
   pat <- parsePattern
   token_is
   expo <- parseExp
   return $ PatBind pat expo
 
 -- parse a single function-case
-funBind :: PT LDecl
-funBind = try $ do
+private funBind :: PT LDecl
+private funBind = try $ do
   fname <- ident
   patl <- parseFktCurryPat
   token_is <?> "rhs of function clause"
@@ -818,11 +806,11 @@ currying in-between
 i,e (a,b,c)(d,e,f) -> [[a,b,c][d,e,f]]
 -}
 
-parseFktCurryPat :: PT [[LPattern]]
-parseFktCurryPat = many1 parseFktCspPat
+private parseFktCurryPat :: PT [[LPattern]]
+private parseFktCurryPat = many1 parseFktCspPat
 
-parseFktCspPat :: PT [LPattern]
-parseFktCspPat = inParens $ sepByComma parsePattern
+private parseFktCspPat :: PT [LPattern]
+private parseFktCspPat = inParens $ sepByComma parsePattern
 
 topDeclList :: PT [LDecl]
 topDeclList = sepByNewLine topDecl 
@@ -1020,8 +1008,8 @@ topDeclList = sepByNewLine topDecl
 
 {- Replicated Expressions in Prefix form -}
 
-parseProcReplicatedExp :: PT LProc
-parseProcReplicatedExp
+private parseProcReplicatedExp :: PT LProc
+private parseProcReplicatedExp
   = choice
     [ 
       procRep T_semicolon   ProcRepSequence
@@ -1071,8 +1059,8 @@ either another prefix or an expression without prefix
 expo <-(parsePrefixExp <|> parseExpBase ) <?> "rhs of prefix operation"
 
 -}
-parsePrefixExp :: PT LExp
-parsePrefixExp = do
+private parsePrefixExp :: PT LExp
+private parsePrefixExp = do
   spos <- getNextPos
   start <- parseExp_noProc -- channel or just an expression
   rest <- parsePrefix
@@ -1094,8 +1082,8 @@ parsePrefixExp = do
 this is not what fdr really does
 fdr parse ch?x.y:a as ch?((x.y):a)
 -}
-parseCommField :: PT LCommField
-parseCommField = inComm <|> outComm <?> "communication field"
+private parseCommField :: PT LCommField
+private parseCommField = inComm <|> outComm <?> "communication field"
   where
   inComm = withLoc $ do
     token T_questionmark
@@ -1121,53 +1109,53 @@ The following is not related to CSPM-Syntax
 
 --maybe this is Combinator.lookAhead ?
 
-testFollows :: PT x -> PT (Maybe x)
-testFollows p = do
+private testFollows :: PT x -> PT (Maybe x)
+private testFollows p = do
   oldState <- getParserState
   res <-optionMaybe p
   _ <- setParserState oldState
   return res
 
-primExUpdatePos :: SourcePos -> Token -> t -> SourcePos
-primExUpdatePos pos (t@(Token {})) _
+private primExUpdatePos :: SourcePos -> Token -> t -> SourcePos
+private primExUpdatePos pos (t@(Token {})) _
   = newPos (sourceName pos) (-1) t.tokenId.unTokenId
 
-primExUpdateState :: t -> Token -> t1 -> PState -> PState
-primExUpdateState _ tok _ st = st.{ lastTok =tok}
+private primExUpdateState :: t -> Token -> t1 -> PState -> PState
+private primExUpdateState _ tok _ st = st.{ lastTok =tok}
 
 {-
 replicating existing combinators, just to work with our lexer
 improve this
 -}
 
-anyToken :: PT Token
-anyToken = tokenPrimEx Token.showToken primExUpdatePos (Just primExUpdateState) Just
+private anyToken :: PT Token
+private anyToken = tokenPrimEx Token.showToken primExUpdatePos (Just primExUpdateState) Just
 
-notFollowedBy :: GenParser tok st Token -> GenParser tok st ()
-notFollowedBy p 
+private notFollowedBy :: GenParser tok st Token -> GenParser tok st ()
+private notFollowedBy p 
   = try (do{ c <- p; unexpected $ Token.showToken c }
          <|> return ()
         )
 
-notFollowedBy' :: GenParser tok st a -> GenParser tok st ()
-notFollowedBy' p
+private notFollowedBy' :: GenParser tok st a -> GenParser tok st ()
+private notFollowedBy' p
   = try $ ( p >> pzero ) <|> return ()
 
-eof :: PT ()
-eof  = notFollowedBy anyToken <?> "end of input"
+private eof :: PT ()
+private eof = notFollowedBy anyToken <?> "end of input"
 
-pprintParsecError :: ParsecError.ParseError -> String
-pprintParsecError err
+private pprintParsecError :: ParsecError.ParseError -> String
+private pprintParsecError err
   = ParsecError.showErrorMessages "or" "unknown parse error" 
       "expecting" "unexpected" "end of input"
         (ParsecError.errorMessages err)
 
-wrapParseError ::
+private wrapParseError ::
      [Token]
   -> Either ParsecError.ParseError ModuleFromParser
   -> Either ParseError ModuleFromParser
-wrapParseError _ (Right ast) = Right ast
-wrapParseError tl (Left err) = Left $ ParseError {
+private wrapParseError _ (Right ast) = Right ast
+private wrapParseError tl (Left err) = Left $ ParseError {
    parseErrorMsg = pprintParsecError err
   ,parseErrorToken = errorTok
   ,parseErrorPos = errorTok.tokenStart
@@ -1176,8 +1164,8 @@ wrapParseError tl (Left err) = Left $ ParseError {
     tokId = Token.mkTokenId $ sourceColumn $ ParsecError.errorPos err
     errorTok = maybe Token.tokenSentinel id  $ find (\t -> t.tokenId ==  tokId) tl
 
-token_is :: PT ()
-token_is = token T_is
+private token_is :: PT ()
+private token_is = token T_is
 
-tokenPrimExDefault :: (Token -> Maybe a) -> GenParser Token PState a
-tokenPrimExDefault = tokenPrimEx Token.showToken primExUpdatePos (Just primExUpdateState)
+private tokenPrimExDefault :: (Token -> Maybe a) -> GenParser Token PState a
+private tokenPrimExDefault = tokenPrimEx Token.showToken primExUpdatePos (Just primExUpdateState)

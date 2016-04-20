@@ -1,5 +1,4 @@
--- {-# LANGUAGE TupleSections, RecordWildCards #-}
-module LexHelper
+module Language.CSPM.LexHelper
 {-
 (
    lexInclude
@@ -12,11 +11,10 @@ module LexHelper
 -}
 where
 
-import Lexer as Lexer (scanner)
-import Token --(Token(..), LexError(..)) TODO import
-import TokenClasses -- (PrimToken(..))
-import UnicodeSymbols (lookupDefaultSymbol)
--- import Control.Monad.IO.Class
+import Language.CSPM.Lexer as Lexer (scanner)
+import Language.CSPM.Token (Token, LexError) --TODO import
+import Language.CSPM.TokenClasses (PrimToken)
+import Language.CSPM.UnicodeSymbols (lookupDefaultSymbol)
 import frege.control.monad.trans.MonadIO 
 import frege.data.Set (Set)
 

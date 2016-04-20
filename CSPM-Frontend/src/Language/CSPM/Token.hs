@@ -11,17 +11,17 @@
 -- This module contains the data type Tokens and some helper functions
 
 
-module Token
+module Language.CSPM.Token
 where
 
-import TokenClasses
+import Language.CSPM.TokenClasses
 
 -- import Data.Typeable (Typeable)
 -- import Data.Generics.Basics (Data)
 -- import GHC.Generics (Generic)
 -- import Data.Generics.Instances ()
 --import Data.Ix
--- import Control.{-Exception-} (Exception)
+-- import Control.{-Exception-} (Exception) TODO
 
 data TokenId = TokenId {unTokenId :: Int}
 derive Show TokenId
@@ -54,7 +54,7 @@ alexMove (AlexPn a l c) _    = AlexPn (a+1)  l     (c+1)
 data LexError = ! LexError {
    lexEPos :: AlexPosn
   ,lexEMsg :: String
-  } --deriving (Show)
+  }
 -- instance Exception LexError
 derive Show LexError
 
@@ -64,7 +64,7 @@ data Token = Token
   , tokenLen    :: Int
   , tokenClass  :: PrimToken
   , tokenString :: String
-  } --deriving (Show, Eq, Ord)
+  }
 derive Show Token
 derive Eq Token
 derive Ord Token

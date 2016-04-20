@@ -1,12 +1,12 @@
 module LexHelperTest where
 
-import LexHelper
-import Token
-import TokenClasses
+import Language.CSPM.LexHelper
+import Language.CSPM.Token
+import Language.CSPM.TokenClasses
 
 import Data.Ix
 import Data.Array
-import UnicodeSymbols
+import Language.CSPM.UnicodeSymbols
 
 main' _ = print $ [minbound..maxBound] -- TODO NOTE strange
 

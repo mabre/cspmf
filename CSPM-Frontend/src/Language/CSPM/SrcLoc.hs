@@ -13,10 +13,10 @@
 --
 -- This module contains the datatype for sourcelocations and some utility functions.
 
-module SrcLoc -- TODO module names
+module Language.CSPM.SrcLoc
 where
 
-import Token --as Token
+import Language.CSPM.Token
 
 import Data.List
 -- import Data.Typeable (Typeable)
