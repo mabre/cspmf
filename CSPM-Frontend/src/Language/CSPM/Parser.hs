@@ -75,7 +75,7 @@ derive Show ParseError
 
 -- instance Exception ParseError
 
-private data PState
+data PState -- TODO compiler bug: if this is private: F src/Language/CSPM/Utils.hs:24:  instForClass: bad instance type Parser.PState
  = PState {
   lastTok        :: Token
  ,gtCounter      :: Int

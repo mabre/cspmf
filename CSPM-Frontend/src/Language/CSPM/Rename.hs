@@ -16,7 +16,7 @@
 -- EmptyDataDecls
 -- ViewPatterns
 
-module Rename
+module Language.CSPM.Rename
 --   (
 --    renameModule
 --   ,RenameError (..)
@@ -26,10 +26,10 @@ module Rename
 --   )
 where
 
-import AST --hiding (prologMode, bindType)
-import AST as AST()
-import SrcLoc as SrcLoc()
-import BuiltIn as BuiltIn
+import Language.CSPM.AST
+import Language.CSPM.AST as AST()
+import Language.CSPM.SrcLoc as SrcLoc()
+import Language.CSPM.BuiltIn as BuiltIn
 
 -- import Data.Generics.Basics (Data(..))
 -- import Data.Data (mkDataType)
