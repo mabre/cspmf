@@ -22,5 +22,7 @@ src/Text/ParserCombinators/Parsec/Language.hs
 
 src/Language/CSPM/Parser.hs
 src/Language/CSPM/BuiltIn.hs
-src/Language/CSPM/Rename.hs
 src/Language/CSPM/Utils.hs
+
+
+src/Language/CSPM/Rename.hs

@@ -1,0 +1,18 @@
+module frege.data.IntMap where
+
+import frege.data.Map as Map()
+import frege.data.Map(Map)
+
+type IntMap x = Map Int x
+derive Show (IntMap x)
+derive Eq (IntMap x)
+derive Ord (IntMap x)
+
+empty :: IntMap a
+empty = Map.empty
+
+insert :: Int -> a -> IntMap a -> IntMap a
+insert = Map.insert
+
+lookup :: Int -> IntMap a -> Maybe a
+lookup = Map.lookup

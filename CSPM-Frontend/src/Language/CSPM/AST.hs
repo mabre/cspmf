@@ -26,11 +26,7 @@ import Data.Data
 import Data.Map (Map)
 -- import Data.Array.IArray
 import Data.Array
-
-data IntMap x = Map Int x
-derive Show (IntMap x)
-derive Eq (IntMap x)
-derive Ord (IntMap x)
+import frege.data.IntMap
 
 type AstAnnotation x = IntMap x
 type Bindings = Map String UniqueIdent
@@ -136,9 +132,6 @@ derive Show (Module a)
 data FromParser = FromParser
 derive Eq FromParser
 derive Show FromParser
--- derive Typeable FromParser -- TODO Typeable
--- instance Data FromParser
--- instance Eq FromParser -- TODO
 
 castModule :: Module a -> Module b
 castModule (Module mds mts msrcloc mcs mps) = Module mds mts msrcloc mcs mps
@@ -681,6 +674,23 @@ instance (Data a1) => Data (Module a1 ) where
                          _ -> error "gunfold(Module)"
     gfoldl f z x = case x of
                          (Module a1 a2 a3 a4 a5) -> (((((z Module) `f` a1) `f` a2) `f` a3) `f` a4) `f` a5
+
+tc_FromRenaming :: TyCon
+tc_FromRenaming = mkTyCon3 "Language.CSPM" "AST" "FromParser"
+instance Typeable (FromParser ) where
+    typeOf _ = mkTyConApp tc_FromRenaming []
+con_FromRenaming_FromRenaming :: Constr
+con_FromRenaming_FromRenaming = mkConstr ty_FromRenaming "con_FromRenaming_FromRenaming" [] Prefix
+ty_FromRenaming :: DataType
+ty_FromRenaming = mkDataType "HHU.Test1.FromParser" [con_FromRenaming_FromRenaming]
+instance Data (FromParser ) where
+    toConstr (FromParser) = con_FromRenaming_FromRenaming
+    dataTypeOf _ = ty_FromRenaming
+    gunfold k z c = case constrIndex c of
+                         1 -> z FromParser
+                         _ -> error "gunfold(FromParser)"
+    gfoldl f z x = case x of
+                         (FromParser) -> z FromParser
 
 tc_Exp :: TyCon
 tc_Exp = mkTyCon3 "Language.CSPM" "AST" "Exp"
