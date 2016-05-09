@@ -2,6 +2,8 @@ module frege.data.IntMap where
 
 import frege.data.Map as Map()
 import frege.data.Map(Map)
+import Data.Typeable
+import Data.Data
 
 type IntMap x = Map Int x
 derive Show (IntMap x)
@@ -16,3 +18,26 @@ insert = Map.insert
 
 lookup :: Int -> IntMap a -> Maybe a
 lookup = Map.lookup
+
+-- removed from a everything which is in b
+difference a b = undefined -- TODO
+    {-fromList $ map f [ e | e <- Map.toList a ]
+    where f = filter (\e -> lookup (fst e) b == Nothing)-}
+fromList = Map.fromList
+
+tc_Map :: TyCon
+tc_Map = mkTyCon3 "Language.CSPM" "AST" "Map"
+instance Typeable b => Typeable (Map a b) where
+    typeOf _ = mkTyConApp tc_Map []
+con_Map_Map :: Constr
+con_Map_Map = mkConstr ty_Map "con_Map_Map" [] Prefix
+ty_Map :: DataType
+ty_Map = mkDataType "HHU.Test1.Map" [con_Map_Map]
+instance (Data k, Data a, Ord k) => Data (Map k a) where
+--     toConstr _ = con_Map_Map
+    toConstr _     = error "toConstr"
+    gunfold _ _    = error "gunfold"
+    dataTypeOf _   = mkNoRepType "Data.Map.Map"
+--     dataCast2 f    = gcast2 f
+    gfoldl f z m   = z Map.fromList `f` Map.toList m
+

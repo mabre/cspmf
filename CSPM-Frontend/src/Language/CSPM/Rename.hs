@@ -43,25 +43,26 @@ import Data.Set (Set)
 import Data.Map as Map()
 import Data.Map (Map)
 import Data.Set as Set()
--- import Data.IntMap as IntMap()
+import Data.IntMap as IntMap()
 import Data.List as List()
 import Data.Maybe
-import frege.data.IntMap
+-- import frege.data.IntMap
 
 
-instance Data FromRenaming
-  where
-    gunfold = error "instance Data FromRenaming gunfold"
-    toConstr = error "instance Data FromRenaming toConstr"
-    dataTypeOf _ = mkDataType "Language.CSPM.Rename.FromRenaming" []
+-- instance Data FromRenaming -- TODO rly unnecessary?
+--   where
+--     gunfold = error "instance Data FromRenaming gunfold"
+--     toConstr = error "instance Data FromRenaming toConstr"
+-- --     dataTypeOf _ = mkDataType "Language.CSPM.Rename.FromRenaming" []
 
 -- | A module that has gone through renaming
 type ModuleFromRenaming = Module FromRenaming
 
 -- | Tag that a module has gone through renaming.
 data FromRenaming = FromRenaming
+derive Show FromRenaming
 tc_FromRenaming :: TyCon
-tc_FromRenaming = mkTyCon3 "HHU" "Test1" "FromRenaming"
+tc_FromRenaming = mkTyCon3 "Language.CSPM" "Rename" "FromRenaming"
 instance Typeable (FromRenaming ) where
     typeOf _ = mkTyConApp tc_FromRenaming []
 
@@ -95,6 +96,16 @@ data RenameInfo = RenameInfo
    ,bindType   :: BindType
   }
 -- derive Show RenameInfo
+instance Show RenameInfo where
+    show r = concat [
+        show r.nameSupply,
+        show (Map.toList r.localBindings), --TODO is Map instance of Show?
+        show (Map.toList r.visible),
+        show r.identDefinition,
+        show r.identUse,
+        show r.usedNames,
+        show r.prologMode,
+        show r.bindType]
 
 initialRState :: RenameInfo
 initialRState = RenameInfo { nameSupply    = 0,

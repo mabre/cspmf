@@ -11,36 +11,33 @@
 -- Some utility functions for converting the AST
 
 module Language.CSPM.AstUtils
-  (
-   removeSourceLocations
-  ,removeParens
-  ,removeModuleAsserts
-  ,unUniqueIdent
-  ,computeFreeNames
-  ,getModuleAsserts
-  ,setNodeIdsZero
-  ,getLastBindExpression -- used for parsing a single expression
-  ,getLastDeclaration -- used for parsing a single declaration
-  )
+--   ( TODO check every module for private
+--    removeSourceLocations
+--   ,removeParens
+--   ,removeModuleAsserts
+--   ,unUniqueIdent
+--   ,computeFreeNames
+--   ,getModuleAsserts
+--   ,setNodeIdsZero
+--   ,getLastBindExpression -- used for parsing a single expression
+--   ,getLastDeclaration -- used for parsing a single declaration
+--   )
 where
 
-import Debug.Trace -- TODO
+-- import Debug.Trace -- TODO
 
-import Language.CSPM.AST hiding (prologMode)
-import qualified Language.CSPM.SrcLoc as SrcLoc
+import Language.CSPM.AST
+import Language.CSPM.SrcLoc(SrcLoc)
 
-import qualified Data.IntMap as IntMap
+import Data.IntMap(IntMap)
 import Data.Data
 import Data.Maybe
--- import Data.Generics.Schemes (everywhere,listify)
--- import Data.Generics.Aliases (mkT)
-
-everywhere = trace "everywhere" undefined --TODO Generics
-listify = trace "listify" undefined --TODO Generics
-mkT = trace "mkT" undefined --TODO Generics
+import Data.Generics.Schemes (everywhere,listify)
+import Data.Generics.Aliases (mkT)
 
 -- | 'removeSourceLocations' sets all locationsInfos to 'NoLocation'
-removeSourceLocations :: Data a => a -> a
+-- removeSourceLocations :: Data a => a -> a -- TODO crashes when called
+removeSourceLocations :: ModuleFromParser -> ModuleFromParser
 removeSourceLocations ast 
   = everywhere (mkT patchLabel) ast
   where
@@ -54,7 +51,7 @@ removeParens ast
   = everywhere (mkT patchExp) ast
   where
     patchExp :: LExp -> LExp
-    patchExp x = case unLabel x of
+    patchExp x = case x.unLabel of
       Parens e -> e
       _ -> x
 
@@ -74,7 +71,7 @@ unUniqueIdent ast
   = everywhere (mkT patchIdent) ast
   where
     patchIdent :: Ident -> Ident
-    patchIdent (UIdent u) = Ident $ newName u
+    patchIdent (UIdent u) = Ident $ u.newName
     patchIdent _ = error "unUniqueIdent : did not expect and 'Ident' in the AST"
 
 -- | Compute the "FreeNames" of an Expression.
@@ -90,8 +87,8 @@ computeFreeNames syntax
     def  =  (map (getIdent . unDef) $ listify isDef syntax)
          ++ (map (getIdent . unDecl) $ listify isDecl syntax)
     getIdent :: LIdent -> (Int, UniqueIdent)
-    getIdent x = (uniqueIdentId h, h)
-      where h = unUIdent $ unLabel x
+    getIdent x = (h.uniqueIdentId, h)
+      where h = unUIdent $ x.unLabel
 
     isUse :: Exp -> Bool
     isUse (Var {}) = True
@@ -115,26 +112,26 @@ computeFreeNames syntax
 
 -- | Get the assert declarations of a module.
 getModuleAsserts :: Module a -> [LAssertDecl]
-getModuleAsserts = mapMaybe justAssert . moduleDecls
+getModuleAsserts = mapMaybe justAssert . Module.moduleDecls
   where
-    justAssert decl = case unLabel decl of
+    justAssert decl = case decl.unLabel of
       Assert  a -> Just a
       _ -> Nothing
 
 getLastBindExpression :: Module a -> LExp
-getLastBindExpression = justDeclExp . last . moduleDecls
+getLastBindExpression = justDeclExp . last . Module.moduleDecls
   where
-    justDeclExp decl = case unLabel decl of
+    justDeclExp decl = case decl.unLabel of
       (PatBind _ exp) -> exp
       _ -> error "getLastBindExpression: expection PatBind"
 
 getLastDeclaration :: Module a -> LDecl
-getLastDeclaration = last . moduleDecls
+getLastDeclaration = last . Module.moduleDecls
 
 -- | Remove assert declarations from a module.
 removeModuleAsserts :: Module a -> Module a
-removeModuleAsserts m = m { moduleDecls = mapMaybe notAssert $ moduleDecls m}
+removeModuleAsserts m = m.{ moduleDecls = mapMaybe notAssert $  m.moduleDecls}
   where
-    notAssert decl = case unLabel decl of
+    notAssert decl = case decl.unLabel of
       Assert _ -> Nothing
       _ -> Just decl

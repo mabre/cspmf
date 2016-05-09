@@ -675,17 +675,17 @@ instance (Data a1) => Data (Module a1 ) where
     gfoldl f z x = case x of
                          (Module a1 a2 a3 a4 a5) -> (((((z Module) `f` a1) `f` a2) `f` a3) `f` a4) `f` a5
 
-tc_FromRenaming :: TyCon
-tc_FromRenaming = mkTyCon3 "Language.CSPM" "AST" "FromParser"
+tc_FromParser :: TyCon
+tc_FromParser = mkTyCon3 "Language.CSPM" "AST" "FromParser"
 instance Typeable (FromParser ) where
-    typeOf _ = mkTyConApp tc_FromRenaming []
-con_FromRenaming_FromRenaming :: Constr
-con_FromRenaming_FromRenaming = mkConstr ty_FromRenaming "con_FromRenaming_FromRenaming" [] Prefix
-ty_FromRenaming :: DataType
-ty_FromRenaming = mkDataType "HHU.Test1.FromParser" [con_FromRenaming_FromRenaming]
+    typeOf _ = mkTyConApp tc_FromParser []
+con_FromParser_FromParser :: Constr
+con_FromParser_FromParser = mkConstr ty_FromParser "con_FromParser_FromParser" [] Prefix
+ty_FromParser :: DataType
+ty_FromParser = mkDataType "Language.CSPM.AST.FromParser" [con_FromParser_FromParser]
 instance Data (FromParser ) where
-    toConstr (FromParser) = con_FromRenaming_FromRenaming
-    dataTypeOf _ = ty_FromRenaming
+    toConstr (FromParser) = con_FromParser_FromParser
+    dataTypeOf _ = ty_FromParser
     gunfold k z c = case constrIndex c of
                          1 -> z FromParser
                          _ -> error "gunfold(FromParser)"
@@ -693,7 +693,7 @@ instance Data (FromParser ) where
                          (FromParser) -> z FromParser
 
 tc_Exp :: TyCon
-tc_Exp = mkTyCon3 "Language.CSPM" "AST" "Exp"
+tc_Exp = mkTyCon3 "HHU" "Test1" "Exp"
 instance Typeable (Exp ) where
     typeOf _ = mkTyConApp tc_Exp []
 con_Exp_Var :: Constr
@@ -712,8 +712,80 @@ con_Exp_Ifte :: Constr
 con_Exp_Ifte = mkConstr ty_Exp "con_Exp_Ifte" [] Prefix
 con_Exp_CallFunction :: Constr
 con_Exp_CallFunction = mkConstr ty_Exp "con_Exp_CallFunction" [] Prefix
+con_Exp_CallBuiltIn :: Constr
+con_Exp_CallBuiltIn = mkConstr ty_Exp "con_Exp_CallBuiltIn" [] Prefix
+con_Exp_Lambda :: Constr
+con_Exp_Lambda = mkConstr ty_Exp "con_Exp_Lambda" [] Prefix
+con_Exp_Stop :: Constr
+con_Exp_Stop = mkConstr ty_Exp "con_Exp_Stop" [] Prefix
+con_Exp_Skip :: Constr
+con_Exp_Skip = mkConstr ty_Exp "con_Exp_Skip" [] Prefix
+con_Exp_CTrue :: Constr
+con_Exp_CTrue = mkConstr ty_Exp "con_Exp_CTrue" [] Prefix
+con_Exp_CFalse :: Constr
+con_Exp_CFalse = mkConstr ty_Exp "con_Exp_CFalse" [] Prefix
+con_Exp_Events :: Constr
+con_Exp_Events = mkConstr ty_Exp "con_Exp_Events" [] Prefix
+con_Exp_BoolSet :: Constr
+con_Exp_BoolSet = mkConstr ty_Exp "con_Exp_BoolSet" [] Prefix
+con_Exp_IntSet :: Constr
+con_Exp_IntSet = mkConstr ty_Exp "con_Exp_IntSet" [] Prefix
+con_Exp_TupleExp :: Constr
+con_Exp_TupleExp = mkConstr ty_Exp "con_Exp_TupleExp" [] Prefix
+con_Exp_Parens :: Constr
+con_Exp_Parens = mkConstr ty_Exp "con_Exp_Parens" [] Prefix
+con_Exp_AndExp :: Constr
+con_Exp_AndExp = mkConstr ty_Exp "con_Exp_AndExp" [] Prefix
+con_Exp_OrExp :: Constr
+con_Exp_OrExp = mkConstr ty_Exp "con_Exp_OrExp" [] Prefix
+con_Exp_NotExp :: Constr
+con_Exp_NotExp = mkConstr ty_Exp "con_Exp_NotExp" [] Prefix
+con_Exp_NegExp :: Constr
+con_Exp_NegExp = mkConstr ty_Exp "con_Exp_NegExp" [] Prefix
+con_Exp_Fun1 :: Constr
+con_Exp_Fun1 = mkConstr ty_Exp "con_Exp_Fun1" [] Prefix
+con_Exp_Fun2 :: Constr
+con_Exp_Fun2 = mkConstr ty_Exp "con_Exp_Fun2" [] Prefix
+con_Exp_DotTuple :: Constr
+con_Exp_DotTuple = mkConstr ty_Exp "con_Exp_DotTuple" [] Prefix
+con_Exp_Closure :: Constr
+con_Exp_Closure = mkConstr ty_Exp "con_Exp_Closure" [] Prefix
+con_Exp_ProcSharing :: Constr
+con_Exp_ProcSharing = mkConstr ty_Exp "con_Exp_ProcSharing" [] Prefix
+con_Exp_ProcAParallel :: Constr
+con_Exp_ProcAParallel = mkConstr ty_Exp "con_Exp_ProcAParallel" [] Prefix
+con_Exp_ProcLinkParallel :: Constr
+con_Exp_ProcLinkParallel = mkConstr ty_Exp "con_Exp_ProcLinkParallel" [] Prefix
+con_Exp_ProcRenaming :: Constr
+con_Exp_ProcRenaming = mkConstr ty_Exp "con_Exp_ProcRenaming" [] Prefix
+con_Exp_ProcException :: Constr
+con_Exp_ProcException = mkConstr ty_Exp "con_Exp_ProcException" [] Prefix
+con_Exp_ProcRepSequence :: Constr
+con_Exp_ProcRepSequence = mkConstr ty_Exp "con_Exp_ProcRepSequence" [] Prefix
+con_Exp_ProcRepInternalChoice :: Constr
+con_Exp_ProcRepInternalChoice = mkConstr ty_Exp "con_Exp_ProcRepInternalChoice" [] Prefix
+con_Exp_ProcRepExternalChoice :: Constr
+con_Exp_ProcRepExternalChoice = mkConstr ty_Exp "con_Exp_ProcRepExternalChoice" [] Prefix
+con_Exp_ProcRepInterleave :: Constr
+con_Exp_ProcRepInterleave = mkConstr ty_Exp "con_Exp_ProcRepInterleave" [] Prefix
+con_Exp_ProcRepAParallel :: Constr
+con_Exp_ProcRepAParallel = mkConstr ty_Exp "con_Exp_ProcRepAParallel" [] Prefix
+con_Exp_ProcRepLinkParallel :: Constr
+con_Exp_ProcRepLinkParallel = mkConstr ty_Exp "con_Exp_ProcRepLinkParallel" [] Prefix
+con_Exp_ProcRepSharing :: Constr
+con_Exp_ProcRepSharing = mkConstr ty_Exp "con_Exp_ProcRepSharing" [] Prefix
+con_Exp_PrefixExp :: Constr
+con_Exp_PrefixExp = mkConstr ty_Exp "con_Exp_PrefixExp" [] Prefix
+con_Exp_PrefixI :: Constr
+con_Exp_PrefixI = mkConstr ty_Exp "con_Exp_PrefixI" [] Prefix
+con_Exp_LetI :: Constr
+con_Exp_LetI = mkConstr ty_Exp "con_Exp_LetI" [] Prefix
+con_Exp_LambdaI :: Constr
+con_Exp_LambdaI = mkConstr ty_Exp "con_Exp_LambdaI" [] Prefix
+con_Exp_ExprWithFreeNames :: Constr
+con_Exp_ExprWithFreeNames = mkConstr ty_Exp "con_Exp_ExprWithFreeNames" [] Prefix
 ty_Exp :: DataType
-ty_Exp = mkDataType "Language.CSPM.AST.Exp" [con_Exp_Var, con_Exp_IntExp, con_Exp_SetExp, con_Exp_ListExp, con_Exp_ClosureComprehension, con_Exp_Let, con_Exp_Ifte, con_Exp_CallFunction]
+ty_Exp = mkDataType "HHU.Test1.Exp" [con_Exp_Var, con_Exp_IntExp, con_Exp_SetExp, con_Exp_ListExp, con_Exp_ClosureComprehension, con_Exp_Let, con_Exp_Ifte, con_Exp_CallFunction, con_Exp_CallBuiltIn, con_Exp_Lambda, con_Exp_Stop, con_Exp_Skip, con_Exp_CTrue, con_Exp_CFalse, con_Exp_Events, con_Exp_BoolSet, con_Exp_IntSet, con_Exp_TupleExp, con_Exp_Parens, con_Exp_AndExp, con_Exp_OrExp, con_Exp_NotExp, con_Exp_NegExp, con_Exp_Fun1, con_Exp_Fun2, con_Exp_DotTuple, con_Exp_Closure, con_Exp_ProcSharing, con_Exp_ProcAParallel, con_Exp_ProcLinkParallel, con_Exp_ProcRenaming, con_Exp_ProcException, con_Exp_ProcRepSequence, con_Exp_ProcRepInternalChoice, con_Exp_ProcRepExternalChoice, con_Exp_ProcRepInterleave, con_Exp_ProcRepAParallel, con_Exp_ProcRepLinkParallel, con_Exp_ProcRepSharing, con_Exp_PrefixExp, con_Exp_PrefixI, con_Exp_LetI, con_Exp_LambdaI, con_Exp_ExprWithFreeNames]
 instance Data (Exp ) where
     toConstr (Var _) = con_Exp_Var
     toConstr (IntExp _) = con_Exp_IntExp
@@ -723,6 +795,42 @@ instance Data (Exp ) where
     toConstr (Let _ _) = con_Exp_Let
     toConstr (Ifte _ _ _) = con_Exp_Ifte
     toConstr (CallFunction _ _) = con_Exp_CallFunction
+    toConstr (CallBuiltIn _ _) = con_Exp_CallBuiltIn
+    toConstr (Lambda _ _) = con_Exp_Lambda
+    toConstr (Stop) = con_Exp_Stop
+    toConstr (Skip) = con_Exp_Skip
+    toConstr (CTrue) = con_Exp_CTrue
+    toConstr (CFalse) = con_Exp_CFalse
+    toConstr (Events) = con_Exp_Events
+    toConstr (BoolSet) = con_Exp_BoolSet
+    toConstr (IntSet) = con_Exp_IntSet
+    toConstr (TupleExp _) = con_Exp_TupleExp
+    toConstr (Parens _) = con_Exp_Parens
+    toConstr (AndExp _ _) = con_Exp_AndExp
+    toConstr (OrExp _ _) = con_Exp_OrExp
+    toConstr (NotExp _) = con_Exp_NotExp
+    toConstr (NegExp _) = con_Exp_NegExp
+    toConstr (Fun1 _ _) = con_Exp_Fun1
+    toConstr (Fun2 _ _ _) = con_Exp_Fun2
+    toConstr (DotTuple _) = con_Exp_DotTuple
+    toConstr (Closure _) = con_Exp_Closure
+    toConstr (ProcSharing _ _ _) = con_Exp_ProcSharing
+    toConstr (ProcAParallel _ _ _ _) = con_Exp_ProcAParallel
+    toConstr (ProcLinkParallel _ _ _) = con_Exp_ProcLinkParallel
+    toConstr (ProcRenaming _ _ _) = con_Exp_ProcRenaming
+    toConstr (ProcException _ _ _) = con_Exp_ProcException
+    toConstr (ProcRepSequence _ _) = con_Exp_ProcRepSequence
+    toConstr (ProcRepInternalChoice _ _) = con_Exp_ProcRepInternalChoice
+    toConstr (ProcRepExternalChoice _ _) = con_Exp_ProcRepExternalChoice
+    toConstr (ProcRepInterleave _ _) = con_Exp_ProcRepInterleave
+    toConstr (ProcRepAParallel _ _ _) = con_Exp_ProcRepAParallel
+    toConstr (ProcRepLinkParallel _ _ _) = con_Exp_ProcRepLinkParallel
+    toConstr (ProcRepSharing _ _ _) = con_Exp_ProcRepSharing
+    toConstr (PrefixExp _ _ _) = con_Exp_PrefixExp
+    toConstr (PrefixI _ _ _ _) = con_Exp_PrefixI
+    toConstr (LetI _ _ _) = con_Exp_LetI
+    toConstr (LambdaI _ _ _) = con_Exp_LambdaI
+    toConstr (ExprWithFreeNames _ _) = con_Exp_ExprWithFreeNames
     dataTypeOf _ = ty_Exp
     gunfold k z c = case constrIndex c of
                          1 -> k (z Var)
@@ -733,6 +841,42 @@ instance Data (Exp ) where
                          6 -> k (k (z Let))
                          7 -> k (k (k (z Ifte)))
                          8 -> k (k (z CallFunction))
+                         9 -> k (k (z CallBuiltIn))
+                         10 -> k (k (z Lambda))
+                         11 -> z Stop
+                         12 -> z Skip
+                         13 -> z CTrue
+                         14 -> z CFalse
+                         15 -> z Events
+                         16 -> z BoolSet
+                         17 -> z IntSet
+                         18 -> k (z TupleExp)
+                         19 -> k (z Parens)
+                         20 -> k (k (z AndExp))
+                         21 -> k (k (z OrExp))
+                         22 -> k (z NotExp)
+                         23 -> k (z NegExp)
+                         24 -> k (k (z Fun1))
+                         25 -> k (k (k (z Fun2)))
+                         26 -> k (z DotTuple)
+                         27 -> k (z Closure)
+                         28 -> k (k (k (z ProcSharing)))
+                         29 -> k (k (k (k (z ProcAParallel))))
+                         30 -> k (k (k (z ProcLinkParallel)))
+                         31 -> k (k (k (z ProcRenaming)))
+                         32 -> k (k (k (z ProcException)))
+                         33 -> k (k (z ProcRepSequence))
+                         34 -> k (k (z ProcRepInternalChoice))
+                         35 -> k (k (z ProcRepExternalChoice))
+                         36 -> k (k (z ProcRepInterleave))
+                         37 -> k (k (k (z ProcRepAParallel)))
+                         38 -> k (k (k (z ProcRepLinkParallel)))
+                         39 -> k (k (k (z ProcRepSharing)))
+                         40 -> k (k (k (z PrefixExp)))
+                         41 -> k (k (k (k (z PrefixI))))
+                         42 -> k (k (k (z LetI)))
+                         43 -> k (k (k (z LambdaI)))
+                         44 -> k (k (z ExprWithFreeNames))
                          _ -> error "gunfold(Exp)"
     gfoldl f z x = case x of
                          (Var a1) -> (z Var) `f` a1
@@ -743,6 +887,42 @@ instance Data (Exp ) where
                          (Let a1 a2) -> ((z Let) `f` a1) `f` a2
                          (Ifte a1 a2 a3) -> (((z Ifte) `f` a1) `f` a2) `f` a3
                          (CallFunction a1 a2) -> ((z CallFunction) `f` a1) `f` a2
+                         (CallBuiltIn a1 a2) -> ((z CallBuiltIn) `f` a1) `f` a2
+                         (Lambda a1 a2) -> ((z Lambda) `f` a1) `f` a2
+                         (Stop) -> z Stop
+                         (Skip) -> z Skip
+                         (CTrue) -> z CTrue
+                         (CFalse) -> z CFalse
+                         (Events) -> z Events
+                         (BoolSet) -> z BoolSet
+                         (IntSet) -> z IntSet
+                         (TupleExp a1) -> (z TupleExp) `f` a1
+                         (Parens a1) -> (z Parens) `f` a1
+                         (AndExp a1 a2) -> ((z AndExp) `f` a1) `f` a2
+                         (OrExp a1 a2) -> ((z OrExp) `f` a1) `f` a2
+                         (NotExp a1) -> (z NotExp) `f` a1
+                         (NegExp a1) -> (z NegExp) `f` a1
+                         (Fun1 a1 a2) -> ((z Fun1) `f` a1) `f` a2
+                         (Fun2 a1 a2 a3) -> (((z Fun2) `f` a1) `f` a2) `f` a3
+                         (DotTuple a1) -> (z DotTuple) `f` a1
+                         (Closure a1) -> (z Closure) `f` a1
+                         (ProcSharing a1 a2 a3) -> (((z ProcSharing) `f` a1) `f` a2) `f` a3
+                         (ProcAParallel a1 a2 a3 a4) -> ((((z ProcAParallel) `f` a1) `f` a2) `f` a3) `f` a4
+                         (ProcLinkParallel a1 a2 a3) -> (((z ProcLinkParallel) `f` a1) `f` a2) `f` a3
+                         (ProcRenaming a1 a2 a3) -> (((z ProcRenaming) `f` a1) `f` a2) `f` a3
+                         (ProcException a1 a2 a3) -> (((z ProcException) `f` a1) `f` a2) `f` a3
+                         (ProcRepSequence a1 a2) -> ((z ProcRepSequence) `f` a1) `f` a2
+                         (ProcRepInternalChoice a1 a2) -> ((z ProcRepInternalChoice) `f` a1) `f` a2
+                         (ProcRepExternalChoice a1 a2) -> ((z ProcRepExternalChoice) `f` a1) `f` a2
+                         (ProcRepInterleave a1 a2) -> ((z ProcRepInterleave) `f` a1) `f` a2
+                         (ProcRepAParallel a1 a2 a3) -> (((z ProcRepAParallel) `f` a1) `f` a2) `f` a3
+                         (ProcRepLinkParallel a1 a2 a3) -> (((z ProcRepLinkParallel) `f` a1) `f` a2) `f` a3
+                         (ProcRepSharing a1 a2 a3) -> (((z ProcRepSharing) `f` a1) `f` a2) `f` a3
+                         (PrefixExp a1 a2 a3) -> (((z PrefixExp) `f` a1) `f` a2) `f` a3
+                         (PrefixI a1 a2 a3 a4) -> ((((z PrefixI) `f` a1) `f` a2) `f` a3) `f` a4
+                         (LetI a1 a2 a3) -> (((z LetI) `f` a1) `f` a2) `f` a3
+                         (LambdaI a1 a2 a3) -> (((z LambdaI) `f` a1) `f` a2) `f` a3
+                         (ExprWithFreeNames a1 a2) -> ((z ExprWithFreeNames) `f` a1) `f` a2
 
 tc_Range :: TyCon
 tc_Range = mkTyCon3 "Language.CSPM" "AST" "Range"
