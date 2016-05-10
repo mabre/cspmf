@@ -30,18 +30,19 @@ where
 
 import Text.PrettyPrint
 import Data.Char
-import Numeric (showHex)
+-- import Numeric (showHex)
+showHex = undefined --TODO
 
 renderProlog :: Doc -> String
 renderProlog a = renderStyle (Style PageMode 60 1.5) a
 
-newtype Atom = Atom {unAtom :: Doc}
-newtype Term = Term {unTerm :: Doc}
-newtype Predicate = Predicate {unPredicate :: Doc}
-newtype Clause = Clause {unClause :: Doc}
-newtype Decl = Decl {unDecl :: Doc}
+data Atom = Atom {unAtom :: Doc}
+data Term = Term {unTerm :: Doc}
+data Predicate = Predicate {unPredicate :: Doc}
+data Clause = Clause {unClause :: Doc}
+data Decl = Decl {unDecl :: Doc}
 
-newtype Quote = Quote String
+data Quote = Quote String
 
 class ATOM a where atom :: a -> Atom
 
@@ -55,7 +56,7 @@ instance ATOM Quote where atom (Quote s) = Atom $ text $ quoteString s
 class TERM t where term :: t -> Term
 
 instance TERM Term where term = id
-instance TERM Atom where term = Term . unAtom
+instance TERM Atom where term = Term . Atom.unAtom
 
 class TERMLIST t where termList :: t -> [Term]
 instance TERM t => TERMLIST [t]
@@ -82,30 +83,32 @@ instance TERM t => TERMLIST t where termList a = [term a]
 
 nTerm :: (ATOM f, TERMLIST ch) => f -> ch -> Term
 nTerm f ch = Term $
-  (unAtom $ atom f) <> if null childs
+  (Atom.unAtom $ atom f) <> if null childs
       then empty
       else parens $ hcat $ punctuate comma 
-                $ map ( unTerm . term ) childs
+                $ map ( Term.unTerm . term ) childs
   where childs = termList ch
 
 aTerm :: ATOM f => f -> Term
-aTerm = Term . unAtom . atom
+aTerm = Term . Atom.unAtom . atom
 
 pList :: TERM ch => [ch] -> Term
 pList l
   = Term $ brackets $ hcat 
-      $ punctuate comma $ map (unTerm . term )l
+      $ punctuate comma $ map (Term.unTerm . term )l
 
 plVar  :: String -> Term
-plVar [] = error "plVar : empty Sting"
-plVar a@(h:_)
+plVar "" = error "plVar : empty Sting"
+plVar s
   = if isUpper h || h=='_'
-      then Term $ text $ escapeBadChars a
-      else error ("lowercase var:" ++ a)
+      then Term $ text $ packed $ escapeBadChars a
+      else error ("lowercase var:" ++ packed a)
         where
            escapeBadChars x = concatMap esc x
-           esc '\'' = "_quote"
+           esc :: Char -> [Char]
+           esc '\'' = "_quote".toList
            esc x = [x]
+           (a@(h:_)) = toList s
 
 plWildCard :: Term
 plWildCard = Term $ text "_"
@@ -121,26 +124,30 @@ instance PREDICATE p => CLAUSE p
  
 nClause :: (PREDICATE h, PREDICATE b) => h -> [b] -> Clause
 nClause h b
-  = Clause $ (unPredicate $ predicate h) <+> text ":-"
-      $$ nest 3 (vcat $ punctuate comma $ map (unPredicate . predicate) b)
+  = Clause $ (Predicate.unPredicate $ predicate h) <+> text ":-"
+      $$ nest 3 (vcat $ punctuate comma $ map (Predicate.unPredicate . predicate) b)
       <> text "."
 
 singleClause :: Clause -> Decl
 singleClause (Clause x) = Decl x
 
 declGroup :: [Clause] -> Decl
-declGroup l = Decl $ vcat $ map unClause l
+declGroup l = Decl $ vcat $ map Clause.unClause l
 
 plPrg :: [Decl] -> Doc
-plPrg l = vcat $ map unDecl l
+plPrg l = vcat $ map Decl.unDecl l
 
 quoteString :: String -> String
-quoteString s
-  = "'" ++ concatMap escapeChar s ++ "'"
+quoteString sl
+  = packed $ ['\''] ++ concatMap escapeChar s ++ ['\'']
   where
+    s :: [Char]
+    s = sl.toList
+    escapeChar :: Char -> [Char]
     escapeChar a = if isBadChar a
-      then "\\x" ++ (showHex (ord a) "") ++ "\\"
+      then toList $ "\\x" ++ (showHex (ord a) "") ++ "\\"
       else [a]
+    isBadChar :: Char -> Bool
     isBadChar a = case ord a of
       x | x <= 31 -> True
       _ | a == '\'' -> True

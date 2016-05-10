@@ -14,29 +14,29 @@
 
 {-# LANGUAGE ScopedTypeVariables #-}
 module Language.CSPM.TranslateToProlog
-(
-  toPrologVersion
-  ,translateToProlog
-  ,translateExpToPrologTerm
-  ,translateDeclToPrologTerm
-)
+-- (
+--   toPrologVersion
+--   ,translateToProlog
+--   ,translateExpToPrologTerm
+--   ,translateDeclToPrologTerm
+-- )
 where
 
-import Language.CSPM.Frontend as Frontend
-import qualified Language.CSPM.SrcLoc as SrcLoc
-import qualified Language.CSPM.Token as Token (lexEMsg,lexEPos,alexLine,alexCol,alexPos)
+-- import Language.CSPM.Frontend as Frontend
+import Language.CSPM.SrcLoc as SrcLoc
+import Language.CSPM.Token as Token (lexEMsg,lexEPos,alexLine,alexCol,alexPos)
 import Language.CSPM.CompileAstToProlog (cspToProlog,mkSymbolTable,te,td)
 import Language.CSPM.AstToProlog (toProlog)
 import Language.Prolog.PrettyPrint.Direct
-import Paths_CSPM_ToProlog (version)
-import Data.Version (Version,showVersion)
+-- import Paths_CSPM_ToProlog (version)
+-- import Data.Version (Version,showVersion)
 import Data.Maybe
 
-import Control.Exception
-import System.Exit
-import System.IO
-import System.CPUTime
-import Text.PrettyPrint
+-- import Control.Exception
+-- import System.Exit
+-- import System.IO
+-- import System.CPUTime
+-- import Text.PrettyPrint
 
 -- | The version of the CSPM-ToProlog library
 toPrologVersion :: Version
@@ -51,7 +51,7 @@ translateExpToPrologTerm ::
 translateExpToPrologTerm file expr = do
   (r :: Either SomeException String) <- try $ mainWorkSinglePlTerm getExpPlCode file ("x__entrypoint_expression = " ++ expr)
   handleTranslationResult r
-   where
+ where
     getExpPlCode :: Module a -> Doc
     getExpPlCode = addFullStopToPrologTerm . unTerm . te . Frontend.getLastBindExpression
 -- | 'translateDeclToPrologTerm' translates a string declaration
@@ -63,7 +63,7 @@ translateDeclToPrologTerm ::
 translateDeclToPrologTerm file decl = do
   (r :: Either SomeException String) <- try $ mainWorkSinglePlTerm getDeclPlCode file decl
   handleTranslationResult r
-   where
+ where
     getDeclPlCode :: Module a -> Doc
     getDeclPlCode = addFullStopToPrologTerm . unTerm . head . td . Frontend.getLastDeclaration
 	

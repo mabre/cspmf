@@ -14,25 +14,25 @@
 {-# OPTIONS_GHC -Wall -Werror -fno-warn-warnings-deprecations #-}
 
 module Language.CSPM.CompileAstToProlog
-(
- cspToProlog
-,mkSymbolTable
-,mkSrcLoc
-,te
-,td
-)
+-- (
+--  cspToProlog
+-- ,mkSymbolTable
+-- ,mkSrcLoc
+-- ,te
+-- ,td
+-- )
 where
 
-import Language.CSPM.Frontend (ModuleFromRenaming, frontendVersion)
+-- import Language.CSPM.Frontend (ModuleFromRenaming, frontendVersion)
 import Language.CSPM.AST
-import qualified Language.CSPM.SrcLoc as SrcLoc
-import Language.Prolog.PrettyPrint.Direct
+import Language.CSPM.SrcLoc as SrcLoc
+-- import Language.Prolog.PrettyPrint.Direct
 
-import Text.PrettyPrint
+-- import Text.PrettyPrint
 import Data.Set (Set)
-import qualified Data.Set as Set
-import qualified Data.IntMap as IntMap
-import Data.Version
+import Data.Set as Set
+import Data.IntMap as IntMap
+-- import Data.Version
 
 -- | Translate a "LModule" into a "Doc" containing a number of Prolog facts.
 -- The LModule must be a renamed,i.e. contain only unique "Ident"ifier.
@@ -106,7 +106,7 @@ te expr = case unLabel expr of
      (_:_:_) -> nTerm "agent_call_curry" [te fkt, pList $ map eList args ]
      [] -> error ("CallFunction without args" ++ show expr)
   CallBuiltIn builtIn args
-    -> if ((unBuiltIn builtIn) `Set.member` plLocatedConstructs )
+    -> if (Set.member (unBuiltIn builtIn) plLocatedConstructs )
           then nTerm "builtin_call" [ nTerm (builtInToString builtIn) (plLoc expr : flatArgs args) ]
           else nTerm "builtin_call" [ nTerm (builtInToString builtIn) $ flatArgs args ]
   Lambda patl e -> nTerm "lambda" [pList $ map tp patl, te e]
@@ -124,7 +124,7 @@ te expr = case unLabel expr of
   NotExp a -> nTerm "bool_not" [te a]
   NegExp a -> nTerm "negate" [te a]
   Fun1 op a -> nTerm (builtInToString op) [te a]
-  Fun2 op a b -> if ((unBuiltIn op) `Set.member` plLocatedConstructs ) 
+  Fun2 op a b -> if (Set.member (unBuiltIn op) plLocatedConstructs ) 
     then nTerm (builtInToString op) [te a, te b, nTerm "src_span_operator" [plLoc expr, plLoc op]]
     else nTerm (builtInToString op) [te a, te b]
   DotTuple a -> nTerm "dotTuple" [eList a]
@@ -160,7 +160,7 @@ te expr = case unLabel expr of
   ExprWithFreeNames {} -> missingCase "ExprWithFreeNames"
   LambdaI {} -> missingCase "LambdaI"
   LetI {} -> missingCase "LetI"
-  where
+ where
     missingCase :: String -> Term
     missingCase s = error $ "missing case in te :" ++ s
     flatArgs :: [[LExp]] -> [Term]
@@ -177,7 +177,7 @@ te expr = case unLabel expr of
       LinkList l -> nTerm "linkList" [ pList $ map (mklink . unLabel) l ]
       LinkListComprehension gen l 
         -> nTerm "linkListComp" [ comprehension gen, pList $ map (mklink . unLabel) l ]
-      where
+     where
         mklink (Link a b) = nTerm "link" [te a,te b]
 
     renameList :: [LRename] -> Term
@@ -219,7 +219,7 @@ tp pattern = case unLabel pattern of
   TuplePat l -> tpList "tuplePat" l
   Selector {} -> error "missing case in tp : Selector"
   Selectors {} -> error "missing case in tp : Selectors"
-  where
+ where
     tpList :: String -> [LPattern] -> Term
     tpList f l =  nTerm f [pList $ map tp l]
 
@@ -238,7 +238,7 @@ td decl = case unLabel decl of
   NameType i t -> [ nTerm "nameType" [plNameTerm i, nTerm "type" [mkTypeDef t]] ]
   Channel ids tdef -> map (mkChannel tdef) ids
   Print e -> [ nTerm "cspPrint" [te e] ]
-  where
+ where
     mkFunBind :: LIdent -> FunCase -> Term
     mkFunBind ident (FunCase pat e) = case pat of 
       [p] -> nTerm "agent" [
@@ -348,7 +348,7 @@ mkSrcLoc loc =  case loc of
       ,itt $ SrcLoc.getStartOffset loc
       ,itt $ SrcLoc.getTokenLen loc ]
   _ -> term $ atom "no_loc_info_available"
-  where 
+ where 
     itt :: Int -> Term
     itt = term . iatom . fromIntegral
     iatom :: Integer -> Atom
