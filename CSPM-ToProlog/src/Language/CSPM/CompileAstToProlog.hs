@@ -24,15 +24,20 @@ module Language.CSPM.CompileAstToProlog
 where
 
 -- import Language.CSPM.Frontend (ModuleFromRenaming, frontendVersion)
+frontendVersion = 1 --TODO
+import Language.CSPM.Rename
 import Language.CSPM.AST
 import Language.CSPM.SrcLoc as SrcLoc
--- import Language.Prolog.PrettyPrint.Direct
+import Language.Prolog.PrettyPrint.Direct
 
 -- import Text.PrettyPrint
 import Data.Set (Set)
-import Data.Set as Set
+import Data.Set(fromList, member)
+import Data.Map(elems)
 import Data.IntMap as IntMap
 -- import Data.Version
+versionBranch _ = [1,2,3] --TODO
+showVersion = "1.2.3"
 
 -- | Translate a "LModule" into a "Doc" containing a number of Prolog facts.
 -- The LModule must be a renamed,i.e. contain only unique "Ident"ifier.
@@ -68,9 +73,9 @@ mkModule m
         [pList $ map atom $ versionBranch $ frontendVersion]
      ,singleClause $ clause $ nTerm "parserVersionStr"
         [atom ("CSPM-Frontent-" ++ showVersion frontendVersion)]
-     ,declGroup $ map clause $ declList $ moduleDecls m
-     ,declGroup $ map mkPragma  $ modulePragmas m
-     ,declGroup $ map mkComment $ moduleComments m
+     ,declGroup $ map clause $ declList $ Module.moduleDecls m
+     ,declGroup $ map mkPragma  $ Module.modulePragmas m
+     ,declGroup $ map mkComment $ Module.moduleComments m
      ]
 
 mkPragma :: String -> Clause
@@ -85,9 +90,9 @@ mkComment (c, loc) = clause $ nTerm "comment" [com, mkSrcLoc loc]
       PragmaComment s -> nTerm "pragmaComment" [aTerm s]
 
 te :: LExp -> Term
-te expr = case unLabel expr of
-  Var i -> let u = unUIdent $ unLabel i in
-    case (prologMode u,idType u) of
+te expr = case expr.unLabel of
+  Var i -> let u = unUIdent $ i.unLabel in
+    case (u.prologMode,u.idType) of
       (PrologGround,VarID)   -> nTerm "val_of" [plNameTerm i, plLoc expr]
       _ -> plNameTerm i
   IntExp i -> nTerm "int" [atom i]
@@ -98,9 +103,9 @@ te expr = case unLabel expr of
   ClosureComprehension (e,c) ->  nTerm "closureComp" [comprehension c ,eList e] 
   Let decl e -> nTerm "let" [pList $ declList decl, te e]
   Ifte cond t e -> nTerm "ifte" [te cond, te t, te e,condPos,thenPos,elsePos] where
-    condPos = mkSrcLoc $ SrcLoc.srcLocFromTo (srcLoc expr) (srcLoc cond)
-    thenPos = mkSrcLoc $ SrcLoc.srcLocBetween (srcLoc cond) (srcLoc t)
-    elsePos = mkSrcLoc $ SrcLoc.srcLocBetween (srcLoc t) (srcLoc e)
+    condPos = mkSrcLoc $ SrcLoc.srcLocFromTo (Labeled.srcLoc expr) (Labeled.srcLoc cond)
+    thenPos = mkSrcLoc $ SrcLoc.srcLocBetween (Labeled.srcLoc cond) (Labeled.srcLoc t)
+    elsePos = mkSrcLoc $ SrcLoc.srcLocBetween (Labeled.srcLoc t) (Labeled.srcLoc e)
   CallFunction fkt args -> case args of
      [l] -> nTerm "agent_call" [plLoc fkt, te fkt, eList l]
      (_:_:_) -> nTerm "agent_call_curry" [te fkt, pList $ map eList args ]
@@ -137,25 +142,25 @@ te expr = case unLabel expr of
   ProcRenaming ren Nothing p
     -> nTerm "procRenaming" [ renameList ren, te p, plLoc expr ]
   ProcRenaming ren (Just gen) p
-    -> nTerm "procRenamingComp" [te p, comprehension $ unLabel gen, renameList ren]
+    -> nTerm "procRenamingComp" [te p, comprehension $ Labeled.unLabel gen, renameList ren]
   ProcException p1 e p2 -> nTerm "exception" [te p1, te e, te p2, plLoc expr]
-  ProcRepSequence gen proc -> nTerm "repSequence" [comprehension $ unLabel gen, te proc, plLoc gen]
+  ProcRepSequence gen proc -> nTerm "repSequence" [comprehension $ Labeled.unLabel gen, te proc, plLoc gen]
   ProcRepInternalChoice gen proc 
-    -> nTerm "repInternalChoice" [comprehension $ unLabel gen, te proc, plLoc gen]
+    -> nTerm "repInternalChoice" [comprehension $ Labeled.unLabel gen, te proc, plLoc gen]
   ProcRepInterleave gen proc 
-    -> nTerm "repInterleave" [comprehension $ unLabel gen, te proc, plLoc gen]
-  ProcRepExternalChoice gen proc -> nTerm "repChoice" [comprehension $ unLabel gen, te proc, plLoc gen]
+    -> nTerm "repInterleave" [comprehension $ Labeled.unLabel gen, te proc, plLoc gen]
+  ProcRepExternalChoice gen proc -> nTerm "repChoice" [comprehension $ Labeled.unLabel gen, te proc, plLoc gen]
   ProcRepAParallel gen alph proc
-    -> nTerm "procRepAParallel" [comprehension $ unLabel gen, nTerm "pair" [te alph, te proc] ,plLoc gen]
+    -> nTerm "procRepAParallel" [comprehension $ Labeled.unLabel gen, nTerm "pair" [te alph, te proc] ,plLoc gen]
   ProcRepLinkParallel gen links proc
-    -> nTerm "procRepLinkParallel" [linkList links, comprehension $ unLabel gen, te proc, plLoc gen]
+    -> nTerm "procRepLinkParallel" [linkList links, comprehension $ Labeled.unLabel gen, te proc, plLoc gen]
   ProcRepSharing gen share proc
-    -> nTerm "procRepSharing" [te share, comprehension $ unLabel gen, te proc, plLoc gen]
+    -> nTerm "procRepSharing" [te share, comprehension $ Labeled.unLabel gen, te proc, plLoc gen]
   PrefixExp ch fields proc -> nTerm "prefix" [plLoc ch, mkCommFields fields, te ch, te proc,prefixLoc ]
     where
       prefixLoc = mkSrcLoc $ SrcLoc.srcLocBetween
-        (if null fields then srcLoc $ ch else srcLoc $ last fields)
-        (srcLoc proc)
+        (if null fields then Labeled.srcLoc $ ch else Labeled.srcLoc $ last fields)
+        (Labeled.srcLoc proc)
   PrefixI {} -> missingCase "PrefixI"
   ExprWithFreeNames {} -> missingCase "ExprWithFreeNames"
   LambdaI {} -> missingCase "LambdaI"
@@ -167,32 +172,32 @@ te expr = case unLabel expr of
     flatArgs l = concatMap (map te) l  
 
     comprehension :: [LCompGen] -> Term
-    comprehension l = pList $ map (comp . unLabel ) l
+    comprehension l = pList $ map (comp . Labeled.unLabel ) l
       where
         comp (Guard e) = nTerm "comprehensionGuard" [te e]
         comp (Generator pat e) = nTerm "comprehensionGenerator" [tp pat, te e]
 
     linkList :: LLinkList -> Term
-    linkList ll = case unLabel ll of
-      LinkList l -> nTerm "linkList" [ pList $ map (mklink . unLabel) l ]
+    linkList ll = case Labeled.unLabel ll of
+      LinkList l -> nTerm "linkList" [ pList $ map (mklink . Labeled.unLabel) l ]
       LinkListComprehension gen l 
-        -> nTerm "linkListComp" [ comprehension gen, pList $ map (mklink . unLabel) l ]
+        -> nTerm "linkListComp" [ comprehension gen, pList $ map (mklink . Labeled.unLabel) l ]
      where
         mklink (Link a b) = nTerm "link" [te a,te b]
 
     renameList :: [LRename] -> Term
-    renameList l = pList $ map (mkRen . unLabel) l
+    renameList l = pList $ map (mkRen . Labeled.unLabel) l
       where
         mkRen (Rename a b) = nTerm "rename" [te a, te b]
     mkCommFields :: [LCommField] -> Term
-    mkCommFields l = pList $ map (mkCF . unLabel) l
+    mkCommFields l = pList $ map (mkCF . Labeled.unLabel) l
       where
         mkCF (InComm p) = nTerm "in" [tp p]
         mkCF (OutComm e) = nTerm "out" [te e]
         mkCF (InCommGuarded p e) = nTerm "inGuard" [tp p, te e]
 
     range :: LRange -> Term
-    range r = case unLabel r of
+    range r = case Labeled.unLabel r of
       RangeOpen a -> nTerm "rangeOpen" [te a]
       RangeClosed a b -> nTerm "rangeClosed" [te a, te b]
       RangeEnum l -> nTerm "rangeEnum" [eList l]
@@ -203,7 +208,7 @@ eList l = pList h
         h = map te l
 
 tp :: LPattern -> Term
-tp pattern = case unLabel pattern of
+tp pattern = case Labeled.unLabel pattern of
   IntPat i -> nTerm "int" [atom i]
   TruePat -> aTerm "true"
   FalsePat -> aTerm "false"
@@ -227,7 +232,7 @@ declList :: [LDecl] -> [Term]
 declList l = concatMap td l
 
 td :: LDecl -> [Term]
-td decl = case unLabel decl of
+td decl = case Labeled.unLabel decl of
   PatBind pat e -> [ nTerm "bindval" [tp pat, te e, plLoc decl]]
   FunBind fkt caseList -> map (mkFunBind fkt) caseList
   Assert e -> mkAssert e
@@ -255,25 +260,25 @@ td decl = case unLabel decl of
     mkConstructorList l = pList $ map mkConstructor l
     
     mkConstructor :: LConstructor -> Term
-    mkConstructor c = case unLabel c of
+    mkConstructor c = case Labeled.unLabel c of
       Constructor i Nothing  -> nTerm "constructor" [plNameTerm i]
       Constructor i (Just t) -> nTerm "constructorC" [plNameTerm i, mkTypeDef t]
 
     mkTypeDef :: LTypeDef -> Term
-    mkTypeDef t = case unLabel t of
+    mkTypeDef t = case Labeled.unLabel t of
        TypeDot na_tuples -> nTerm "dotTupleType" [mkTypeDotArgs na_tuples]
 
     mkTypeDotArgs :: [LNATuples] -> Term
     mkTypeDotArgs na_tuples = pList $ map mkTypeTupleArg na_tuples
        where
          mkTypeTupleArg na_tuple =
-             case unLabel na_tuple of
+             case Labeled.unLabel na_tuple of
                  SingleValue e -> te e
                  TypeTuple le -> nTerm "typeTuple" [eList le]
 
 {-
     mkTypeDef :: LTypeDef -> Term
-    mkTypeDef t = case unLabel t of
+    mkTypeDef t = case Labeled.unLabel t of
       TypeTuple l -> nTerm "typeTuple" [eList l]
       TypeDot   l -> nTerm "dotTupleType" [eList l]
 -}
@@ -285,12 +290,12 @@ td decl = case unLabel decl of
 
 
     mkAssert :: LAssertDecl -> [Term]
-    mkAssert ass = case unLabel ass of
+    mkAssert ass = case Labeled.unLabel ass of
       AssertBool e -> [ nTerm "assertBool" [te e] ]
       AssertRefine b p1 m p2
         -> [ nTerm "assertRef" [aTerm $ show b, te p1, termShow m, te p2, plLoc decl] ]
       AssertLTLCTL b p t s
-        -> case unLabel t of
+        -> case Labeled.unLabel t of
           LTL -> [ nTerm "assertLtl" [aTerm $ show b, te p, aTerm s, plLoc decl] ]
           CTL -> [ nTerm "assertCtl" [aTerm $ show b, te p, aTerm s, plLoc decl] ]
       AssertTauPrio b p1 m p2 e
@@ -300,30 +305,30 @@ td decl = case unLabel decl of
       AssertModelCheck b p m Nothing
         -> [ nTerm "assertModelCheck" [aTerm $ show b, te p, termShow m ] ]
     termShow :: Show a => Labeled a -> Term
-    termShow = aTerm . show . unLabel
+    termShow = aTerm . show . Labeled.unLabel
 
 plNameTerm :: LIdent -> Term
 plNameTerm l
-    = case (idType uIdent,prologMode uIdent) of
+    = case (uIdent.idType,uIdent.prologMode) of
         (VarID,PrologVariable) -> plVar ("_" ++ uniquePlName uIdent)
         (VarID,PrologGround)   -> term $ atom $ uniquePlName uIdent
         _             -> term $ plName l
-    where uIdent = unUIdent $ unLabel l
+    where uIdent = unUIdent $ Labeled.unLabel l
 
 plName :: LIdent -> Atom
 plName l
-    = case idType uIdent of
-         TransparentID -> atom $ realName uIdent
+    = case UniqueIdent.idType uIdent of
+         TransparentID -> atom $ UniqueIdent.realName uIdent
          VarID         -> error ("plName : " ++ show l)
          _             -> atom $ uniquePlName uIdent
-    where uIdent = unUIdent $ unLabel l
+    where uIdent = unUIdent $ Labeled.unLabel l
 
 uniquePlName :: UniqueIdent -> String
-uniquePlName = newName
+uniquePlName = UniqueIdent.newName
 
 
 plLoc :: Labeled x -> Term
-plLoc = mkSrcLoc . srcLoc
+plLoc = mkSrcLoc . Labeled.srcLoc
 
 -- | Translate a source location to Prolog
 mkSrcLoc :: SrcLoc.SrcLoc -> Term
@@ -359,17 +364,17 @@ mkSrcLoc loc =  case loc of
 -- into a "Doc" containing Prolog facts
 mkSymbolTable :: AstAnnotation UniqueIdent -> Doc
 mkSymbolTable ids 
-  = plPrg [declGroup $ map mkSymbol $ IntMap.elems ids]
+  = plPrg [declGroup $ map mkSymbol $ Map.elems ids]
   where
   mkSymbol :: UniqueIdent -> Clause
   mkSymbol i = clause $ nTerm "symbol"
    [aTerm $ uniquePlName i
-   ,aTerm $ realName i
-   ,mkSrcLoc $ bindingLoc i
+   ,aTerm i.realName
+   ,mkSrcLoc i.bindingLoc
    ,aTerm $ pprintIDType i
    ]
   pprintIDType :: UniqueIdent -> String
-  pprintIDType i = case idType i of
+  pprintIDType i = case UniqueIdent.idType i of
     ChannelID -> "Channel"
     NameTypeID -> "Nametype"
     FunID -> "Funktion or Process"
@@ -377,14 +382,14 @@ mkSymbolTable ids
     DataTypeID     -> "Datatype"
     TransparentID  -> "Transparent function"
     BuiltInID  -> "BuiltIn primitive"
-    VarID -> case prologMode i of
+    VarID -> case i.prologMode of
       PrologGround -> "Ident (Groundrep.)"
       PrologVariable -> "Ident (Prolog Variable)"
 
 -- | Map the abstract datatype LBuiltIn back to plain Strings for Prolog
 builtInToString :: LBuiltIn -> String
 builtInToString x = 
-  let (BuiltIn bi) = unLabel x in
+  let (BuiltIn bi) = Labeled.unLabel x in
   case bi of
   F_STOP -> "STOP"     
   F_SKIP -> "SKIP"     
@@ -438,4 +443,4 @@ builtInToString x =
   F_Hiding -> "\\"        
 
 unBuiltIn :: LBuiltIn -> Const
-unBuiltIn x =  let (BuiltIn fkt) = unLabel x in fkt
+unBuiltIn x =  let (BuiltIn fkt) = Labeled.unLabel x in fkt

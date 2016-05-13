@@ -28,7 +28,7 @@ module Language.Prolog.PrettyPrint.Direct
 
 where
 
-import Text.PrettyPrint
+import Text.PrettyPrint public
 import Data.Char
 -- import Numeric (showHex)
 showHex = undefined --TODO
@@ -79,7 +79,7 @@ instance (TERM t1,TERM t2,TERM t3,TERM t4,TERM t5,TERM t6,TERM t7)
 This is the default-case.
 It overlapps all the other cases
 -}
-instance TERM t => TERMLIST t where termList a = [term a]
+-- instance TERM t => TERMLIST t where termList a = [term a]
 
 nTerm :: (ATOM f, TERMLIST ch) => f -> ch -> Term
 nTerm f ch = Term $
@@ -115,12 +115,12 @@ plWildCard = Term $ text "_"
 
 class PREDICATE p where predicate :: p -> Predicate
 instance PREDICATE Predicate where predicate = id
-instance TERM t => PREDICATE t where predicate = Predicate . unTerm . term
+-- instance TERM t => PREDICATE t where predicate = Predicate . unTerm . term
 
 class CLAUSE c where clause :: c -> Clause
 instance CLAUSE Clause where clause = id
-instance PREDICATE p => CLAUSE p
-  where clause x = Clause ( (unPredicate $ predicate x) <> text ".")
+-- instance PREDICATE p => CLAUSE p --NOTE das einfach als clause' nehmen? mit case?
+--   where clause x = Clause ( (unPredicate $ predicate x) <> text ".")
  
 nClause :: (PREDICATE h, PREDICATE b) => h -> [b] -> Clause
 nClause h b

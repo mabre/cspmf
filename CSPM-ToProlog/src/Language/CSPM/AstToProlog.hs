@@ -14,21 +14,21 @@
 {-# LANGUAGE TypeOperators,FlexibleInstances, FlexibleContexts, DefaultSignatures, OverlappingInstances #-}
 
 module Language.CSPM.AstToProlog
-  (
-    toProlog
-  )
+--   (
+--     toProlog
+--   )
 where
 
 import Language.CSPM.Rename (ModuleFromRenaming)
 import Language.CSPM.AST as AST
 import Language.CSPM.CompileAstToProlog (mkSrcLoc)
-import qualified Language.Prolog.PrettyPrint.Direct as Prolog (unTerm,atom,unAtom)
+import Language.Prolog.PrettyPrint.Direct as Prolog (unTerm,atom,unAtom)
 import Language.CSPM.SrcLoc as SrcLoc
 
-import GHC.Generics as Generics
+-- import GHC.Generics as Generics
 import Text.PrettyPrint
 import Data.Array.IArray as Array
-import qualified Data.IntMap as IntMap
+import Data.IntMap as IntMap
 
 toProlog :: TP d => d -> Doc
 toProlog = tp
@@ -41,13 +41,13 @@ class GTPL f where
 
 class TP f where
     tp :: f -> Doc
-    default tp :: (Generic f, GTP (Rep f)) => f -> Doc
-    tp = gtp . from
+--     default tp :: (Generic f, GTP (Rep f)) => f -> Doc
+--     tp = gtp . from
 
 class TPL f where
     tpl :: Doc -> f -> Doc
-    default tpl :: (Generic f, GTPL (Rep f)) => Doc -> f -> Doc
-    tpl l = gtpl l . from
+--     default tpl :: (Generic f, GTPL (Rep f)) => Doc -> f -> Doc
+--     tpl l = gtpl l . from
 
 
 instance TPL f => TP (Labeled f) where
