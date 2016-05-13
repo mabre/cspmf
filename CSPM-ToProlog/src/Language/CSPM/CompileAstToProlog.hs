@@ -37,7 +37,7 @@ import Data.Map(elems)
 import Data.IntMap as IntMap
 -- import Data.Version
 versionBranch _ = [1,2,3] --TODO
-showVersion = "1.2.3"
+showVersion _ = "1.2.3" --TODO
 
 -- | Translate a "LModule" into a "Doc" containing a number of Prolog facts.
 -- The LModule must be a renamed,i.e. contain only unique "Ident"ifier.
@@ -69,20 +69,20 @@ plLocatedConstructs = Set.fromList
 mkModule :: ModuleFromRenaming -> Doc
 mkModule m
   = plPrg [
-      singleClause $ clause $ nTerm "parserVersionNum"
+      singleClause $ clause $ termToClause $ nTerm "parserVersionNum"
         [pList $ map atom $ versionBranch $ frontendVersion]
-     ,singleClause $ clause $ nTerm "parserVersionStr"
+     ,singleClause $ clause $ termToClause $ nTerm "parserVersionStr"
         [atom ("CSPM-Frontent-" ++ showVersion frontendVersion)]
-     ,declGroup $ map clause $ declList $ Module.moduleDecls m
+     ,declGroup $ map (clause . termToClause) $ declList $ Module.moduleDecls m
      ,declGroup $ map mkPragma  $ Module.modulePragmas m
      ,declGroup $ map mkComment $ Module.moduleComments m
      ]
 
 mkPragma :: String -> Clause
-mkPragma s = clause $ nTerm "pragma" [aTerm s]
+mkPragma s = clause $ termToClause $ nTerm "pragma" [aTerm s]
 
 mkComment :: (Comment, SrcLoc.SrcLoc) -> Clause
-mkComment (c, loc) = clause $ nTerm "comment" [com, mkSrcLoc loc]
+mkComment (c, loc) = clause $ termToClause $ nTerm "comment" [com, mkSrcLoc loc]
   where
     com = case c of
       LineComment s ->  nTerm "lineComment" [aTerm s]
@@ -359,7 +359,6 @@ mkSrcLoc loc =  case loc of
     iatom :: Integer -> Atom
     iatom = atom
 
-
 -- | Translate a "AstAnnotation" with "UnqiueIdentifier" (i.e. a Symboltable)
 -- into a "Doc" containing Prolog facts
 mkSymbolTable :: AstAnnotation UniqueIdent -> Doc
@@ -367,7 +366,7 @@ mkSymbolTable ids
   = plPrg [declGroup $ map mkSymbol $ Map.elems ids]
   where
   mkSymbol :: UniqueIdent -> Clause
-  mkSymbol i = clause $ nTerm "symbol"
+  mkSymbol i = clause $ termToClause $ nTerm "symbol"
    [aTerm $ uniquePlName i
    ,aTerm i.realName
    ,mkSrcLoc i.bindingLoc

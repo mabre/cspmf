@@ -31,7 +31,7 @@ where
 import Text.PrettyPrint public
 import Data.Char
 -- import Numeric (showHex)
-showHex = undefined --TODO
+showHex _ _ = "0xDEADBEEF" --TODO
 
 renderProlog :: Doc -> String
 renderProlog a = renderStyle (Style PageMode 60 1.5) a
@@ -81,6 +81,15 @@ It overlapps all the other cases
 -}
 -- instance TERM t => TERMLIST t where termList a = [term a]
 
+-- Frege does not support FlexibleInstances (#5), so convert
+-- explicitly where necessary.
+termToClause :: Term -> Clause
+termToClause = predicateToClause . termToPredicate
+predicateToClause :: Predicate -> Clause
+predicateToClause x = Clause ( (Predicate.unPredicate $ predicate x) <> text ".")
+termToPredicate :: Term -> Predicate
+termToPredicate = Predicate . Term.unTerm . term
+
 nTerm :: (ATOM f, TERMLIST ch) => f -> ch -> Term
 nTerm f ch = Term $
   (Atom.unAtom $ atom f) <> if null childs
@@ -119,7 +128,7 @@ instance PREDICATE Predicate where predicate = id
 
 class CLAUSE c where clause :: c -> Clause
 instance CLAUSE Clause where clause = id
--- instance PREDICATE p => CLAUSE p --NOTE das einfach als clause' nehmen? mit case?
+-- instance PREDICATE p => CLAUSE p --NOTE TODO NEXT das einfach als clause' nehmen? mit case?
 --   where clause x = Clause ( (unPredicate $ predicate x) <> text ".")
  
 nClause :: (PREDICATE h, PREDICATE b) => h -> [b] -> Clause
