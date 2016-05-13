@@ -22,11 +22,20 @@ module Language.CSPM.TranslateToProlog
 -- )
 where
 
--- import Language.CSPM.Frontend as Frontend
+-- import Language.CSPM.Frontend as Frontend --TODO
+import Language.CSPM.AstUtils
+import Language.CSPM.Utils
+import Language.CSPM.Parser
+import Language.CSPM.Rename
+import Language.CSPM.LexHelper
+import Language.Prolog.PrettyPrint.Direct
+
+
+
 import Language.CSPM.SrcLoc as SrcLoc
-import Language.CSPM.Token as Token (lexEMsg,lexEPos,alexLine,alexCol,alexPos)
-import Language.CSPM.CompileAstToProlog (cspToProlog,mkSymbolTable,te,td)
-import Language.CSPM.AstToProlog (toProlog)
+import Language.CSPM.Token as Token --(lexEMsg,lexEPos,alexLine,alexCol,alexPos)
+import Language.CSPM.CompileAstToProlog (cspToProlog,mkSymbolTable,te,td      ,showVersion) --TODO
+-- import Language.CSPM.AstToProlog (toProlog)
 import Language.Prolog.PrettyPrint.Direct
 -- import Paths_CSPM_ToProlog (version)
 -- import Data.Version (Version,showVersion)
@@ -36,11 +45,17 @@ import Data.Maybe
 -- import System.Exit
 -- import System.IO
 -- import System.CPUTime
--- import Text.PrettyPrint
+import Text.PrettyPrint
+
+--TODO
+import Language.CSPM.AST
+type FilePath = String
+try = id
 
 -- | The version of the CSPM-ToProlog library
-toPrologVersion :: Version
-toPrologVersion = version
+-- toPrologVersion :: Version --TODO
+-- toPrologVersion = version
+toPrologVersion = "1.0"
 
 -- | 'translateExpToPrologTerm' translates a string expression
 -- to a prolog term in regard to the given CSP-M specification.
@@ -49,11 +64,11 @@ translateExpToPrologTerm ::
   -> String
   -> IO ()
 translateExpToPrologTerm file expr = do
-  (r :: Either SomeException String) <- try $ mainWorkSinglePlTerm getExpPlCode file ("x__entrypoint_expression = " ++ expr)
+  (r :: {-Either SomeException-} String) <- try $ mainWorkSinglePlTerm getExpPlCode file ("x__entrypoint_expression = " ++ expr)
   handleTranslationResult r
  where
     getExpPlCode :: Module a -> Doc
-    getExpPlCode = addFullStopToPrologTerm . unTerm . te . Frontend.getLastBindExpression
+    getExpPlCode = addFullStopToPrologTerm . Term.unTerm . te . {-Frontend.-}getLastBindExpression
 -- | 'translateDeclToPrologTerm' translates a string declaration
 -- to a prolog term in regard to the given CSP-M specification.
 translateDeclToPrologTerm ::
@@ -61,32 +76,36 @@ translateDeclToPrologTerm ::
   -> String
   -> IO ()
 translateDeclToPrologTerm file decl = do
-  (r :: Either SomeException String) <- try $ mainWorkSinglePlTerm getDeclPlCode file decl
+  (r :: {-Either SomeException-} String) <- try $ mainWorkSinglePlTerm getDeclPlCode file decl
   handleTranslationResult r
  where
     getDeclPlCode :: Module a -> Doc
-    getDeclPlCode = addFullStopToPrologTerm . unTerm . head . td . Frontend.getLastDeclaration
+    getDeclPlCode = addFullStopToPrologTerm . Term.unTerm . head . td . {-Frontend.-}getLastDeclaration
 	
 addFullStopToPrologTerm :: Doc -> Doc
 addFullStopToPrologTerm plTerm = plTerm <> (text ".")
 
-handleTranslationResult :: Either SomeException String -> IO ()
+{-handleTranslationResult :: Either SomeException String -> IO ()
 handleTranslationResult r =
   case r of
     Right res -> putStr res >> exitSuccess
     Left err -> do
       hPutStrLn stderr $ show err
-      exitFailure   
+      exitFailure-}  
+--TODO
+handleTranslationResult :: String -> IO ()
+handleTranslationResult r = putStr r
 
 mainWorkSinglePlTerm :: (ModuleFromRenaming -> Doc) -> Maybe FilePath -> String -> IO String
 mainWorkSinglePlTerm termFun filePath decl = do
   (specSrc,fileName) <- if isJust filePath then readFile (fromJust filePath) >>= \s -> return (s,fromJust filePath) else return ("","no-file-name")
   let src = specSrc ++ "\n--patch entrypoint\n"++decl ++"\n"
-  ast <- Frontend.parseNamedString fileName src
+  ast <- {-Frontend.-}parseNamedString fileName src
   (astNew, _) <- eitherToExc $ renameModule ast
   let plTerm = termFun astNew
-  output <- evaluate $ show plTerm
-  return output
+--   output <- evaluate $ show plTerm
+--   return output
+  return $ show plTerm --TODO
 
 -- | 'translateToProlog' reads a CSPM specification from inFile
 -- and writes the Prolog representation to outFile.
@@ -96,19 +115,19 @@ translateToProlog ::
   -> FilePath -- ^ filename output
   -> IO ()
 translateToProlog inFile outFile = do
-  res <- handle catchAllExceptions
+  res <- {-handle catchAllExceptions
           $ handleLexError lexErrorHandler
              $ handleParseError parseErrorHandler
-               $ handleRenameError renameErrorHandler $ mainWork inFile
+               $ handleRenameError renameErrorHandler $-} mainWork inFile
   -- putStrLn "Parsing Done!"
-  (r :: Either SomeException ()) <- try $ writeFile outFile res
-  -- putStrLn "Writing File Done!"
-  case r of
-    Right () -> exitSuccess
-    Left err -> do
-      hPutStrLn stderr "output-file not written"
-      hPutStrLn stderr $ show err
-      exitFailure
+  (r :: {-Either SomeException-} ()) <- try $ writeFile outFile res
+  putStrLn "Writing File Done!"
+--   case r of
+--     Right () -> exitSuccess
+--     Left err -> do --TODO
+--       hPutStrLn stderr "output-file not written"
+--       hPutStrLn stderr $ show err
+--       exitFailure
 
 {-
 main :: IO ()
@@ -128,34 +147,40 @@ mainWork fileName = do
   src <- readFile fileName
 
   printDebug $ "Reading File " ++ fileName
-  startTime <- (return $ length src) >> getCPUTime
+--   startTime <- (return $ length src) >> getCPUTime --TODO
   tokenList <- lexInclude fileName src >>= eitherToExc
-  time_have_tokens <- getCPUTime
+--   time_have_tokens <- getCPUTime
 
   ast <- eitherToExc $ parse fileName tokenList
-  time_have_ast <- getCPUTime
+--   time_have_ast <- getCPUTime
 
   printDebug $ "Parsing OK"
-  printDebug $ "lextime : " ++ showTime (time_have_tokens - startTime)
-  printDebug $ "parsetime : " ++ showTime(time_have_ast - time_have_tokens)
+--   printDebug $ "lextime : " ++ showTime (time_have_tokens - startTime)
+--   printDebug $ "parsetime : " ++ showTime(time_have_ast - time_have_tokens)
   
-  time_start_renaming <- getCPUTime
+--   time_start_renaming <- getCPUTime
   (astNew, renaming) <- eitherToExc $ renameModule ast
   let
       plCode = cspToProlog astNew
-      symbolTable = mkSymbolTable $ identDefinition renaming
+      symbolTable = mkSymbolTable $ renaming.identDefinition
       -- moduleFact  = toProlog astNew
-  output <- evaluate $ show $ vcat [ 
+--   output <- evaluate $ show $ vcat [ 
+--       mkResult "ok" "" 0 0 0
+--      -- ,moduleFact -- writing original ast to .pl file
+--      ,plCode
+--      ,symbolTable
+--      ]
+
+--   time_have_renaming <- getCPUTime
+--   printDebug $ "renamingtime : " ++ showTime (time_have_renaming - time_start_renaming)
+--   printDebug $ "total : " ++ showTime(time_have_ast - startTime)
+--   return output--TODO
+  return $ show $ vcat [ 
       mkResult "ok" "" 0 0 0
      -- ,moduleFact -- writing original ast to .pl file
      ,plCode
      ,symbolTable
      ]
-
-  time_have_renaming <- getCPUTime
-  printDebug $ "renamingtime : " ++ showTime (time_have_renaming - time_start_renaming)
-  printDebug $ "total : " ++ showTime(time_have_ast - startTime)
-  return output
 
 showTime :: Integer -> String
 showTime a = show (div a 1000000000) ++ "ms"
@@ -167,7 +192,7 @@ defaultHeader
     $$ simpleFact "parserVersionStr" [aTerm $ showVersion toPrologVersion]
 
 simpleFact :: String -> [Term] -> Doc
-simpleFact a l= plPrg [declGroup [clause $ nTerm a l]]
+simpleFact a l= plPrg [declGroup [clause $ termToClause $ nTerm a l]]
 
 mkResult :: String -> String -> Int -> Int -> Int -> Doc
 mkResult var msg line col pos
@@ -178,44 +203,45 @@ printDebug :: String -> IO ()
 printDebug _ = return ()
 --printDebug = putStrLn
 
-parseErrorHandler :: ParseError -> IO String
-parseErrorHandler err = do
-  printDebug "ParseError : "
-  printDebug $ show err
-  let loc = Frontend.parseErrorPos err
-  evaluate $ show
-    $ mkResult "parseError"
-        (Frontend.parseErrorMsg err)
-        (Token.alexLine loc)
-        (Token.alexCol loc)
-        (Token.alexPos loc)
+-- TODO
+-- parseErrorHandler :: ParseError -> IO String
+-- parseErrorHandler err = do
+--   printDebug "ParseError : "
+--   printDebug $ show err
+--   let loc = Frontend.parseErrorPos err
+--   evaluate $ show
+--     $ mkResult "parseError"
+--         (Frontend.parseErrorMsg err)
+--         (Token.alexLine loc)
+--         (Token.alexCol loc)
+--         (Token.alexPos loc)
+-- 
+-- lexErrorHandler :: LexError -> IO String
+-- lexErrorHandler err = do
+--   printDebug "LexError : "
+--   printDebug $ show err
+--   let loc = Token.lexEPos err
+--   evaluate $ show
+--     $ mkResult "lexError"
+--         (Token.lexEMsg err)
+--         (Token.alexLine loc)
+--         (Token.alexCol loc)
+--         (Token.alexPos loc)
+-- 
+-- renameErrorHandler :: RenameError -> IO String
+-- renameErrorHandler err = do 
+--   printDebug "RenamingError : "
+--   printDebug $ show err
+--   let loc = Frontend.renameErrorLoc err
+--   evaluate $ show
+--     $ mkResult "renameError"
+--         (Frontend.renameErrorMsg err)
+--         (SrcLoc.getStartLine loc)
+--         (SrcLoc.getStartCol loc)
+--         (SrcLoc.getStartOffset loc)
 
-lexErrorHandler :: LexError -> IO String
-lexErrorHandler err = do
-  printDebug "LexError : "
-  printDebug $ show err
-  let loc = Token.lexEPos err
-  evaluate $ show
-    $ mkResult "lexError"
-        (Token.lexEMsg err)
-        (Token.alexLine loc)
-        (Token.alexCol loc)
-        (Token.alexPos loc)
-
-renameErrorHandler :: RenameError -> IO String
-renameErrorHandler err = do 
-  printDebug "RenamingError : "
-  printDebug $ show err
-  let loc = Frontend.renameErrorLoc err
-  evaluate $ show
-    $ mkResult "renameError"
-        (Frontend.renameErrorMsg err)
-        (SrcLoc.getStartLine loc)
-        (SrcLoc.getStartCol loc)
-        (SrcLoc.getStartOffset loc)
-
-catchAllExceptions :: SomeException -> IO String
-catchAllExceptions err = do
-  printDebug "ParserException : "
-  printDebug $ show err
-  evaluate $ show $ mkResult "exception" (show err) 0 0 0
+-- catchAllExceptions :: SomeException -> IO String
+-- catchAllExceptions err = do
+--   printDebug "ParserException : "
+--   printDebug $ show err
+--   evaluate $ show $ mkResult "exception" (show err) 0 0 0
