@@ -508,8 +508,10 @@ instance Data (NodeId ) where
 
 tc_Labeled :: TyCon
 tc_Labeled = mkTyCon3 "Language.CSPM" "AST" "Labeled"
-instance (Data a1) => Typeable (Labeled a1 ) where
-    typeOf _ = mkTyConApp tc_Labeled []
+instance (Typeable a1) => Typeable (Labeled a1 ) where
+    typeOf = typeOfDefault
+instance Typeable1 Labeled where
+  typeOf1 _ = mkTyConApp tc_Labeled []
 con_Labeled_Labeled :: Constr
 con_Labeled_Labeled = mkConstr ty_Labeled "con_Labeled_Labeled" [] Prefix
 ty_Labeled :: DataType
@@ -660,8 +662,10 @@ instance Data (BindType ) where
 
 tc_Module :: TyCon
 tc_Module = mkTyCon3 "Language.CSPM" "AST" "Module"
-instance (Data a1) => Typeable (Module a1 ) where
-    typeOf _ = mkTyConApp tc_Module []
+instance (Typeable a1) => Typeable (Module a1 ) where
+    typeOf = typeOfDefault
+instance Typeable1 Module where
+  typeOf1 _ = mkTyConApp tc_Module []
 con_Module_Module :: Constr
 con_Module_Module = mkConstr ty_Module "con_Module_Module" [] Prefix
 ty_Module :: DataType
