@@ -34,11 +34,12 @@ import Language.Prolog.PrettyPrint.Direct
 
 import Language.CSPM.SrcLoc as SrcLoc
 import Language.CSPM.Token as Token --(lexEMsg,lexEPos,alexLine,alexCol,alexPos)
-import Language.CSPM.CompileAstToProlog (cspToProlog,mkSymbolTable,te,td      ,showVersion) --TODO
+import Language.CSPM.CompileAstToProlog (cspToProlog,mkSymbolTable,te,td)
 -- import Language.CSPM.AstToProlog (toProlog)
 import Language.Prolog.PrettyPrint.Direct
 -- import Paths_CSPM_ToProlog (version)
--- import Data.Version (Version,showVersion)
+version = makeVersion [0,6,1,1]
+import Data.Version (Version,showVersion,makeVersion)
 import Data.Maybe
 
 -- import Control.Exception
@@ -54,9 +55,8 @@ try = id
 native getCPUTime java.lang.System.currentTimeMillis :: () -> IO Long
 
 -- | The version of the CSPM-ToProlog library
--- toPrologVersion :: Version --TODO
--- toPrologVersion = version
-toPrologVersion = "1.0"
+toPrologVersion :: Version --TODO
+toPrologVersion = version
 
 -- | 'translateExpToPrologTerm' translates a string expression
 -- to a prolog term in regard to the given CSP-M specification.

@@ -190,7 +190,6 @@ data Exp
 derive Eq Exp
 derive Ord Exp
 derive Show Exp
--- derive Typeable Exp -- TODO Typeable
 
 type LRange = Labeled Range
 data Range

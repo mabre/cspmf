@@ -23,8 +23,9 @@ module Language.CSPM.CompileAstToProlog
 -- )
 where
 
--- import Language.CSPM.Frontend (ModuleFromRenaming, frontendVersion)
-frontendVersion = 1 --TODO
+import frege.Prelude hiding (MonadAlt.<+>, Show.display, ListEmpty.empty)
+
+import Language.CSPM.Frontend ({-TODO ModuleFromRenaming,-} frontendVersion)
 import Language.CSPM.Rename
 import Language.CSPM.AST
 import Language.CSPM.SrcLoc as SrcLoc
@@ -34,10 +35,7 @@ import Language.Prolog.PrettyPrint.Direct
 import Data.Set (Set)
 import Data.Set(fromList, member)
 import Data.Map(elems)
-import Data.IntMap as IntMap
--- import Data.Version
-versionBranch _ = [1,2,3] --TODO
-showVersion _ = "1.2.3" --TODO
+import Data.Version
 
 -- | Translate a "LModule" into a "Doc" containing a number of Prolog facts.
 -- The LModule must be a renamed,i.e. contain only unique "Ident"ifier.
@@ -70,7 +68,7 @@ mkModule :: ModuleFromRenaming -> Doc
 mkModule m
   = plPrg [
       singleClause $ clause $ termToClause $ nTerm "parserVersionNum"
-        [pList $ map atom $ versionBranch $ frontendVersion]
+        [pList $ map atom $ frontendVersion.versionBranch]
      ,singleClause $ clause $ termToClause $ nTerm "parserVersionStr"
         [atom ("CSPM-Frontent-" ++ showVersion frontendVersion)]
      ,declGroup $ map (clause . termToClause) $ declList $ Module.moduleDecls m
