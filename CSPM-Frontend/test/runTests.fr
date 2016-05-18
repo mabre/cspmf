@@ -1,0 +1,22 @@
+module RunTests where
+
+import Language.CSPM.TranslateToProlog
+
+native getCPUTime java.lang.System.currentTimeMillis :: () -> IO Long
+
+main args = do
+    startTime <- getCPUTime ()
+    times <- sequence $ map doWork args
+    endTime <- getCPUTime ()
+    let total = (endTime - startTime)
+    putStrLn $ "total: " ++ (show total) ++ "ms"
+    putStrLn $ "  " ++ (show $ total `div` (fromIntegral $ length args)) ++ "ms/file"
+    putStrLn "Per-file call times:"
+    putStrLn $ unlines $ map show times
+  
+doWork :: String -> IO Long
+doWork fileName = do
+    startTime <- getCPUTime ()
+    translateToProlog fileName (fileName ++ ".fr.pl")
+    endTime <- getCPUTime ()
+    return $ endTime - startTime
