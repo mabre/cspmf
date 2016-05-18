@@ -28,10 +28,10 @@ module Language.Prolog.PrettyPrint.Direct
 
 where
 
+import frege.Prelude hiding (ListEmpty.empty, Show.display, MonadAlt.<+>, Num.isNumber)
+
 import Text.PrettyPrint public
 import Data.Char
--- import Numeric (showHex)
-showHex _ _ = "0xDEADBEEF" --TODO
 
 renderProlog :: Doc -> String
 renderProlog a = renderStyle (Style PageMode 60 1.5) a
@@ -154,7 +154,7 @@ quoteString sl
     s = sl.toList
     escapeChar :: Char -> [Char]
     escapeChar a = if isBadChar a
-      then toList $ "\\x" ++ (showHex (ord a) "") ++ "\\"
+      then toList $ "\\x" ++ (ord a).toHexString ++ "\\"
       else [a]
     isBadChar :: Char -> Bool
     isBadChar a = case ord a of
