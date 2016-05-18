@@ -44,13 +44,14 @@ import Data.Maybe
 -- import Control.Exception
 -- import System.Exit
 -- import System.IO
--- import System.CPUTime
 import Text.PrettyPrint
 
 --TODO
 import Language.CSPM.AST
 type FilePath = String
 try = id
+
+native getCPUTime java.lang.System.currentTimeMillis :: () -> IO Long
 
 -- | The version of the CSPM-ToProlog library
 -- toPrologVersion :: Version --TODO
@@ -147,43 +148,37 @@ mainWork fileName = do
   src <- readFile fileName
 
   printDebug $ "Reading File " ++ fileName
---   startTime <- (return $ length src) >> getCPUTime --TODO
+  startTime <- (return $ length src) >> getCPUTime ()
   tokenList <- lexInclude fileName src >>= eitherToExc
---   time_have_tokens <- getCPUTime
+  time_have_tokens <- getCPUTime ()
 
   ast <- eitherToExc $ parse fileName tokenList
---   time_have_ast <- getCPUTime
+  time_have_ast <- getCPUTime ()
 
   printDebug $ "Parsing OK"
---   printDebug $ "lextime : " ++ showTime (time_have_tokens - startTime)
---   printDebug $ "parsetime : " ++ showTime(time_have_ast - time_have_tokens)
+  printDebug $ "lextime : " ++ showTime (time_have_tokens - startTime)
+  printDebug $ "parsetime : " ++ showTime(time_have_ast - time_have_tokens)
   
---   time_start_renaming <- getCPUTime
+  time_start_renaming <- getCPUTime ()
   (astNew, renaming) <- eitherToExc $ renameModule ast
   let
       plCode = cspToProlog astNew
       symbolTable = mkSymbolTable $ renaming.identDefinition
       -- moduleFact  = toProlog astNew
---   output <- evaluate $ show $ vcat [ 
---       mkResult "ok" "" 0 0 0
---      -- ,moduleFact -- writing original ast to .pl file
---      ,plCode
---      ,symbolTable
---      ]
+  let output = {-output <- evaluate $-} show $ vcat [ 
+        mkResult "ok" "" 0 0 0
+        -- ,moduleFact -- writing original ast to .pl file
+        ,plCode
+        ,symbolTable
+        ]
 
---   time_have_renaming <- getCPUTime
---   printDebug $ "renamingtime : " ++ showTime (time_have_renaming - time_start_renaming)
---   printDebug $ "total : " ++ showTime(time_have_ast - startTime)
---   return output--TODO
-  return $ show $ vcat [ 
-      mkResult "ok" "" 0 0 0
-     -- ,moduleFact -- writing original ast to .pl file
-     ,plCode
-     ,symbolTable
-     ]
+  time_have_renaming <- getCPUTime ()
+  printDebug $ "renamingtime : " ++ showTime (time_have_renaming - time_start_renaming)
+  printDebug $ "total : " ++ showTime(time_have_ast - startTime)
+  return output
 
-showTime :: Integer -> String
-showTime a = show (div a 1000000000) ++ "ms"
+showTime :: Long -> String
+showTime a = show a ++ "ms"
 
 defaultHeader :: Doc
 defaultHeader 
@@ -200,8 +195,8 @@ mkResult var msg line col pos
     $$ simpleFact "parseResult" [aTerm var, aTerm msg, aTerm line, aTerm col, aTerm pos]
 
 printDebug :: String -> IO ()
-printDebug _ = return ()
---printDebug = putStrLn
+-- printDebug _ = return () -- TODO
+printDebug = putStrLn
 
 -- TODO
 -- parseErrorHandler :: ParseError -> IO String
