@@ -36,8 +36,7 @@ import Data.Generics.Schemes (everywhere,listify)
 import Data.Generics.Aliases (mkT)
 
 -- | 'removeSourceLocations' sets all locationsInfos to 'NoLocation'
--- removeSourceLocations :: Data a => a -> a -- TODO crashes when called
-removeSourceLocations :: ModuleFromParser -> ModuleFromParser
+removeSourceLocations :: Data b => b -> b
 removeSourceLocations ast 
   = everywhere (mkT patchLabel) ast
   where
@@ -46,7 +45,7 @@ removeSourceLocations ast
 
 -- | 'removeParens' removes all occurences of of Parens,
 -- i.e. explicit parentheses from the AST
-removeParens :: Data a => a -> a
+removeParens :: Data b => b -> b
 removeParens ast 
   = everywhere (mkT patchExp) ast
   where
@@ -56,7 +55,7 @@ removeParens ast
       _ -> x
 
 -- | Set all NodeIds to zero.
-setNodeIdsZero :: Data a => a -> a
+setNodeIdsZero :: Data b => b -> b
 setNodeIdsZero ast 
   = everywhere (mkT nID) ast
   where
@@ -66,7 +65,7 @@ setNodeIdsZero ast
 -- | unUniqueIdent replaces the all UIdent with the Ident of the the new name,
 -- thus forgetting additional information like the bindingside, etc.
 -- Usefull to get a smaller AST.
-unUniqueIdent :: Data a => a -> a
+unUniqueIdent :: Data b => b -> b
 unUniqueIdent ast
   = everywhere (mkT patchIdent) ast
   where
@@ -77,7 +76,7 @@ unUniqueIdent ast
 -- | Compute the "FreeNames" of an Expression.
 -- This function does only work after renaming has been done.
 -- This implementation is inefficient.
-computeFreeNames :: Data a => a -> FreeNames
+computeFreeNames :: Data b => b -> FreeNames
 computeFreeNames syntax
   = IntMap.difference (IntMap.fromList used) (IntMap.fromList def)
   where

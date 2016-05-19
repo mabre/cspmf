@@ -47,12 +47,15 @@ import Data.List as List()
 import Data.Maybe
 -- import frege.data.IntMap
 
-
--- instance Data FromRenaming -- TODO rly unnecessary?
---   where
---     gunfold = error "instance Data FromRenaming gunfold"
---     toConstr = error "instance Data FromRenaming toConstr"
--- --     dataTypeOf _ = mkDataType "Language.CSPM.Rename.FromRenaming" []
+con_FromRenaming_FromRenaming :: Constr
+con_FromRenaming_FromRenaming = mkConstr ty_FromRenaming "con_FromRenaming_FromRenaming" [] Prefix
+ty_FromRenaming :: Data.DataType
+ty_FromRenaming = mkDataType "Language.CSPM.Rename.FromRenaming" [con_FromRenaming_FromRenaming]
+instance Data FromRenaming
+  where
+    gunfold k z c = error "instance Data FromRenaming gunfold"
+    toConstr _ = error "instance Data FromRenaming toConstr"
+    dataTypeOf _ = mkDataType "Language.CSPM.Rename.FromRenaming" []
 
 -- | A module that has gone through renaming
 type ModuleFromRenaming = Module FromRenaming
