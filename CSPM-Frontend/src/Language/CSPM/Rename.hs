@@ -136,7 +136,7 @@ derive Exceptional RenameErrorException
 throwError :: RenameError -> RM ()
 throwError e = unsafeCoerce_ $ throwIO (RenameErrorException.new e)
 
--- This is a hack (apparently): We use it only if an exception is thrown within a,
+-- This is a hack (obviously): We use it only if an exception is thrown within a,
 -- so we will (should) never get into trouble with incompatible types.
 private pure native unsafeCoerce_ java.util.Objects.requireNonNull :: a -> b
 

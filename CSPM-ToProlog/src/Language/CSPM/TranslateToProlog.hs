@@ -120,7 +120,7 @@ translateToProlog inFile outFile = do
          `catch` renameErrorHandler
          `catch` parseErrorHandler
          `catch` lexErrorHandler
-  --       `catch` catchAllExceptions TODO
+         `catch` catchAllExceptions
   putStrLn "Parsing Done!"
   (r :: {-Either SomeException-} ()) <- try $ writeFile outFile res
   putStrLn "Writing File Done!"
@@ -199,7 +199,6 @@ printDebug :: String -> IO ()
 -- printDebug _ = return () -- TODO
 printDebug = putStrLn
 
--- TODO
 parseErrorHandler :: ParseErrorException -> IO String
 parseErrorHandler exc = do
     printDebug "ParseError : "
@@ -243,11 +242,11 @@ renameErrorHandler exc = do
   where
     err = exc.get
 
--- catchAllExceptions :: SomeException -> IO String
--- catchAllExceptions err = do
---   printDebug "ParserException : "
---   printDebug $ show err
---   evaluate $ show $ mkResult "exception" (show err) 0 0 0
+catchAllExceptions :: Exception -> IO String
+catchAllExceptions exc = do
+  printDebug "ParserException : "
+  printDebug $ show exc.getMessage
+  evaluate $ show $ mkResult "exception" (exc.getMessage) 0 0 0
 
 evaluate :: a -> IO a
 evaluate x = (return $! x) >>= return
