@@ -35,7 +35,6 @@ import Data.Data hiding (DataType)
 import Data.Generics.Schemes (everywhere)
 import Data.Generics.Aliases (mkT)
 import Data.Typeable
--- import Control.Exception (Exception)
 
 -- import Control.Monad.Error
 import frege.control.monad.MState
@@ -129,14 +128,17 @@ data RenameError
   }
 derive Show RenameError
 
--- instance Exception RenameError
+data RenameErrorException = pure native frege.language.CSPM.RenameErrorException where
+    pure native new new            :: RenameError -> RenameErrorException
+    pure native get getRenameError :: RenameErrorException -> RenameError
+derive Exceptional RenameErrorException
 
+throwError :: RenameError -> RM ()
+throwError e = unsafeCoerce_ $ throwIO (RenameErrorException.new e)
 
--- instance Error RenameError where
---   noMsg = RenameError { renameErrorMsg = "no Messsage", renameErrorLoc = SrcLoc.NoLocation }
---   strMsg m = RenameError { renameErrorMsg = m, renameErrorLoc = SrcLoc.NoLocation }
-
-throwError = undefined -- TODO Error
+-- This is a hack (apparently): We use it only if an exception is thrown within a,
+-- so we will (should) never get into trouble with incompatible types.
+private pure native unsafeCoerce_ java.util.Objects.requireNonNull :: a -> b
 
 lookupVisible :: LIdent -> RM (Maybe UniqueIdent)
 lookupVisible i = do

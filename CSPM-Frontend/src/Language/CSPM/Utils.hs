@@ -22,7 +22,7 @@ where
 
 import Language.CSPM.Token (Token, LexError, LexErrorException)
 import Language.CSPM.Parser (ParseError, ParseErrorException, parse)
--- import Language.CSPM.Rename (RenameError, renameModule, ModuleFromRenaming)
+import Language.CSPM.Rename (RenameError, RenameErrorException, renameModule, ModuleFromRenaming)
 import Language.CSPM.Token (LexError)
 import Language.CSPM.AST (ModuleFromParser)
 -- import Language.CSPM.PrettyPrinter(pPrint) -- TODO
@@ -48,7 +48,7 @@ type FilePath = String
 --                        Just e' -> unIO (handler e')
 --                        Nothing -> raiseIO# e
 
-
+-- | "either*ToExc" returns the Right part of "Either" or throws the Left part as an dynamic exception.
 eitherLexErrorToExc :: Either LexError b -> IO b
 eitherLexErrorToExc (Right r) = return r
 eitherLexErrorToExc (Left e)  = throwIO (LexErrorException.new e)
@@ -57,17 +57,9 @@ eitherParseErrorToExc :: Either ParseError b -> IO b
 eitherParseErrorToExc (Right r) = return r
 eitherParseErrorToExc (Left e)  = throwIO (ParseErrorException.new e)
 
--- | "eitherToExc" returns the Right part of "Either" or throws the Left part as an dynamic exception.
--- eitherToExc :: Exception a => Either a b -> IO b
--- eitherToExc :: Either LexError b -> IO b
-eitherToExc (Right r) = return r
--- eitherToExc (Left e) = throwIO (LexErrorException.new e)
-eitherToExc (Left e) | traceLn ("eitherToExc: " ++ show e) || true = undefined --TODO Generic Exception
-
--- | Handle a dymanic exception of type "RenameError".
--- handleRenameError :: (RenameError -> IO a) -> IO a -> IO a
--- handleRenameError handler proc = Exception.catch proc handler
--- handleRenameError | traceLn "handleRenameError" || true = undefined --TODO Generic Exception
+eitherRenameErrorToExc :: Either RenameError b -> IO b
+eitherRenameErrorToExc (Right r) = return r
+eitherRenameErrorToExc (Left e)  = throwIO (RenameErrorException.new e)
 
 -- | Lex and parse a file and return a "LModule", throw an exception in case of an error
 parseFile :: FilePath -> IO ModuleFromParser
@@ -82,7 +74,7 @@ parseString = parseNamedString "no-file-name"
 parseNamedString :: FilePath -> String -> IO ModuleFromParser
 parseNamedString name str = do
   tokenList <- Lexer.lexInclude name str >>= eitherLexErrorToExc
-  eitherToExc $ parse name tokenList
+  eitherParseErrorToExc $ parse name tokenList
 
 -- | Test function that parses a string and then pretty prints the produced AST
 -- parseAndPrettyPrint :: String -> IO String -- TODO

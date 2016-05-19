@@ -102,7 +102,7 @@ mainWorkSinglePlTerm termFun filePath decl = do
   (specSrc,fileName) <- if isJust filePath then readFile (fromJust filePath) >>= \s -> return (s,fromJust filePath) else return ("","no-file-name")
   let src = specSrc ++ "\n--patch entrypoint\n"++decl ++"\n"
   ast <- {-Frontend.-}parseNamedString fileName src
-  (astNew, _) <- eitherToExc $ renameModule ast
+  (astNew, _) <- eitherRenameErrorToExc $ renameModule ast
   let plTerm = termFun astNew
 --   output <- evaluate $ show plTerm
 --   return output
@@ -116,9 +116,12 @@ translateToProlog ::
   -> FilePath -- ^ filename output
   -> IO ()
 translateToProlog inFile outFile = do
-  res <- {-handle catchAllExceptions
-               $ handleRenameError renameErrorHandler $-} (mainWork inFile) `catch` parseErrorHandler `catch` lexErrorHandler
-  -- putStrLn "Parsing Done!"
+  res <- (mainWork inFile)
+         `catch` renameErrorHandler
+         `catch` parseErrorHandler
+         `catch` lexErrorHandler
+  --       `catch` catchAllExceptions TODO
+  putStrLn "Parsing Done!"
   (r :: {-Either SomeException-} ()) <- try $ writeFile outFile res
   putStrLn "Writing File Done!"
 --   case r of
@@ -158,7 +161,7 @@ mainWork fileName = do
   printDebug $ "parsetime : " ++ showTime(time_have_ast - time_have_tokens)
   
   time_start_renaming <- getCPUTime ()
-  (astNew, renaming) <- eitherToExc $ renameModule ast
+  (astNew, renaming) <- eitherRenameErrorToExc $ renameModule ast
   let
       plCode = cspToProlog astNew
       symbolTable = mkSymbolTable $ renaming.identDefinition
@@ -225,18 +228,20 @@ lexErrorHandler exc = do
         loc.alexPos
   where
     err = exc.get
--- 
--- renameErrorHandler :: RenameError -> IO String
--- renameErrorHandler err = do 
---   printDebug "RenamingError : "
---   printDebug $ show err
---   let loc = Frontend.renameErrorLoc err
---   evaluate $ show
---     $ mkResult "renameError"
---         (Frontend.renameErrorMsg err)
---         (SrcLoc.getStartLine loc)
---         (SrcLoc.getStartCol loc)
---         (SrcLoc.getStartOffset loc)
+
+renameErrorHandler :: RenameErrorException -> IO String
+renameErrorHandler exc = do 
+    printDebug "RenamingError : "
+    printDebug $ show err
+    let loc = err.renameErrorLoc
+    evaluate $ show
+      $ mkResult "renameError"
+        err.renameErrorMsg
+        (getStartLine loc)
+        (getStartCol loc)
+        (getStartOffset loc)
+  where
+    err = exc.get
 
 -- catchAllExceptions :: SomeException -> IO String
 -- catchAllExceptions err = do
