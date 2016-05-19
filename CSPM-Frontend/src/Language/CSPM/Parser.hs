@@ -36,11 +36,8 @@ import Text.ParserCombinators.Parsec.Char hiding (newline)
 -- import Text.ParserCombinators.Parsec.Token as ParsecToken (TokenParser.integer)
 import Text.ParserCombinators.Parsec.Pos
 import Text.ParserCombinators.Parsec.Error as ParsecError hiding (ParseError, Show_ParseError)
--- import Data.Typeable (Typeable)
 -- import Control.Monad.State
 import Data.List
-import Data.Maybe
--- import Control.Exception (Exception) -- TODO exception
 
 type PT a = GenParser Token PState a
 
@@ -73,7 +70,10 @@ data ParseError = ParseError {
   }
 derive Show ParseError
 
--- instance Exception ParseError
+data ParseErrorException = pure native frege.language.CSPM.ParseErrorException where
+    pure native new new           :: ParseError -> ParseErrorException
+    pure native get getParseError :: ParseErrorException -> ParseError
+derive Exceptional ParseErrorException
 
 data PState -- TODO compiler bug: if this is private: F src/Language/CSPM/Utils.hs:24:  instForClass: bad instance type Parser.PState
  = PState {

@@ -52,8 +52,12 @@ data LexError = ! LexError {
    lexEPos :: AlexPosn
   ,lexEMsg :: String
   }
--- instance Exception LexError
 derive Show LexError
+
+data LexErrorException = pure native frege.language.CSPM.LexErrorException where
+    pure native new new         :: LexError -> LexErrorException
+    pure native get getLexError :: LexErrorException -> LexError
+derive Exceptional LexErrorException
 
 data Token = Token
   { tokenId     :: TokenId

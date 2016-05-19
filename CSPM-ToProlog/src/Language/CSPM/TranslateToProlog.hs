@@ -117,9 +117,7 @@ translateToProlog ::
   -> IO ()
 translateToProlog inFile outFile = do
   res <- {-handle catchAllExceptions
-          $ handleLexError lexErrorHandler
-             $ handleParseError parseErrorHandler
-               $ handleRenameError renameErrorHandler $-} (mainWork inFile) `catch` lexErrorHandler
+               $ handleRenameError renameErrorHandler $-} (mainWork inFile) `catch` parseErrorHandler `catch` lexErrorHandler
   -- putStrLn "Parsing Done!"
   (r :: {-Either SomeException-} ()) <- try $ writeFile outFile res
   putStrLn "Writing File Done!"
@@ -152,7 +150,7 @@ mainWork fileName = do
   tokenList <- lexInclude fileName src >>= eitherLexErrorToExc
   time_have_tokens <- getCPUTime ()
 
-  ast <- eitherToExc $ parse fileName tokenList
+  ast <- eitherParseErrorToExc $ parse fileName tokenList
   time_have_ast <- getCPUTime ()
 
   printDebug $ "Parsing OK"
@@ -199,25 +197,27 @@ printDebug :: String -> IO ()
 printDebug = putStrLn
 
 -- TODO
--- parseErrorHandler :: ParseError -> IO String
--- parseErrorHandler err = do
---   printDebug "ParseError : "
---   printDebug $ show err
---   let loc = Frontend.parseErrorPos err
---   evaluate $ show
---     $ mkResult "parseError"
---         (Frontend.parseErrorMsg err)
---         (Token.alexLine loc)
---         (Token.alexCol loc)
---         (Token.alexPos loc)
--- 
+parseErrorHandler :: ParseErrorException -> IO String
+parseErrorHandler exc = do
+    printDebug "ParseError : "
+    printDebug $ show err
+    let loc = err.parseErrorPos
+    evaluate $ show
+      $ mkResult "parseError"
+        err.parseErrorMsg
+        loc.alexLine
+        loc.alexCol
+        loc.alexPos
+  where
+    err = exc.get
+                
 
 lexErrorHandler :: LexErrorException -> IO String
 lexErrorHandler exc = do
     printDebug "LexError : "
     printDebug $ show err
     let loc = err.lexEPos
-    return $ show
+    evaluate $ show
       $ mkResult "lexError"
         err.lexEMsg
         loc.alexLine
@@ -225,18 +225,6 @@ lexErrorHandler exc = do
         loc.alexPos
   where
     err = exc.get
-
--- lexErrorHandler :: LexError -> IO String
--- lexErrorHandler err = do
---   printDebug "LexError : "
---   printDebug $ show err
---   let loc = Token.lexEPos err
---   evaluate $ show
---     $ mkResult "lexError"
---         (Token.lexEMsg err)
---         (Token.alexLine loc)
---         (Token.alexCol loc)
---         (Token.alexPos loc)
 -- 
 -- renameErrorHandler :: RenameError -> IO String
 -- renameErrorHandler err = do 
@@ -255,3 +243,6 @@ lexErrorHandler exc = do
 --   printDebug "ParserException : "
 --   printDebug $ show err
 --   evaluate $ show $ mkResult "exception" (show err) 0 0 0
+
+evaluate :: a -> IO a
+evaluate x = (return $! x) >>= return

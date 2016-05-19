@@ -20,8 +20,8 @@ where
 
 -- import Debug.Trace -- TODO
 
-import Language.CSPM.Token (Token, LexError)
-import Language.CSPM.Parser --(ParseError, parse)
+import Language.CSPM.Token (Token, LexError, LexErrorException)
+import Language.CSPM.Parser (ParseError, ParseErrorException, parse)
 -- import Language.CSPM.Rename (RenameError, renameModule, ModuleFromRenaming)
 import Language.CSPM.Token (LexError)
 import Language.CSPM.AST (ModuleFromParser)
@@ -48,15 +48,14 @@ type FilePath = String
 --                        Just e' -> unIO (handler e')
 --                        Nothing -> raiseIO# e
 
-data LexErrorException = pure native frege.language.CSPM.LexErrorException where
-    pure native new new         :: LexError -> LexErrorException
-    pure native get getLexError :: LexErrorException -> LexError
-derive Exceptional LexErrorException
-
 
 eitherLexErrorToExc :: Either LexError b -> IO b
 eitherLexErrorToExc (Right r) = return r
-eitherLexErrorToExc (Left e) = throwIO (LexErrorException.new e)
+eitherLexErrorToExc (Left e)  = throwIO (LexErrorException.new e)
+
+eitherParseErrorToExc :: Either ParseError b -> IO b
+eitherParseErrorToExc (Right r) = return r
+eitherParseErrorToExc (Left e)  = throwIO (ParseErrorException.new e)
 
 -- | "eitherToExc" returns the Right part of "Either" or throws the Left part as an dynamic exception.
 -- eitherToExc :: Exception a => Either a b -> IO b
@@ -64,16 +63,6 @@ eitherLexErrorToExc (Left e) = throwIO (LexErrorException.new e)
 eitherToExc (Right r) = return r
 -- eitherToExc (Left e) = throwIO (LexErrorException.new e)
 eitherToExc (Left e) | traceLn ("eitherToExc: " ++ show e) || true = undefined --TODO Generic Exception
-
--- | Handle a dymanic exception of type "LexError".
-handleLexError :: (LexErrorException -> IO a) -> IO a -> IO a
--- handleLexError handler proc = catchLexError proc handler
-handleLexError | traceLn "handleLexError" || true = undefined --TODO Generic Exception
-
--- | Handle a dymanic exception of type "ParseError".
-handleParseError :: (ParseError -> IO a) -> IO a -> IO a
--- handleParseError handler proc = Exception.catch proc handler
-handleParseError | traceLn "handleParseError" || true = undefined --TODO Generic Exception
 
 -- | Handle a dymanic exception of type "RenameError".
 -- handleRenameError :: (RenameError -> IO a) -> IO a -> IO a
