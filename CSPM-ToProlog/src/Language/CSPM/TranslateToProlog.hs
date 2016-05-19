@@ -119,7 +119,7 @@ translateToProlog inFile outFile = do
   res <- {-handle catchAllExceptions
           $ handleLexError lexErrorHandler
              $ handleParseError parseErrorHandler
-               $ handleRenameError renameErrorHandler $-} mainWork inFile
+               $ handleRenameError renameErrorHandler $-} (mainWork inFile) `catch` lexErrorHandler
   -- putStrLn "Parsing Done!"
   (r :: {-Either SomeException-} ()) <- try $ writeFile outFile res
   putStrLn "Writing File Done!"
@@ -149,7 +149,7 @@ mainWork fileName = do
 
   printDebug $ "Reading File " ++ fileName
   startTime <- (return $ length src) >> getCPUTime ()
-  tokenList <- lexInclude fileName src >>= eitherToExc
+  tokenList <- lexInclude fileName src >>= eitherLexErrorToExc
   time_have_tokens <- getCPUTime ()
 
   ast <- eitherToExc $ parse fileName tokenList
@@ -211,6 +211,21 @@ printDebug = putStrLn
 --         (Token.alexCol loc)
 --         (Token.alexPos loc)
 -- 
+
+lexErrorHandler :: LexErrorException -> IO String
+lexErrorHandler exc = do
+    printDebug "LexError : "
+    printDebug $ show err
+    let loc = err.lexEPos
+    return $ show
+      $ mkResult "lexError"
+        err.lexEMsg
+        loc.alexLine
+        loc.alexCol
+        loc.alexPos
+  where
+    err = exc.get
+
 -- lexErrorHandler :: LexError -> IO String
 -- lexErrorHandler err = do
 --   printDebug "LexError : "

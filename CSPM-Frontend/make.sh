@@ -26,3 +26,5 @@ src/Language/CSPM/Utils.hs
 
 
 src/Language/CSPM/Rename.hs
+
+javac -d build/ -cp build/:/home/markus/Downloads/frege/fregec.jar  src/Language/CSPM/LexErrorException.java

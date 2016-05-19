@@ -33,15 +33,41 @@ type FilePath = String
 -- import Control.Exception as Exception
 -- import System.CPUTime
 
--- | "eitherToExe" returns the Right part of "Either" or throws the Left part as an dynamic exception.
+-- catchLexError :: IO a               -- ^ The computation to run
+--              -> (LexError -> IO a)  -- ^ Handler to invoke if an exception is raised
+--              -> IO a
+-- catchLexError io handler = do
+--     res <- io
+--     case io of
+--          (err@(LexError _ _)) -> handler err
+--          noerr                -> return noerr
+--     
+--     
+--     IO $ catch# io handler'
+--     where handler' e = case fromException e of
+--                        Just e' -> unIO (handler e')
+--                        Nothing -> raiseIO# e
+
+data LexErrorException = pure native frege.language.CSPM.LexErrorException where
+    pure native new new         :: LexError -> LexErrorException
+    pure native get getLexError :: LexErrorException -> LexError
+derive Exceptional LexErrorException
+
+
+eitherLexErrorToExc :: Either LexError b -> IO b
+eitherLexErrorToExc (Right r) = return r
+eitherLexErrorToExc (Left e) = throwIO (LexErrorException.new e)
+
+-- | "eitherToExc" returns the Right part of "Either" or throws the Left part as an dynamic exception.
 -- eitherToExc :: Exception a => Either a b -> IO b
+-- eitherToExc :: Either LexError b -> IO b
 eitherToExc (Right r) = return r
--- eitherToExc (Left e) = throw e
-eitherToExc (Left e) | traceLn (show e) || true = undefined --TODO Generic Exception
+-- eitherToExc (Left e) = throwIO (LexErrorException.new e)
+eitherToExc (Left e) | traceLn ("eitherToExc: " ++ show e) || true = undefined --TODO Generic Exception
 
 -- | Handle a dymanic exception of type "LexError".
-handleLexError :: (LexError -> IO a) -> IO a -> IO a
--- handleLexError handler proc = Exception.catch proc handler
+handleLexError :: (LexErrorException -> IO a) -> IO a -> IO a
+-- handleLexError handler proc = catchLexError proc handler
 handleLexError | traceLn "handleLexError" || true = undefined --TODO Generic Exception
 
 -- | Handle a dymanic exception of type "ParseError".
@@ -66,7 +92,7 @@ parseString = parseNamedString "no-file-name"
 
 parseNamedString :: FilePath -> String -> IO ModuleFromParser
 parseNamedString name str = do
-  tokenList <- Lexer.lexInclude name str >>= eitherToExc
+  tokenList <- Lexer.lexInclude name str >>= eitherLexErrorToExc
   eitherToExc $ parse name tokenList
 
 -- | Test function that parses a string and then pretty prints the produced AST
