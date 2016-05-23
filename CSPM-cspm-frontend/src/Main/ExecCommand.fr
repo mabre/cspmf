@@ -1,0 +1,39 @@
+----------------------------------------------------------------------------
+-- |
+-- Module      :  Main.ExecCommand
+-- Copyright   :  (c) Fontaine 2010-2011
+-- License     :  BSD3
+--
+-- Maintainer  :  Fontaine@cs.uni-duesseldorf.de
+-- Stability   :  experimental
+-- Portability :  GHC-only
+--
+-- Comand line interface for the CSPM tools.
+----------------------------------------------------------------------------
+module Main.ExecCommand
+where
+
+import Language.CSPM.TranslateToProlog
+import Language.CSPM.LexHelper
+import Language.CSPM.Utils
+
+addUnicode :: FilePath -> FilePath -> IO ()
+addUnicode src outFile = do
+    tokens <- readFile src >>= lexInclude src >>= eitherLexErrorToExc
+    writeFile outFile $ concatMap unicodeTokenString tokens
+
+-- TODO does not work yet, try --latin1 https://www.haskell.org/alex/doc/html/api.html#encoding
+removeUnicode :: FilePath -> FilePath -> IO ()
+removeUnicode src outFile = do
+    tokens <- readFile src >>= lexInclude src >>= eitherLexErrorToExc
+    writeFile outFile $ concatMap asciiTokenString tokens
+
+prologOut :: FilePath -> FilePath -> IO ()
+prologOut src outFile = do
+    translateToProlog src outFile
+
+expressionToPrologTerm :: FilePath -> String -> IO ()
+expressionToPrologTerm "no-file" str = do
+    translateExpToPrologTerm Nothing str
+expressionToPrologTerm src str = do
+    translateExpToPrologTerm (Just src) str
