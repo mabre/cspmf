@@ -18,7 +18,7 @@ import Data.Char hiding (isNumber)
 -- import Data.Word (Word8)
 import Data.Bits
 import Data.List
-
+-- TODO newtype supported by alpha
 -- #if __GLASGOW_HASKELL__ >= 710
 -- import qualified Control.Monad (ap)
 -- #endif
@@ -107,17 +107,17 @@ utf8Encode = map fromIntegral . go . ord
    | oc <= 0x7f       = [oc]
 
    | oc <= 0x7ff      = [ 0xc0 + (shiftR oc 6)
-                        , 0x80 + oc .&. 0x3f
+                        , 0x80 + (oc .&. 0x3f)
                         ]
 
    | oc <= 0xffff     = [ 0xe0 + (shiftR oc 12)
                         , 0x80 + ((shiftR oc 6) .&. 0x3f)
-                        , 0x80 + oc .&. 0x3f
+                        , 0x80 + (oc .&. 0x3f)
                         ]
    | otherwise        = [ 0xf0 + (shiftR oc 18)
                         , 0x80 + ((shiftR oc 12) .&. 0x3f)
                         , 0x80 + ((shiftR oc 6) .&. 0x3f)
-                        , 0x80 + oc .&. 0x3f
+                        , 0x80 + (oc .&. 0x3f)
                         ]
 
 

@@ -22,7 +22,6 @@ addUnicode src outFile = do
     tokens <- readFile src >>= lexInclude src >>= eitherLexErrorToExc
     writeFile outFile $ concatMap unicodeTokenString tokens
 
--- TODO does not work yet, try --latin1 https://www.haskell.org/alex/doc/html/api.html#encoding
 removeUnicode :: FilePath -> FilePath -> IO ()
 removeUnicode src outFile = do
     tokens <- readFile src >>= lexInclude src >>= eitherLexErrorToExc
