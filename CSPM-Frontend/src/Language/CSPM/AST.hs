@@ -12,9 +12,6 @@
 -- This is the AST that is computed by the parser.
 -- For historical reasons, it is rather unstructured.
 
-{-# LANGUAGE DeriveDataTypeable #-}
---DeriveGeneric
---GeneralizedNewtypeDeriving
 module Language.CSPM.AST
 where
 
@@ -24,7 +21,6 @@ import Language.CSPM.SrcLoc
 import Data.Data
 -- import Data.IntMap (IntMap) -- TODO IntMap efficiency
 import Data.Map (Map)
--- import Data.Array.IArray
 import Data.Array
 import frege.data.IntMap
 
@@ -32,6 +28,7 @@ type AstAnnotation x = IntMap x
 type Bindings = Map String UniqueIdent
 type FreeNames = IntMap UniqueIdent
 
+{-# derive DataTypeable #-}
 data NodeId = NodeId {unNodeId :: Int}
 derive Eq NodeId
 derive Ord NodeId
@@ -42,6 +39,7 @@ succ' (NodeId i) = NodeId $ succ i
 mkNodeId :: Int -> NodeId
 mkNodeId = NodeId
 
+{-# derive DataTypeable #-}
 data Labeled t = Labeled {
     nodeId :: NodeId
    ,srcLoc  :: SrcLoc
@@ -65,6 +63,7 @@ setNode l n = l.{unLabel = n}
 
 type LIdent = Labeled Ident
 
+{-# derive DataTypeable #-}
 data Ident
   = Ident  {unIdent :: String}
   | UIdent UniqueIdent
@@ -81,6 +80,7 @@ unUIdent other = error
 identId :: LIdent -> Int
 identId = UniqueIdent.uniqueIdentId . unUIdent . Labeled.unLabel
 
+{-# derive DataTypeable #-}
 data UniqueIdent = UniqueIdent
   {
    uniqueIdentId :: Int
@@ -96,6 +96,7 @@ derive Eq UniqueIdent
 derive Ord UniqueIdent
 derive Show UniqueIdent
 
+{-# derive DataTypeable #-}
 data IDType 
   = VarID | ChannelID | NameTypeID | FunID
   | ConstrID | DataTypeID | TransparentID
@@ -104,12 +105,14 @@ derive Eq IDType
 derive Ord IDType
 derive Show IDType
 
+{-# derive DataTypeable #-}
 data PrologMode = PrologGround | PrologVariable
 derive Eq PrologMode
 derive Ord PrologMode
 derive Show PrologMode
 
 {- Actually BindType and PrologMode are semantically aquivalent -}
+{-# derive DataTypeable #-}
 data BindType = LetBound | NotLetBound
 derive Eq BindType
 derive Ord BindType
@@ -118,6 +121,7 @@ derive Show BindType
 isLetBound :: BindType -> Bool
 isLetBound x = x==LetBound
 
+{-# derive DataTypeable #-}
 data Module a = Module {
    moduleDecls :: [LDecl]
   ,moduleTokens :: Maybe [Token]
@@ -129,6 +133,7 @@ derive Eq (Module a)
 derive Ord (Module a)
 derive Show (Module a)
 
+{-# derive DataTypeable #-}
 data FromParser = FromParser
 derive Eq FromParser
 derive Show FromParser
@@ -141,6 +146,7 @@ type ModuleFromParser = Module FromParser
 type LExp = Labeled Exp
 type LProc = LExp --LProc is just a typealias for better readablility
 
+{-# derive DataTypeable #-}
 data Exp
   = Var LIdent
   | IntExp Integer
@@ -192,6 +198,7 @@ derive Ord Exp
 derive Show Exp
 
 type LRange = Labeled Range
+{-# derive DataTypeable #-}
 data Range
   = RangeEnum [LExp]
   | RangeClosed LExp LExp
@@ -201,6 +208,7 @@ derive Ord Range
 derive Show Range
 
 type LCommField = Labeled CommField
+{-# derive DataTypeable #-}
 data CommField
   =  InComm LPattern
   | InCommGuarded LPattern LExp
@@ -210,6 +218,7 @@ derive Ord CommField
 derive Show CommField
 
 type LLinkList = Labeled LinkList
+{-# derive DataTypeable #-}
 data LinkList
   = LinkList [LLink]
   | LinkListComprehension [LCompGen] [LLink]
@@ -218,18 +227,21 @@ derive Ord LinkList
 derive Show LinkList
 
 type LLink = Labeled Link
+{-# derive DataTypeable #-}
 data Link = Link LExp LExp
 derive Eq Link
 derive Ord Link
 derive Show Link
 
 type LRename = Labeled Rename
+{-# derive DataTypeable #-}
 data Rename = Rename LExp LExp
 derive Eq Rename
 derive Ord Rename
 derive Show Rename
 
 type LBuiltIn = Labeled BuiltIn
+{-# derive DataTypeable #-}
 data BuiltIn = BuiltIn Const
 derive Eq BuiltIn
 derive Ord BuiltIn
@@ -241,6 +253,7 @@ lBuiltInToConst = h . Labeled.unLabel where
 
 type LCompGenList = Labeled [LCompGen]
 type LCompGen = Labeled CompGen
+{-# derive DataTypeable #-}
 data CompGen
   = Generator LPattern LExp
   | Guard LExp
@@ -249,6 +262,7 @@ derive Ord CompGen
 derive Show CompGen
 
 type LPattern = Labeled Pattern
+{-# derive DataTypeable #-}
 data Pattern
   = IntPat Integer
   | TruePat
@@ -275,6 +289,7 @@ derive Ord Pattern
 derive Show Pattern
 
 {- A Selector is a path in a Pattern/Expression. -}
+{-# derive DataTypeable #-}
 data Selector
   = IntSel Integer
   | TrueSel
@@ -299,6 +314,7 @@ derive Ord Selector
 derive Show Selector
 
 type LDecl = Labeled Decl
+{-# derive DataTypeable #-}
 data Decl
   = PatBind LPattern LExp -- x = x+1
   | FunBind LIdent [FunCase] -- f(<>)  = <>
@@ -321,6 +337,7 @@ Renaming, and the Prolog interface to 1).
 For now we just patch the AST just before PatternCompilation.
 -}
 type FunArgs = [[LPattern]]
+{-# derive DataTypeable #-}
 data FunCase
   = FunCase FunArgs LExp
   | FunCaseI [LPattern] LExp
@@ -339,6 +356,7 @@ derive Typeable undefined
 derive Data undefined
 -}
 type LTypeDef = Labeled TypeDef
+{-# derive DataTypeable #-}
 data TypeDef
   = TypeDot [LNATuples] -- a.(b,c).d.(e,f,g)
 derive Eq TypeDef
@@ -346,6 +364,7 @@ derive Ord TypeDef
 derive Show TypeDef
 
 type LNATuples = Labeled NATuples
+{-# derive DataTypeable #-}
 data NATuples
   = TypeTuple [LExp]
   | SingleValue LExp
@@ -354,6 +373,7 @@ derive Ord NATuples
 derive Show NATuples
 
 type LConstructor = Labeled Constructor
+{-# derive DataTypeable #-}
 data Constructor
   = Constructor LIdent (Maybe LTypeDef) 
 derive Eq Constructor
@@ -364,6 +384,7 @@ withLabel :: ( NodeId -> a -> b ) -> Labeled a -> Labeled b
 withLabel f x = x.{unLabel = f (x.nodeId) (x.unLabel) }
 
 type LAssertDecl = Labeled AssertDecl
+{-# derive DataTypeable #-}
 data AssertDecl
   = AssertBool LExp
   | AssertRefine     Bool LExp LRefineOp    LExp
@@ -375,6 +396,7 @@ derive Ord AssertDecl
 derive Show AssertDecl
 
 type LFDRModels = Labeled FDRModels
+{-# derive DataTypeable #-}
 data FDRModels
   = DeadlockFree
   | Deterministic
@@ -384,6 +406,7 @@ derive Ord FDRModels
 derive Show FDRModels
 
 type LFdrExt = Labeled FdrExt
+{-# derive DataTypeable #-}
 data FdrExt 
   = F 
   | FD
@@ -393,6 +416,7 @@ derive Ord FdrExt
 derive Show FdrExt
 
 type LTauRefineOp = Labeled TauRefineOp 
+{-# derive DataTypeable #-}
 data TauRefineOp
   = TauTrace
   | TauRefine
@@ -401,6 +425,7 @@ derive Ord TauRefineOp
 derive Show TauRefineOp
 
 type LRefineOp = Labeled RefineOp
+{-# derive DataTypeable #-}
 data RefineOp 
   = Trace
   | Failure
@@ -415,6 +440,7 @@ derive Ord RefineOp
 derive Show RefineOp
 
 type LFormulaType = Labeled FormulaType
+{-# derive DataTypeable #-}
 data FormulaType
   = LTL
   | CTL
@@ -422,6 +448,7 @@ derive Eq FormulaType
 derive Ord FormulaType
 derive Show FormulaType
 
+{-# derive DataTypeable #-}
 data Const
   = F_true
   | F_false
@@ -479,6 +506,7 @@ derive Show Const
 
 type Pragma = String
 type LocComment = (Comment, SrcLoc)
+{-# derive DataTypeable #-}
 data Comment
   = LineComment String
   | BlockComment String
