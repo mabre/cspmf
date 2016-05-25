@@ -18,7 +18,6 @@ import Language.CSPM.TokenClasses
 
 import Data.Data
 --import Data.Ix TODO?
--- import Control.{-Exception-} (Exception) TODO
 
 {-# derive DataTypeable #-}
 data TokenId = TokenId {unTokenId :: Int}
