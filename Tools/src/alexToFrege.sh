@@ -32,11 +32,10 @@ grep -v "^#" $1                             | # remove cpp includes starting wit
 
 # split long arrays to prevent "code too large" message from JVM
 for array in "alex_table" "alex_check"; do
-    line=`grep $array $outfile`
+    line=`grep "$array = " $outfile`
     name=`echo $line | cut -d " " -f2`
     ints=`echo $line | sed -E "s/.*\[(.*)\].*/\1/"`
-    # TODO
-    splitted=`java -Xss16m -Xmx2g -cp /home/markus/Downloads/frege/fregec.jar:.:build ArraySplitter $name $ints | sed "s/\"//g"`
+    splitted=`build/ArraySplitter $name $ints | sed "s/\"//g"`
     newlines=`echo $line | cut -d " " -f1-5`" $ $splitted"
     esc_line=`echo $line | sed -e 's/[][]/\\\\&/g'`
     esc_newlines=`echo $newlines | sed -e 's/[][]/\\\\&/g'`
