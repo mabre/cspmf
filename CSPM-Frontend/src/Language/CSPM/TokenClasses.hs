@@ -17,6 +17,7 @@ import Data.Data
 import Data.Ix
 
 -- | The token classes of the CSP-M lexer
+{-# derive DataTypeable #-}
 data PrimToken
   = L_Newline
   | T_WhiteSpace

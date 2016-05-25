@@ -22,6 +22,7 @@ import Data.List
 import Data.Data
 
 {-  todo : simplify this -}
+{-# derive DataTypeable #-}
 data SrcLoc
   = TokIdPos TokenId
   | TokIdSpan TokenId TokenId

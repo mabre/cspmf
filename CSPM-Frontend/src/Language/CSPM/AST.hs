@@ -538,7 +538,7 @@ tc_Labeled = mkTyCon3 "Language.CSPM" "AST" "Labeled"
 instance (Typeable a1) => Typeable (Labeled a1 ) where
     typeOf = typeOfDefault
 instance Typeable1 Labeled where
-  typeOf1 _ = mkTyConApp tc_Labeled []
+    typeOf1 _ = mkTyConApp tc_Labeled []
 con_Labeled_Labeled :: Constr
 con_Labeled_Labeled = mkConstr ty_Labeled "con_Labeled_Labeled" [] Prefix
 ty_Labeled :: DataType
@@ -692,7 +692,7 @@ tc_Module = mkTyCon3 "Language.CSPM" "AST" "Module"
 instance (Typeable a1) => Typeable (Module a1 ) where
     typeOf = typeOfDefault
 instance Typeable1 Module where
-  typeOf1 _ = mkTyConApp tc_Module []
+    typeOf1 _ = mkTyConApp tc_Module []
 con_Module_Module :: Constr
 con_Module_Module = mkConstr ty_Module "con_Module_Module" [] Prefix
 ty_Module :: DataType
@@ -724,7 +724,7 @@ instance Data (FromParser ) where
                          (FromParser) -> z FromParser
 
 tc_Exp :: TyCon
-tc_Exp = mkTyCon3 "HHU" "Test1" "Exp"
+tc_Exp = mkTyCon3 "Language.CSPM" "AST" "Exp"
 instance Typeable (Exp ) where
     typeOf _ = mkTyConApp tc_Exp []
 con_Exp_Var :: Constr
@@ -816,7 +816,7 @@ con_Exp_LambdaI = mkConstr ty_Exp "con_Exp_LambdaI" [] Prefix
 con_Exp_ExprWithFreeNames :: Constr
 con_Exp_ExprWithFreeNames = mkConstr ty_Exp "con_Exp_ExprWithFreeNames" [] Prefix
 ty_Exp :: DataType
-ty_Exp = mkDataType "HHU.Test1.Exp" [con_Exp_Var, con_Exp_IntExp, con_Exp_SetExp, con_Exp_ListExp, con_Exp_ClosureComprehension, con_Exp_Let, con_Exp_Ifte, con_Exp_CallFunction, con_Exp_CallBuiltIn, con_Exp_Lambda, con_Exp_Stop, con_Exp_Skip, con_Exp_CTrue, con_Exp_CFalse, con_Exp_Events, con_Exp_BoolSet, con_Exp_IntSet, con_Exp_TupleExp, con_Exp_Parens, con_Exp_AndExp, con_Exp_OrExp, con_Exp_NotExp, con_Exp_NegExp, con_Exp_Fun1, con_Exp_Fun2, con_Exp_DotTuple, con_Exp_Closure, con_Exp_ProcSharing, con_Exp_ProcAParallel, con_Exp_ProcLinkParallel, con_Exp_ProcRenaming, con_Exp_ProcException, con_Exp_ProcRepSequence, con_Exp_ProcRepInternalChoice, con_Exp_ProcRepExternalChoice, con_Exp_ProcRepInterleave, con_Exp_ProcRepAParallel, con_Exp_ProcRepLinkParallel, con_Exp_ProcRepSharing, con_Exp_PrefixExp, con_Exp_PrefixI, con_Exp_LetI, con_Exp_LambdaI, con_Exp_ExprWithFreeNames]
+ty_Exp = mkDataType "Language.CSPM.AST.Exp" [con_Exp_Var, con_Exp_IntExp, con_Exp_SetExp, con_Exp_ListExp, con_Exp_ClosureComprehension, con_Exp_Let, con_Exp_Ifte, con_Exp_CallFunction, con_Exp_CallBuiltIn, con_Exp_Lambda, con_Exp_Stop, con_Exp_Skip, con_Exp_CTrue, con_Exp_CFalse, con_Exp_Events, con_Exp_BoolSet, con_Exp_IntSet, con_Exp_TupleExp, con_Exp_Parens, con_Exp_AndExp, con_Exp_OrExp, con_Exp_NotExp, con_Exp_NegExp, con_Exp_Fun1, con_Exp_Fun2, con_Exp_DotTuple, con_Exp_Closure, con_Exp_ProcSharing, con_Exp_ProcAParallel, con_Exp_ProcLinkParallel, con_Exp_ProcRenaming, con_Exp_ProcException, con_Exp_ProcRepSequence, con_Exp_ProcRepInternalChoice, con_Exp_ProcRepExternalChoice, con_Exp_ProcRepInterleave, con_Exp_ProcRepAParallel, con_Exp_ProcRepLinkParallel, con_Exp_ProcRepSharing, con_Exp_PrefixExp, con_Exp_PrefixI, con_Exp_LetI, con_Exp_LambdaI, con_Exp_ExprWithFreeNames]
 instance Data (Exp ) where
     toConstr (Var _) = con_Exp_Var
     toConstr (IntExp _) = con_Exp_IntExp

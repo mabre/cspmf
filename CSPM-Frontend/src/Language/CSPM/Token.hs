@@ -20,6 +20,7 @@ import Data.Data
 --import Data.Ix TODO?
 -- import Control.{-Exception-} (Exception) TODO
 
+{-# derive DataTypeable #-}
 data TokenId = TokenId {unTokenId :: Int}
 derive Show TokenId
 derive Eq TokenId
@@ -28,6 +29,7 @@ derive Ord TokenId
 mkTokenId :: Int -> TokenId
 mkTokenId = TokenId
 
+{-# derive DataTypeable #-}
 data AlexPosn = ! AlexPn {
    alexPos :: Int
   ,alexLine   :: Int 
@@ -47,7 +49,7 @@ alexMove :: AlexPosn -> Char -> AlexPosn
 alexMove (AlexPn a l _c) '\n' = AlexPn (a+1) (l+1)   1
 alexMove (AlexPn a l c) _    = AlexPn (a+1)  l     (c+1)
 
-
+{-# derive DataTypeable #-}
 data LexError = ! LexError {
    lexEPos :: AlexPosn
   ,lexEMsg :: String
@@ -59,6 +61,7 @@ data LexErrorException = pure native frege.language.CSPM.LexErrorException where
     pure native get getLexError :: LexErrorException -> LexError
 derive Exceptional LexErrorException
 
+{-# derive DataTypeable #-}
 data Token = Token
   { tokenId     :: TokenId
   , tokenStart  :: AlexPosn
@@ -76,7 +79,7 @@ tokenSentinel = Token
   , tokenStart = AlexPn 0 0 0
   , tokenLen = 0
   , tokenClass  = error "CSPLexer.x illegal access tokenSentinel"
-  , tokenString =error "CSPLexer.x illegal access tokenSentinel"}
+  , tokenString = error "CSPLexer.x illegal access tokenSentinel"}
 
 showPosn :: AlexPosn -> String
 showPosn (AlexPn _ line col) = show line ++ ":" ++ show col
