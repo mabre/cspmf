@@ -48,18 +48,19 @@ type FilePath = String
 --                        Just e' -> unIO (handler e')
 --                        Nothing -> raiseIO# e
 
--- | "either*ToExc" returns the Right part of "Either" or throws the Left part as an dynamic exception.
-eitherLexErrorToExc :: Either LexError b -> IO b
-eitherLexErrorToExc (Right r) = return r
-eitherLexErrorToExc (Left e)  = throwIO (LexErrorException.new e)
+-- | "eitherToExc" returns the Right part of "Either" or throws the Left part as an dynamic exception. "throw" is a function like throwIO . NativeJavaException.new.
+eitherToExc :: (a -> IO b) -> Either a b ->  IO b
+eitherToExc _     (Right r) = return r
+eitherToExc throw (Left e)  = throw e
 
-eitherParseErrorToExc :: Either ParseError b -> IO b
-eitherParseErrorToExc (Right r) = return r
-eitherParseErrorToExc (Left e)  = throwIO (ParseErrorException.new e)
+throwLexError :: LexError -> IO a
+throwLexError = (throwIO . LexErrorException.new)
 
-eitherRenameErrorToExc :: Either RenameError b -> IO b
-eitherRenameErrorToExc (Right r) = return r
-eitherRenameErrorToExc (Left e)  = throwIO (RenameErrorException.new e)
+throwParseError :: ParseError -> IO a
+throwParseError = (throwIO . ParseErrorException.new)
+
+throwRenameError :: RenameError -> IO a
+throwRenameError = (throwIO . RenameErrorException.new)
 
 -- | Lex and parse a file and return a "LModule", throw an exception in case of an error
 parseFile :: FilePath -> IO ModuleFromParser
@@ -73,8 +74,8 @@ parseString = parseNamedString "no-file-name"
 
 parseNamedString :: FilePath -> String -> IO ModuleFromParser
 parseNamedString name str = do
-  tokenList <- Lexer.lexInclude name str >>= eitherLexErrorToExc
-  eitherParseErrorToExc $ parse name tokenList
+  tokenList <- Lexer.lexInclude name str >>= eitherToExc throwLexError
+  eitherToExc throwParseError $ parse name tokenList
 
 -- | Test function that parses a string and then pretty prints the produced AST
 -- parseAndPrettyPrint :: String -> IO String -- TODO

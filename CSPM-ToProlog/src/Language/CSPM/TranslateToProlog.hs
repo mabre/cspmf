@@ -91,7 +91,7 @@ mainWorkSinglePlTerm termFun filePath decl = do
   (specSrc,fileName) <- if isJust filePath then readFile (fromJust filePath) >>= \s -> return (s,fromJust filePath) else return ("","no-file-name")
   let src = specSrc ++ "\n--patch entrypoint\n"++decl ++"\n"
   ast <- {-Frontend.-}parseNamedString fileName src
-  (astNew, _) <- eitherRenameErrorToExc $ renameModule ast
+  (astNew, _) <- eitherToExc throwRenameError $ renameModule ast
   let plTerm = termFun astNew
   output <- evaluate $ show plTerm
   return output
@@ -132,10 +132,10 @@ mainWork fileName = do
 
   printDebug $ "Reading File " ++ fileName
   startTime <- (return $ length src) >> getCPUTime ()
-  tokenList <- lexInclude fileName src >>= eitherLexErrorToExc
+  tokenList <- lexInclude fileName src >>= eitherToExc throwLexError
   time_have_tokens <- getCPUTime ()
 
-  ast <- eitherParseErrorToExc $ parse fileName tokenList
+  ast <- eitherToExc throwParseError $ parse fileName tokenList
   time_have_ast <- getCPUTime ()
 
   printDebug $ "Parsing OK"
@@ -143,7 +143,7 @@ mainWork fileName = do
   printDebug $ "parsetime : " ++ showTime(time_have_ast - time_have_tokens)
   
   time_start_renaming <- getCPUTime ()
-  (astNew, renaming) <- eitherRenameErrorToExc $ renameModule ast
+  (astNew, renaming) <- eitherToExc throwRenameError $ renameModule ast
   let
       plCode = cspToProlog astNew
       symbolTable = mkSymbolTable $ renaming.identDefinition
