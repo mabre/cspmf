@@ -23,6 +23,8 @@ import Language.CSPM.PrettyPrinter
 import Text.PrettyPrint
 import Data.Version
 
+import Main.ExceptionHandler
+
 cmdVersion :: Version
 cmdVersion = makeVersion [0,1,0,0]
 
@@ -52,7 +54,7 @@ verbose = do
   where nl = "\n"
 
 prettyOut :: FilePath -> Bool -> FilePath -> IO ()
-prettyOut src rename outFile = do
+prettyOut src rename outFile = handleException $ do
     ast <- do
           ast1 <- parseFile src
           if rename
@@ -61,27 +63,27 @@ prettyOut src rename outFile = do
     writeFile outFile $ prettyShow ast
 
 addUnicode :: FilePath -> FilePath -> IO ()
-addUnicode src outFile = do
+addUnicode src outFile = handleException $ do
     tokens <- readFile src >>= lexInclude src >>= eitherLexErrorToExc
     writeFile outFile $ concatMap unicodeTokenString tokens
 
 removeUnicode :: FilePath -> FilePath -> IO ()
-removeUnicode src outFile = do
+removeUnicode src outFile = handleException $ do
     tokens <- readFile src >>= lexInclude src >>= eitherLexErrorToExc
     writeFile outFile $ concatMap asciiTokenString tokens
 
 prologOut :: FilePath -> FilePath -> IO ()
-prologOut src outFile = do
-    translateToProlog src outFile -- exception handling is done there
+prologOut src outFile = do -- exception handling is done in translateToProlog
+    translateToProlog src outFile
 
 expressionToPrologTerm :: FilePath -> String -> IO ()
-expressionToPrologTerm "no-file" str = do
+expressionToPrologTerm "no-file" str = handleException $ do
     translateExpToPrologTerm Nothing str
-expressionToPrologTerm src str = do
+expressionToPrologTerm src str = handleException $ do
     translateExpToPrologTerm (Just src) str
 
 declarationToPrologTerm :: FilePath -> String -> IO ()
-declarationToPrologTerm "no-file" str = do
+declarationToPrologTerm "no-file" str = handleException $ do
     translateDeclToPrologTerm Nothing str
-declarationToPrologTerm src str = do
+declarationToPrologTerm src str = handleException $ do
     translateDeclToPrologTerm (Just src) str

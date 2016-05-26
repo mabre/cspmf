@@ -10,72 +10,46 @@
 --
 -- ExceptionHandler for the command line interface
 ----------------------------------------------------------------------------
-{-# LANGUAGE RecordWildCards #-}
 
 module Main.ExceptionHandler
-(
-  handleException
-)
 
 where
 
-import Language.CSPM.Frontend
-  (LexError(..), ParseError(..), RenameError(..))
-import Language.CSPM.Token (pprintAlexPosn, Token(..))
-
-import Control.Exception
-import System.Exit (exitFailure, ExitCode)
-import System.IO
+import Language.CSPM.Parser (ParseError, ParseErrorException)
+import Language.CSPM.Token (LexError, LexErrorException)
+import Language.CSPM.Rename (RenameError, RenameErrorException)
+-- import Language.CSPM.Frontend (LexError, ParseError, RenameError) TODO
+import Language.CSPM.Token (pprintAlexPosn, Token)
+import frege.system.Exit
 
 -- | The top-level exception handler.
 handleException :: IO () -> IO ()
 handleException x
-  = x `catches` allHandler
+  = x `catch` lexError
+      `catch` parseError
+      `catch` renameError
+      `catch` someExc
   where
-    putStrLnErr = hPutStrLn stderr
-    allHandler = [
-        Handler propagateExitCode
-       ,Handler lexError, Handler parseError, Handler renameError
-       ,Handler errCall
-       ,Handler async
-       ,Handler ioExc
-       ,Handler someExc ]
-    propagateExitCode :: ExitCode -> IO ()
-    propagateExitCode = throwIO
-    lexError :: LexError -> IO ()
-    lexError LexError {..} = do
-      putStrLnErr "lexError"
-      putStrLnErr $ pprintAlexPosn lexEPos
-      putStrLnErr lexEMsg
+    lexError :: LexErrorException -> IO ()
+    lexError lexError = do
+      stderr.println "lexError"
+      stderr.println $ pprintAlexPosn lexError.get.lexEPos
+      stderr.println lexError.get.lexEMsg
       exitFailure
-    parseError :: ParseError -> IO ()
-    parseError ParseError {..}  = do
-      putStrLnErr "parseError"
-      putStrLnErr parseErrorMsg
-      putStrLnErr $ pprintAlexPosn parseErrorPos
-      putStrLnErr $ "at token : " ++ (show $ tokenString parseErrorToken)
+    parseError :: ParseErrorException -> IO ()
+    parseError parseError  = do
+      stderr.println "parseError"
+      stderr.println parseError.get.parseErrorMsg
+      stderr.println $ pprintAlexPosn parseError.get.parseErrorPos
+      stderr.println $ "at token : " ++ (show parseError.get.parseErrorToken.tokenString)
       exitFailure
-    renameError :: RenameError -> IO ()
-    renameError RenameError {..} = do
-      putStrLnErr "renameError"
-      putStrLnErr renameErrorMsg
-      putStrLnErr $ show renameErrorLoc
+    renameError :: RenameErrorException -> IO ()
+    renameError renameError = do
+      stderr.println "renameError"
+      stderr.println renameError.get.renameErrorMsg
+      stderr.println $ show renameError.get.renameErrorLoc
       exitFailure
-    ioExc :: IOException -> IO ()
-    ioExc err = do
-      putStrLnErr $ show err
-      exitFailure
-    errCall :: ErrorCall -> IO ()
-    errCall err = flip catches allHandler $ do
-      putStrLnErr "unexpected error call"
-      putStrLnErr $ show err
-      exitFailure
-    async :: AsyncException -> IO ()
-    async err = do
-      putStrLnErr "AsyncException (Pressing CRTL-C ?)"
-      putStrLnErr $ show err
-      exitFailure
-    someExc :: SomeException -> IO ()
+    someExc :: Exception -> IO ()
     someExc err = do
-      putStrLnErr $ show err
+      stderr.println err.getMessage
       exitFailure
