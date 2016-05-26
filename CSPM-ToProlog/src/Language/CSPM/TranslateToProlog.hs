@@ -50,7 +50,6 @@ import Text.PrettyPrint
 --TODO
 import Language.CSPM.AST
 type FilePath = String
-try = id
 
 native getCPUTime java.lang.System.currentTimeMillis :: () -> IO Long
 
@@ -65,11 +64,12 @@ translateExpToPrologTerm ::
   -> String
   -> IO ()
 translateExpToPrologTerm file expr = do
-  (r :: {-Either SomeException-} String) <- try $ mainWorkSinglePlTerm getExpPlCode file ("x__entrypoint_expression = " ++ expr)
-  handleTranslationResult r
- where
+    r <- mainWorkSinglePlTerm getExpPlCode file ("x__entrypoint_expression = " ++ expr)
+    putStrLn r
+  where
     getExpPlCode :: Module a -> Doc
     getExpPlCode = addFullStopToPrologTerm . Term.unTerm . te . {-Frontend.-}getLastBindExpression
+
 -- | 'translateDeclToPrologTerm' translates a string declaration
 -- to a prolog term in regard to the given CSP-M specification.
 translateDeclToPrologTerm ::
@@ -77,25 +77,14 @@ translateDeclToPrologTerm ::
   -> String
   -> IO ()
 translateDeclToPrologTerm file decl = do
-  (r :: {-Either SomeException-} String) <- try $ mainWorkSinglePlTerm getDeclPlCode file decl
-  handleTranslationResult r
- where
+    r <- mainWorkSinglePlTerm getDeclPlCode file decl
+    putStrLn r
+  where
     getDeclPlCode :: Module a -> Doc
     getDeclPlCode = addFullStopToPrologTerm . Term.unTerm . head . td . {-Frontend.-}getLastDeclaration
 	
 addFullStopToPrologTerm :: Doc -> Doc
 addFullStopToPrologTerm plTerm = plTerm <> (text ".")
-
-{-handleTranslationResult :: Either SomeException String -> IO ()
-handleTranslationResult r =
-  case r of
-    Right res -> putStr res >> exitSuccess
-    Left err -> do
-      hPutStrLn stderr $ show err
-      exitFailure-}  
---TODO
-handleTranslationResult :: String -> IO ()
-handleTranslationResult r = putStr r
 
 mainWorkSinglePlTerm :: (ModuleFromRenaming -> Doc) -> Maybe FilePath -> String -> IO String
 mainWorkSinglePlTerm termFun filePath decl = do
@@ -104,9 +93,8 @@ mainWorkSinglePlTerm termFun filePath decl = do
   ast <- {-Frontend.-}parseNamedString fileName src
   (astNew, _) <- eitherRenameErrorToExc $ renameModule ast
   let plTerm = termFun astNew
---   output <- evaluate $ show plTerm
---   return output
-  return $ show plTerm --TODO
+  output <- evaluate $ show plTerm
+  return output
 
 -- | 'translateToProlog' reads a CSPM specification from inFile
 -- and writes the Prolog representation to outFile.
@@ -122,14 +110,8 @@ translateToProlog inFile outFile = do
          `catch` lexErrorHandler
          `catch` catchAllExceptions
   putStrLn "Parsing Done!"
-  (r :: {-Either SomeException-} ()) <- try $ writeFile outFile res
-  putStrLn "Writing File Done!"
---   case r of
---     Right () -> exitSuccess
---     Left err -> do --TODO
---       hPutStrLn stderr "output-file not written"
---       hPutStrLn stderr $ show err
---       exitFailure
+  (writeFile outFile res >> putStrLn "Writing File Done!")
+         `catch` writeFileExceptionHandler
 
 {-
 main :: IO ()
@@ -244,9 +226,14 @@ renameErrorHandler exc = do
 
 catchAllExceptions :: Exception -> IO String
 catchAllExceptions exc = do
-  printDebug "ParserException : "
-  printDebug $ show exc.getMessage
-  evaluate $ show $ mkResult "exception" (exc.getMessage) 0 0 0
+    printDebug "ParserException : "
+    printDebug $ show exc.getMessage
+    evaluate $ show $ mkResult "exception" (exc.getMessage) 0 0 0
+
+writeFileExceptionHandler :: Exception -> IO ()
+writeFileExceptionHandler exc = do
+    stderr.println "output-file not written"
+    stderr.println $ show exc.getMessage
 
 evaluate :: a -> IO a
 evaluate x = (return $! x) >>= return
