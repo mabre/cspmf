@@ -12,20 +12,12 @@
 -- 
 -----------------------------------------------------------------------------
 
-module Text.ParserCombinators.Parsec.Token
-                  {-( LanguageDef (..)
-                  , TokenParser (..)
-                  , makeTokenParser
-                  ) -}where
+module Text.ParserCombinators.Parsec.Token where
 
+import frege.Prelude hiding (<|>,pzero,try)
 import Data.Char as C(isAlpha,toLower,toUpper,isSpace,digitToInt)
 import Data.List (nub,sort)
--- import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Pos            -- textual positions
-import Text.ParserCombinators.Parsec.Error          -- parse errors
-import Text.ParserCombinators.Parsec.Prim           -- primitive combinators
-import Text.ParserCombinators.Parsec.Combinator     -- derived combinators
-import Text.ParserCombinators.Parsec.Char           -- character parsers
+import Text.ParserCombinators.Parsec.Parsec
 
 -----------------------------------------------------------
 -- Language Definition

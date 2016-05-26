@@ -18,8 +18,9 @@
 
 module Text.PrettyPrint where
 
-import Data.Monoid
+import Data.Monoid hiding (<>)
 import Prelude.Math (round)
+import frege.Prelude hiding (empty, <+>, display)
 
 -- ---------------------------------------------------------------------------
 -- The Doc calculus

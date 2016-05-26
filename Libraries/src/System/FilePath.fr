@@ -58,50 +58,9 @@
 --
 -- References:
 -- [1] <http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247.aspx Naming Files, Paths and Namespaces> (Microsoft MSDN)
-module System.FilePath -- .MODULE_NAME
---     (
---     -- * Separator predicates
---     FilePath,
---     pathSeparator, pathSeparators, isPathSeparator,
---     searchPathSeparator, isSearchPathSeparator,
---     extSeparator, isExtSeparator,
--- 
---     -- * @$PATH@ methods
---     splitSearchPath, getSearchPath,
--- 
---     -- * Extension functions
---     splitExtension,
---     takeExtension, replaceExtension, (-<.>), dropExtension, addExtension, hasExtension, (<.>),
---     splitExtensions, dropExtensions, takeExtensions, replaceExtensions,
---     stripExtension,
--- 
---     -- * Filename\/directory functions
---     splitFileName,
---     takeFileName, replaceFileName, dropFileName,
---     takeBaseName, replaceBaseName,
---     takeDirectory, replaceDirectory,
---     combine, (</>),
---     splitPath, joinPath, splitDirectories,
--- 
---     -- * Drive functions
---     splitDrive, joinDrive,
---     takeDrive, hasDrive, dropDrive, isDrive,
--- 
---     -- * Trailing slash functions
---     hasTrailingPathSeparator,
---     addTrailingPathSeparator,
---     dropTrailingPathSeparator,
--- 
---     -- * File name manipulations
---     normalise, equalFilePath,
---     makeRelative,
---     isRelative, isAbsolute,
---     isValid, makeValid
---     )
-    where
+module System.FilePath where -- TODO rethink [Char]/String
 
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
-import Data.Maybe(isJust)
 import Data.List(stripPrefix)
 
 import System.Environment(getEnv)

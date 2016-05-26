@@ -13,16 +13,9 @@
 -- 
 -----------------------------------------------------------------------------
 
-module Text.ParserCombinators.Parsec.Language
-                     {-( haskellDef, haskell
-                     , mondrianDef, mondrian
-                   
-                     , emptyDef
-                     , haskellStyle
-                     , javaStyle   
-                     , LanguageDef (..)                
-                     )-} where
+module Text.ParserCombinators.Parsec.Language where
 
+import frege.Prelude hiding (<|>,pzero,try)
 import Text.ParserCombinators.Parsec.Char
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec.Token
@@ -106,8 +99,8 @@ haskellDef   = haskell98Def.
                 }
 
 -- | The language definition for the language Haskell98.
-haskell98Def :: LanguageDef st
-haskell98Def = haskellStyle.
+private haskell98Def :: LanguageDef st
+private haskell98Def = haskellStyle.
                 { reservedOpNames= ["::","..","=","\\","|","<-","->","@","~","=>"]
                 , reservedNames  = ["let","in","case","of","if","then","else",
                                     "data","type",

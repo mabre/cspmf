@@ -10,16 +10,17 @@ src/Language/CSPM/AST.hs
 src/Language/CSPM/UnicodeSymbols.hs
 src/Language/CSPM/LexHelper.hs
 
-src/Text/ParserCombinators/Parsec/Error.hs
 src/Text/ParserCombinators/Parsec/Pos.hs
+src/Text/ParserCombinators/Parsec/Error.hs
 src/Text/ParserCombinators/Parsec/Prim.hs
 src/Text/ParserCombinators/Parsec/Char.hs
 src/Text/ParserCombinators/Parsec/Combinator.hs
 src/Text/ParserCombinators/Parsec/Expr.hs
-src/Text/ParserCombinators/Parsec/ExprM.hs
+src/Text/ParserCombinators/Parsec/Parsec.hs
 src/Text/ParserCombinators/Parsec/Token.hs
 src/Text/ParserCombinators/Parsec/Language.hs
 
+src/Text/ParserCombinators/Parsec/ExprM.hs
 src/Language/CSPM/Parser.hs
 src/Language/CSPM/BuiltIn.hs
 src/Language/CSPM/Utils.hs

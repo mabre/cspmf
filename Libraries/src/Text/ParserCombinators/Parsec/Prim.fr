@@ -12,43 +12,13 @@
 -- 
 -----------------------------------------------------------------------------
 
-module Text.ParserCombinators.Parsec.Prim
-                   {-( -- operators: label a parser, alternative
-                     (<?>), (<|>)
+module Text.ParserCombinators.Parsec.Prim inline (parsecMap, parsecReturn, parsecBind, parsecZero, parsecPlus, token, tokenPrim)
+where
 
-                   -- basic types
-                   , Parser, GenParser
-                   , runParser, parse, parseFromFile, parseTest
-                   
-                   -- primitive parsers:
-                   -- instance Functor Parser     : fmap
-                   -- instance Monad Parser       : return, >>=, fail
-                   -- instance MonadPlus Parser   : mzero (pzero), mplus (<|>)
-                   , token, tokens, tokenPrim, tokenPrimEx
-                   , try, label, labels, unexpected, pzero
-
-                   -- primitive because of space behaviour
-                   , many, skipMany
-                                
-                   -- user state manipulation
-                   , getState, setState, updateState
-
-                   -- state manipulation
-                   , getPosition, setPosition
-                   , getInput, setInput                   
-                   , State(..), getParserState, setParserState 
-                 )-} where
+import frege.Prelude hiding (<|>,pzero,try)
 
 import Text.ParserCombinators.Parsec.Pos
 import Text.ParserCombinators.Parsec.Error
-
-{-# INLINE parsecMap    #-}
-{-# INLINE parsecReturn #-}
-{-# INLINE parsecBind   #-}
-{-# INLINE parsecZero   #-}
-{-# INLINE parsecPlus   #-}
-{-# INLINE token        #-}
-{-# INLINE tokenPrim    #-}
 
 -----------------------------------------------------------
 -- Operators:
@@ -162,17 +132,17 @@ setParserState st = updateParserState (const st)
 type Parser a           = GenParser Char () a
 
 data GenParser tok st a = Parser (State tok st -> Consumed (Reply tok st a))
-runP (Parser p)            = p
+private runP (Parser p) = p
 
-data Consumed a         = Consumed a                --input is consumed
-                        | !Empty a                  --no input is consumed
+data Consumed a = Consumed a                --input is consumed
+                | !Empty a                  --no input is consumed
                     
-data Reply tok st a     = !Ok a (State tok st) ParseError    --parsing succeeded with "a"
-                        | Error ParseError                    --parsing failed
+data Reply tok st a = !Ok a (State tok st) ParseError    --parsing succeeded with "a"
+                    | Error ParseError                   --parsing failed
 
 data State tok st       = State { stateInput :: [tok]
-                                , statePos   :: {-!-}SourcePos
-                                , stateUser  :: {-!-}st
+                                , !statePos  :: SourcePos
+                                , !stateUser :: st
                                 }
 
 
@@ -227,7 +197,7 @@ runParser p st name input
         Ok x _ _    -> Right x
         Error err   -> Left err
 
-parserReply result     
+private parserReply result     
     = case result of
         Consumed reply -> reply
         Empty reply    -> reply
@@ -239,8 +209,8 @@ parserReply result
 instance Functor (GenParser tok st) where
   fmap f p  = parsecMap f p
 
-parsecMap :: (a -> b) -> GenParser tok st a -> GenParser tok st b
-parsecMap f (Parser p)
+private parsecMap :: (a -> b) -> GenParser tok st a -> GenParser tok st b
+private parsecMap f (Parser p)
     = Parser (\state -> 
         case (p state) of
           Consumed reply -> Consumed (mapReply reply)
@@ -264,12 +234,12 @@ instance Monad (GenParser tok st) where
 instance MonadFail (GenParser tok st) where
   fail msg   = parsecFail msg
 
-parsecReturn :: a -> GenParser tok st a
-parsecReturn x
+private parsecReturn :: a -> GenParser tok st a
+private parsecReturn x
   = Parser (\state -> Empty (Ok x state (unknownError state)))   
 
-parsecBind :: GenParser tok st a -> (a -> GenParser tok st b) -> GenParser tok st b
-parsecBind (Parser p) f
+private parsecBind :: GenParser tok st a -> (a -> GenParser tok st b) -> GenParser tok st b
+private parsecBind (Parser p) f
     = Parser (\state ->
         case (p state) of                 
           Consumed reply1 
@@ -288,14 +258,14 @@ parsecBind (Parser p) f
                  Error err1       -> Empty (Error err1)
       )                                                              
 
-mergeErrorReply err1 reply
+private mergeErrorReply err1 reply
   = case reply of
       Ok x state err2 -> Ok x state (mergeError err1 err2)
       Error err2      -> Error (mergeError err1 err2)
 
 
-parsecFail :: String -> GenParser tok st a
-parsecFail msg
+private parsecFail :: String -> GenParser tok st a
+private parsecFail msg
   = Parser (\state -> 
       Empty (Error (newErrorMessage (Message msg) (state.statePos))))
 
@@ -314,12 +284,12 @@ pzero = parsecZero
 -- | @parsecZero@ always fails without consuming any input. @parsecZero@ is defined
 -- equal to the 'mzero' member of the 'MonadPlus' class and to the 'Control.Applicative.empty' member
 -- of the 'Control.Applicative.Applicative' class.
-parsecZero :: GenParser tok st a
-parsecZero
+private parsecZero :: GenParser tok st a
+private parsecZero
     = Parser (\state -> Empty (Error (unknownError state)))
 
-parsecPlus :: GenParser tok st a -> GenParser tok st a -> GenParser tok st a
-parsecPlus (Parser p1) (Parser p2)
+private parsecPlus :: GenParser tok st a -> GenParser tok st a -> GenParser tok st a
+private parsecPlus (Parser p1) (Parser p2)
     = Parser (\state ->
         case (p1 state) of        
           Empty (Error err) -> case (p2 state) of
@@ -492,8 +462,8 @@ labels (Parser p) msgs
 
 
 -- | @updateParserState f@ applies function @f@ to the parser state.
-updateParserState :: (State tok st -> State tok st) -> GenParser tok st (State tok st)
-updateParserState f 
+private updateParserState :: (State tok st -> State tok st) -> GenParser tok st (State tok st)
+private updateParserState f 
     = Parser (\state -> let newstate = f state
                         in Empty (Ok state newstate (unknownError newstate)))
     
@@ -509,13 +479,13 @@ unexpected msg
     = Parser (\state -> Empty (Error (newErrorMessage (UnExpect msg) (state.statePos))))
     
 
-setExpectErrors err []         = setErrorMessage (Expect "") err
-setExpectErrors err [msg]      = setErrorMessage (Expect msg) err
-setExpectErrors err (msg:msgs) = foldr (\msg err -> addErrorMessage (Expect msg) err) 
+private setExpectErrors err []         = setErrorMessage (Expect "") err
+private setExpectErrors err [msg]      = setErrorMessage (Expect msg) err
+private setExpectErrors err (msg:msgs) = foldr (\msg err -> addErrorMessage (Expect msg) err) 
                                        (setErrorMessage (Expect msg) err) msgs
 
-sysUnExpectError msg pos  = Error (newErrorMessage (SysUnExpect msg) pos)
-unknownError state        = newErrorUnknown (State.statePos state)
+private sysUnExpectError msg pos  = Error (newErrorMessage (SysUnExpect msg) pos)
+private unknownError state        = newErrorUnknown (State.statePos state)
 
 -----------------------------------------------------------
 -- Parsers unfolded for space:
@@ -546,8 +516,8 @@ skipMany p
       ; return ()
       }
 
-manyAccum :: (a -> [a] -> [a]) -> GenParser tok st a -> GenParser tok st [a]
-manyAccum accum (Parser p)
+private manyAccum :: (a -> [a] -> [a]) -> GenParser tok st a -> GenParser tok st [a]
+private manyAccum accum (Parser p)
   = Parser $ \state -> 
     let walk xs state r = case r of
                            Empty (Error err)          -> Ok xs state err

@@ -27,28 +27,15 @@
 --
 -----------------------------------------------------------------------------
 
-module Text.ParserCombinators.Parsec
-               {-( -- complete modules
-                 module Text.ParserCombinators.Parsec.Prim
-               , module Text.ParserCombinators.Parsec.Combinator
-               , module Text.ParserCombinators.Parsec.Char
-               
-               -- module Text.ParserCombinators.Parsec.Error -- TODO selective export
-               , ParseError   
-               , errorPos   
-               
-               -- module Text.ParserCombinators.Parsec.Pos
-               , SourcePos
-               , SourceName, Line, Column             
-               , sourceName, sourceLine, sourceColumn             
-               , incSourceLine, incSourceColumn
-               , setSourceLine, setSourceColumn, setSourceName
+-- NOTE Text.ParserCombinators.Parsec whould clash with package Text.ParserCombinators.Parsec.
+-- So either break compatiblity with this module name or with all other module names.
+module Text.ParserCombinators.Parsec.Parsec where
 
-             )-} where
-
-import Text.ParserCombinators.Parsec.Pos public         -- textual positions
-import Text.ParserCombinators.Parsec.Error public       -- parse errors
+import frege.Prelude hiding (<|>,pzero,try)
+-- textual positions
+import Text.ParserCombinators.Parsec.Pos (public SourcePos, public SourceName, public Line, public Column, public sourceName, public sourceLine, public sourceColumn, public incSourceLine, public incSourceColumn, public setSourceLine, public setSourceColumn, public setSourceName)
+-- parse errors
+import Text.ParserCombinators.Parsec.Error (public ParseError, public errorPos)
 import Text.ParserCombinators.Parsec.Prim  public       -- primitive combinators
 import Text.ParserCombinators.Parsec.Combinator public  -- derived combinators
 import Text.ParserCombinators.Parsec.Char public        -- character parsers
-

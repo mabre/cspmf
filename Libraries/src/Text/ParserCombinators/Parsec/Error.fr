@@ -12,18 +12,7 @@
 -- 
 -----------------------------------------------------------------------------
 
-module Text.ParserCombinators.Parsec.Error
---                   ( Message(SysUnExpect,UnExpect,Expect,Message)
---                   , messageString, messageCompare, messageEq
---                   
---                   , ParseError, errorPos, errorMessages, errorIsUnknown
---                   , showErrorMessages
---                   
---                   , newErrorMessage, newErrorUnknown
---                   , addErrorMessage, setErrorPos, setErrorMessage
---                   , mergeError
---                   )
-                  where
+module Text.ParserCombinators.Parsec.Error where
 
 
 import Data.List (nub,sortBy)
@@ -60,7 +49,7 @@ data Message        = !SysUnExpect String   --library generated unexpect
                     | !Expect      String   --expecting something
                     | !Message     String   --raw message
                     
-messageToEnum msg
+private messageToEnum msg
     = case msg of SysUnExpect _ -> 0
                   UnExpect _    -> 1
                   Expect _      -> 2

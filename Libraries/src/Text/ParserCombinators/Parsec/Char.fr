@@ -12,17 +12,9 @@
 -- 
 -----------------------------------------------------------------------------
 
-module Text.ParserCombinators.Parsec.Char
-                  {-( CharParser
-                  , spaces, space
-                  , newline, tab
-                  , upper, lower, alphaNum, letter
-                  , digit, hexDigit, octDigit
-                  , char, string
-                  , anyChar, oneOf, noneOf
-                  , satisfy
-                  )-} where
+module Text.ParserCombinators.Parsec.Char where
 
+import frege.Prelude hiding (<|>,pzero,try)
 import Data.Char as C( isAlpha, isAlphaNum, isDigit, isHexDigit, isLower, isOctDigit, isSpace, isUpper )
 import Text.ParserCombinators.Parsec.Pos( updatePosChar, updatePosString )
 import Text.ParserCombinators.Parsec.Prim

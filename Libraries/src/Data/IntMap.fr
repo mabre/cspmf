@@ -20,7 +20,7 @@ lookup :: Int -> IntMap a -> Maybe a
 lookup = Map.lookup
 
 -- removed from a everything which is in b
-difference a b = undefined -- TODO
+difference a b = error "IntMap.difference not implemented" -- TODO use filter or HashSet?
     {-fromList $ map f [ e | e <- Map.toList a ]
     where f = filter (\e -> lookup (fst e) b == Nothing)-}
 fromList = Map.fromList

@@ -17,7 +17,7 @@
 -- Published as a functional pearl at the Haskell Workshop 2001.
 -- 
 -----------------------------------------------------------------------------
-
+-- TODO not ported yet
 module Text.ParserCombinators.Parsec.Perm
                   {-( PermParser  -- abstract
 

@@ -12,24 +12,9 @@
 -- 
 -----------------------------------------------------------------------------
 
-module Text.ParserCombinators.Parsec.Combinator
-                       {- ( choice
-                        , count
-                        , between
-                        , option, optionMaybe, optional
-                        , skipMany1
-                        , many1
-                        , sepBy, sepBy1
-                        , endBy, endBy1
-                        , sepEndBy, sepEndBy1
-                        , chainl, chainl1
-                        , chainr, chainr1
-                        , eof, notFollowedBy
-                        
-                        -- tricky combinators
-                        , manyTill, lookAhead, anyToken
-                        )-} where
+module Text.ParserCombinators.Parsec.Combinator where
 
+import frege.Prelude hiding (<|>,pzero,try)
 import Text.ParserCombinators.Parsec.Prim
 
 

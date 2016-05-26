@@ -13,11 +13,9 @@
 -- 
 -----------------------------------------------------------------------------
 
-module Text.ParserCombinators.Parsec.Expr
-                 {-( Assoc(..), Operator(..), OperatorTable
-                 , buildExpressionParser
-                 )-} where
+module Text.ParserCombinators.Parsec.Expr where
 
+import frege.Prelude hiding (<|>,pzero,try)
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec.Combinator
 
