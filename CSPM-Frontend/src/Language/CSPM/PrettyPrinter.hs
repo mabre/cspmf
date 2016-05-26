@@ -14,46 +14,46 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Language.CSPM.PrettyPrinter
-(
-  pPrint
-)
+-- ( TODO
+--   pPrint
+-- )
 where
 
-import Text.PrettyPrint.HughesPJClass
+import Text.PrettyPrint
 
 import Language.CSPM.AST
 
 instance (Pretty x) => Pretty (Labeled x) where
-  pPrint = pPrint . unLabel
+  pPrint = pPrint . Labeled.unLabel
 
 instance Pretty (Module a) where
-  pPrint m = vcat $ map pPrint (moduleDecls m)
+  pPrint m = vcat $ map pPrint m.moduleDecls
 
 
 -- help functions for the Instances of the Type-class Pretty
-dot :: Doc
-dot = text "."
+private dot :: Doc
+private dot = text "."
 
-pPrintListSet :: (Pretty r) => String -> String -> r -> Maybe [LCompGen] -> Doc
-pPrintListSet str1 str2 range mgen  =
+private pPrintListSet :: (Pretty r) => String -> String -> r -> Maybe [LCompGen] -> Doc
+private pPrintListSet str1 str2 range mgen  =
      case mgen of
        Nothing  -> text str1 <+>  pPrint range <+>  text str2
        Just gen -> text str1 <+> pPrint range <+> text "|"
                     <+> (hsep $ punctuate comma (map (pPrintCompGen False) gen)) <+> text str2
 
-hsepPrintunctuate :: (Pretty t) => Doc -> [t] -> Doc
-hsepPrintunctuate s l = hsep $ punctuate s $ map pPrint l
+private hsepPrintunctuate :: (Pretty t) => Doc -> [t] -> Doc
+private hsepPrintunctuate s l = hsep $ punctuate s $ map pPrint l
 
-hcatPunctuate :: (Pretty t) => Doc -> [t] -> Doc
-hcatPunctuate s l = hcat $ punctuate s $ map pPrint l
+private hcatPunctuate :: (Pretty t) => Doc -> [t] -> Doc
+private hcatPunctuate s l = hcat $ punctuate s $ map pPrint l
 
-printFunBind :: LIdent -> [FunCase] -> Doc
-printFunBind ident lcase = vcat $ map (printIdent (unLabel ident) <>) (map printCase lcase) 
+private printFunBind :: LIdent -> [FunCase] -> Doc
+private printFunBind ident lcase = vcat $ map (printIdent (ident.unLabel) <>) (map printCase lcase) 
 
-printCase :: FunCase -> Doc
-printCase c = case c of
-  FunCaseI pat  expr -> (parens $ hcatPunctuate comma pat) <+> equals <+> pPrint expr
-  FunCase  list expr -> (hcat $ map mkPat list) <+> equals <+> pPrint expr
+private printCase :: FunCase -> Doc
+private printCase c = case c of
+    FunCaseI pat  expr -> (parens $ hcatPunctuate comma pat) <+> equals <+> pPrint expr
+    FunCase  list expr -> (hcat $ map mkPat list) <+> equals <+> pPrint expr
   where
     mkPat l = parens $ hcatPunctuate comma l
 
@@ -63,29 +63,29 @@ instance Pretty Decl where
     FunBind ident lcase -> printFunBind ident lcase
     Assert a -> text "assert" <+> pPrint a
     Transparent ids
-      -> text "transparent" <+> (hsep $ punctuate comma (map (printIdent . unLabel) ids))
+      -> text "transparent" <+> (hsep $ punctuate comma (map (printIdent . Labeled.unLabel) ids))
     SubType ident constrs
-      ->     text "subtype" <+> printIdent (unLabel ident) <+> equals
-         <+> (vcat $ punctuate (text " |") (map printConstr (map unLabel constrs)))
+      ->     text "subtype" <+> printIdent (ident.unLabel) <+> equals
+         <+> (vcat $ punctuate (text " |") (map printConstr (map Labeled.unLabel constrs)))
     DataType ident constrs
-      ->     text "datatype" <+> printIdent (unLabel ident) <+> equals 
-         <+> (hsep $ punctuate (text " |") (map printConstr (map unLabel constrs)))
+      ->     text "datatype" <+> printIdent (ident.unLabel) <+> equals 
+         <+> (hsep $ punctuate (text " |") (map printConstr (map Labeled.unLabel constrs)))
     NameType ident typ
-      -> text "nametype" <+> printIdent (unLabel ident) <+> equals <+> typeDef typ
+      -> text "nametype" <+> printIdent (ident.unLabel) <+> equals <+> typeDef typ
     Channel ids t
-      -> text "channel" <+> (hsep $ punctuate comma $ map (printIdent . unLabel) ids) <+> typ
+      -> text "channel" <+> (hsep $ punctuate comma $ map (printIdent . Labeled.unLabel) ids) <+> typ
        where
          typ = case t of
            Nothing -> empty
            Just x -> text ":" <+> typeDef x
     Print expr -> text "print"  <+> pPrint expr
 
-printFunArgs :: [[LExp]] -> Doc
-printFunArgs = hcat . map (parens . hsepPrintunctuate comma)
+private printFunArgs :: [[LExp]] -> Doc
+private printFunArgs = hcat . map (parens . hsepPrintunctuate comma)
 
 -- Contructors
-printConstr :: Constructor -> Doc
-printConstr (Constructor ident typ) = printIdent (unLabel ident) <>
+private printConstr :: Constructor -> Doc
+private printConstr (Constructor ident typ) = printIdent (ident.unLabel) <>
   case typ of 
    Nothing -> empty
    Just t  -> dot <> typeDef t
@@ -98,21 +98,21 @@ typeDef typ = case unLabel typ of
   TypeDot e -> hcatPunctuate dot e
 -}
 
-typeDef :: LTypeDef -> Doc
-typeDef typ = case unLabel typ of
+private typeDef :: LTypeDef -> Doc
+private typeDef typ = case typ.unLabel of
   TypeDot na_tuples -> typeDotArgs na_tuples
 
-typeDotArgs :: [LNATuples] -> Doc
-typeDotArgs na_tuples = hcat $ punctuate dot (map typeNATuples na_tuples)
+private typeDotArgs :: [LNATuples] -> Doc
+private typeDotArgs na_tuples = hcat $ punctuate dot (map typeNATuples na_tuples)
   where
     typeNATuples :: LNATuples -> Doc
-    typeNATuples na_tuple = case unLabel na_tuple of
+    typeNATuples na_tuple = case na_tuple.unLabel of
        SingleValue e -> pPrint e
        TypeTuple le  -> parens $ hcatPunctuate comma le
 
 instance Pretty Exp where
   pPrint expression = case expression of
-    Var ident -> printIdent $ unLabel ident
+    Var ident -> printIdent $ ident.unLabel
     IntExp i -> integer i
     SetExp range mgen -> pPrintListSet "{"  "}" range mgen
     ListExp range mgen -> pPrintListSet "<"  ">" range mgen
@@ -162,23 +162,23 @@ instance Pretty Exp where
          where
            gens = case mgen of
                     Nothing   -> empty
-                    Just lgen -> text "|" <+> (separateGen False (unLabel lgen))
+                    Just lgen -> text "|" <+> (separateGen False (lgen.unLabel))
                                                                           
     ProcException e p1 p2 -> pPrint p1 <+> text "[|" <+> pPrint e <+> text "|>" <+> pPrint p2
-    ProcRepSequence lgen proc -> replicatedProc (text ";")   (unLabel lgen) proc
-    ProcRepInternalChoice lgen proc -> replicatedProc (text "|~|") (unLabel lgen) proc
-    ProcRepExternalChoice lgen proc -> replicatedProc (text "[]")  (unLabel lgen) proc
-    ProcRepInterleave lgen proc -> replicatedProc (text "|||") (unLabel lgen) proc
+    ProcRepSequence lgen proc -> replicatedProc (text ";")   (lgen.unLabel) proc
+    ProcRepInternalChoice lgen proc -> replicatedProc (text "|~|") (lgen.unLabel) proc
+    ProcRepExternalChoice lgen proc -> replicatedProc (text "[]")  (lgen.unLabel) proc
+    ProcRepInterleave lgen proc -> replicatedProc (text "|||") (lgen.unLabel) proc
     PrefixExp expr fields proc
         -> pPrint expr <> (hcat $ map pPrint fields) <+> text "->" <+> pPrint proc
     ProcRepSharing lgen expr proc
         ->     text "[|" <+> pPrint expr <+> text "|]"
-           <+> (separateGen True (unLabel lgen)) <+> text "@" <+> pPrint proc
+           <+> (separateGen True (lgen.unLabel)) <+> text "@" <+> pPrint proc
     ProcRepAParallel lgen expr proc
-        -> text "||" <+> (separateGen True (unLabel lgen)) <+> text "@" 
+        -> text "||" <+> (separateGen True (lgen.unLabel)) <+> text "@" 
                                                   <+> (brackets $ pPrint expr) <+> pPrint proc
     ProcRepLinkParallel lgen llist proc
-        -> pPrint llist  <+> (separateGen True (unLabel lgen)) <+> text "@" <+> pPrint proc
+        -> pPrint llist  <+> (separateGen True (lgen.unLabel)) <+> text "@" <+> pPrint proc
 
 -- only used in later stages
 -- this do not affect the CSPM notation: same outputs as above
@@ -193,8 +193,8 @@ instance Pretty Exp where
         -> text "\\" <+> hsepPrintunctuate comma pat <+> text "@" <+> pPrint expr
     ExprWithFreeNames _ expr -> pPrint expr
 
-replicatedProc :: Doc -> [LCompGen] -> LProc -> Doc
-replicatedProc op lgen proc = op <+> (separateGen True lgen) <+> text "@" <+> pPrint proc
+private replicatedProc :: Doc -> [LCompGen] -> LProc -> Doc
+private replicatedProc op lgen proc = op <+> (separateGen True lgen) <+> text "@" <+> pPrint proc
 
 instance Pretty LinkList where
   pPrint (LinkList list)                   = brackets $ hsepPrintunctuate comma list
@@ -207,14 +207,14 @@ instance Pretty Link where
 instance Pretty Rename where
   pPrint (Rename expr1 expr2) = pPrint expr1 <+> text "<-" <+> pPrint expr2
 
-separateGen :: Bool -> [LCompGen] -> Doc
-separateGen b lgen = hsep $ punctuate comma $ map (pPrintCompGen b) lgen
+private separateGen :: Bool -> [LCompGen] -> Doc
+private separateGen b lgen = hsep $ punctuate comma $ map (pPrintCompGen b) lgen
 
 -- the generators of the comprehension sets, lists (all after the |) and 
 -- inside replicated processes (like "x: {1..10}", in this case the bool variable must be true,
 -- otherwise false)
-pPrintCompGen :: Bool -> LCompGen -> Doc
-pPrintCompGen b gen = case unLabel gen of
+private pPrintCompGen :: Bool -> LCompGen -> Doc
+private pPrintCompGen b gen = case gen.unLabel of
   (Generator pat expr) -> (pPrint pat) <+> case b of
            False -> text "<-" <+> (pPrint expr)
            True  -> text ":"  <+> (pPrint expr)
@@ -244,7 +244,7 @@ instance Pretty Pattern where
     TruePat          -> text "true"
     FalsePat         -> text "false"
     WildCard         -> text "_"
-    ConstrPat ident  -> printIdent $ unLabel ident
+    ConstrPat ident  -> printIdent $ ident.unLabel
     Also pat         -> pPrintAlso (Also pat)
     Append pat       -> hcatPunctuate (text "^") pat
     DotPat []        -> error "pPrint Pattern: empty dot pattern"
@@ -254,33 +254,33 @@ instance Pretty Pattern where
     EmptySetPat      -> text "{ }"
     ListEnumPat pat  -> text "<" <+> hsepPrintunctuate comma pat <+> text ">"
     TuplePat pat     -> text "(" <> hsepPrintunctuate comma pat <>  text ")"
-    VarPat ident     -> printIdent $ unLabel ident
+    VarPat ident     -> printIdent $ ident.unLabel
     Selectors _ _    -> error "pPrint Pattern Seclectors"
     Selector _ _     -> error "pPrint Pattern Seclector"
-    where
-      nestedDotPat p = case unLabel p of
+   where
+      nestedDotPat p = case p.unLabel of
         DotPat {} -> parens $ pPrint p
         x -> pPrint x
 
 -- external function for Also-Patterns for a better look
-pPrintAlso :: Pattern -> Doc
-pPrintAlso (Also [])    = text ""
-pPrintAlso (Also (h:t)) =
-   case unLabel h of
+private pPrintAlso :: Pattern -> Doc
+private pPrintAlso (Also [])    = text ""
+private pPrintAlso (Also (h:t)) =
+   case h.unLabel of
      DotPat _ -> if length t > 0 then (pPrint h) <> text "@@" <> pPrintAlso (Also t)
                                  else pPrint h
      Append _ -> if length t > 0 then (pPrint h) <> text "@@" <> pPrintAlso (Also t)
                                  else pPrint h
      _        -> if length t > 0 then pPrint h <> text "@@" <> pPrintAlso (Also t)
                                  else pPrint h
-pPrintAlso _ = text ""
+private pPrintAlso _ = text ""
 
 -- disticts the cases for different syntax-records for the Ident datatype
-printIdent :: Ident -> Doc
-printIdent ident = 
+private printIdent :: Ident -> Doc
+private printIdent ident = 
   case ident of 
-   Ident _  -> text $ unIdent ident
-   UIdent _ -> text $ newName $ unUIdent ident
+   Ident _  -> text $ ident.unIdent
+   UIdent _ -> text $ (unUIdent ident).newName
 
 instance Pretty AssertDecl where
   pPrint a = case a of
