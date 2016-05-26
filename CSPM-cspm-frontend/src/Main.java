@@ -1,10 +1,12 @@
 import frege.main.ExecCommand;
-import java.util.function.Supplier;
 import org.apache.commons.cli.*;
 import org.apache.commons.cli.Option.*;
 
 public class Main {
 
+    /**
+     * main-funtion for the command line.
+     */
     public static void main(String[] args) {
         Options options = new Options();
         options.addOption("?", "help", false, "Display help message");
@@ -13,15 +15,26 @@ public class Main {
                                 .longOpt("numeric-version")
                                 .desc("Print just the version number")
                                 .build());
+        options.addOption("v", "verbose", false, "verbose");
+        options.addOption(Option.builder()
+                                .longOpt("rename")
+                                .desc("run renaming on the AST")
+                                .build());
+        options.addOption(Option.builder()
+                                .longOpt("prettyOut")
+                                .desc("prettyPrint to a file")
+                                .hasArg()
+                                .argName("FILE")
+                                .build());
         options.addOption(Option.builder()
                                 .longOpt("addUnicode")
-                                .desc("optional: replace some CSPM symbols with unicode")
+                                .desc("replace some CSPM symbols with unicode")
                                 .hasArg()
                                 .argName("FILE")
                                 .build());
         options.addOption(Option.builder()
                                 .longOpt("removeUnicode")
-                                .desc("optional: replace some unicode symbols with default CSPM encoding")
+                                .desc("replace some unicode symbols with default CSPM encoding")
                                 .hasArg()
                                 .argName("FILE")
                                 .build());
@@ -37,6 +50,12 @@ public class Main {
                                 .hasArg()
                                 .argName("STRING")
                                 .build());
+        options.addOption(Option.builder()
+                                .longOpt("declarationToPrologTerm")
+                                .desc("translate a single CSP-M declaration to Prolog")
+                                .hasArg()
+                                .argName("STRING")
+                                .build());
         
         CommandLineParser parser = new DefaultParser();
         try {
@@ -45,11 +64,23 @@ public class Main {
             String[] arguments = cmdLine.getArgs();
             
             if(cmdLine.hasOption("help")) {
+                // TODO seperate translate/info
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.printHelp("cspmf translate", options);
+            } else if(cmdLine.hasOption("version")) {
+                evaluateFregeIOFunction(ExecCommand.version);
+            } else if(cmdLine.hasOption("numeric-version")) {
+                evaluateFregeIOFunction(ExecCommand.numericVersion);
+            } else if(cmdLine.hasOption("verbose")) {
+                evaluateFregeIOFunction(ExecCommand.verbose);
             } else if(arguments.length == 2) {
                 if(arguments[0].equals("translate")) {
                     String src = arguments[1];
+                    boolean rename = cmdLine.hasOption("rename");
+                    if(cmdLine.hasOption("prettyOut")) {
+                        String outFile = cmdLine.getOptionValue("prettyOut");
+                        evaluateFregeIOFunction(ExecCommand.prettyOut(src, rename, outFile));
+                    }
                     if(cmdLine.hasOption("addUnicode")) {
                         String outFile = cmdLine.getOptionValue("addUnicode");
                         evaluateFregeIOFunction(ExecCommand.addUnicode(src, outFile));
@@ -63,8 +94,12 @@ public class Main {
                         evaluateFregeIOFunction(ExecCommand.prologOut(src, outFile));
                     }
                     if(cmdLine.hasOption("expressionToPrologTerm")) {
-                        String outFile = cmdLine.getOptionValue("expressionToPrologTerm");
-                        evaluateFregeIOFunction(ExecCommand.expressionToPrologTerm(src, outFile));
+                        String expr = cmdLine.getOptionValue("expressionToPrologTerm");
+                        evaluateFregeIOFunction(ExecCommand.expressionToPrologTerm(src, expr));
+                    }
+                    if(cmdLine.hasOption("declarationToPrologTerm")) {
+                        String decl = cmdLine.getOptionValue("declarationToPrologTerm");
+                        evaluateFregeIOFunction(ExecCommand.declarationToPrologTerm(src, decl));
                     }
                 } else {
                     System.err.println("Missing mode, wanted any of: info translate");
