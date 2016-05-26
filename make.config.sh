@@ -13,6 +13,10 @@ red=$(tput setaf 1)
 green=$(tput setaf 2)
 normal=$(tput sgr0)
 
+function step() {
+    echo "$bold*** $1 ***$normal"
+}
+
 function success() {
     if [ $2 -eq 0 ]; then
         echo "$green $1 ok $normal"

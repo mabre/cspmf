@@ -1,0 +1,19 @@
+module DataDeriver.Main where
+
+import DataDeriver.Deriver
+import DataDeriver.Parser hiding (main)
+import DataDeriver.Preprocessor
+import Data.List
+
+-- | Reads the frege file given in the first argument and prints Typeable and
+-- Data implementations for all data-Blocks which are annotated with
+-- {-# derive DataTypeable #-}.
+main :: [String] -> IO ()
+main args = do
+        content <- readFile $ args !! 0
+        let (packag, modul, ls) = preprocess content
+        let decls = map fromRight (getTopdecls ls)
+        putStrLn $ unlines $ map (createInstance packag modul) decls
+    where
+        fromRight (Right a) = a
+        fromRight (Left a)  = error $ show a
