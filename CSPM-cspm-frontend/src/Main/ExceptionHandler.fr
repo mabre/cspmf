@@ -15,10 +15,8 @@ module Main.ExceptionHandler
 
 where
 
-import Language.CSPM.Parser (ParseError, ParseErrorException)
-import Language.CSPM.Token (LexError, LexErrorException)
-import Language.CSPM.Rename (RenameError, RenameErrorException)
--- import Language.CSPM.Frontend (LexError, ParseError, RenameError) TODO
+import Language.CSPM.Frontend (LexError, ParseError, RenameError,
+    LexErrorException, ParseErrorException, RenameErrorException)
 import Language.CSPM.Token (pprintAlexPosn, Token)
 import frege.system.Exit
 

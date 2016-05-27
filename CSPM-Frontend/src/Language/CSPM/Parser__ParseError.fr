@@ -1,0 +1,12 @@
+-- This "forward declares" ParseError so that the make script can compile the java dependencies.
+module Language.CSPM.Parser where
+
+import Language.CSPM.Token (Token,AlexPosn)
+
+-- | ParseError data type. This has an wrapping ParseErrorException
+data ParseError = ParseError {
+   parseErrorMsg   :: String
+  ,parseErrorToken :: Token
+  ,parseErrorPos   :: AlexPosn
+  }
+derive Show ParseError

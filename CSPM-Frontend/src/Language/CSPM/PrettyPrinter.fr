@@ -14,13 +14,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Language.CSPM.PrettyPrinter
--- ( TODO
---   pPrint
--- )
 where
 
+import frege.Prelude hiding (empty, display, <+>)
 import Text.PrettyPrint
-
 import Language.CSPM.AST
 
 instance (Pretty x) => Pretty (Labeled x) where

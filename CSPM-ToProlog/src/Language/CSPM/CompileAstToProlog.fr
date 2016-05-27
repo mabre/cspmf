@@ -14,13 +14,6 @@
 {-# OPTIONS_GHC -Wall -Werror -fno-warn-warnings-deprecations #-}
 
 module Language.CSPM.CompileAstToProlog
--- (
---  cspToProlog
--- ,mkSymbolTable
--- ,mkSrcLoc
--- ,te
--- ,td
--- )
 where
 
 import frege.Prelude hiding (MonadAlt.<+>, Show.display, ListEmpty.empty)
@@ -58,14 +51,14 @@ cspToProlog ast = header $+$ core
         ,text ":- dynamic assertLtl/4, assertCtl/4."
         ]
 
-plLocatedConstructs :: Set Const
-plLocatedConstructs = Set.fromList 
+private plLocatedConstructs :: Set Const
+private plLocatedConstructs = Set.fromList 
   [F_Interleave , F_Interrupt, F_Timeout, F_CHAOS,
    F_ExtChoice, F_IntChoice, F_Sequential, F_Hiding
   ]
 
-mkModule :: ModuleFromRenaming -> Doc
-mkModule m
+private mkModule :: ModuleFromRenaming -> Doc
+private mkModule m
   = plPrg [
       singleClause $ clause $ termToClause $ nTerm "parserVersionNum"
         [pList $ map atom $ frontendVersion.versionBranch]
@@ -76,11 +69,11 @@ mkModule m
      ,declGroup $ map mkComment $ Module.moduleComments m
      ]
 
-mkPragma :: String -> Clause
-mkPragma s = clause $ termToClause $ nTerm "pragma" [aTerm s]
+private mkPragma :: String -> Clause
+private mkPragma s = clause $ termToClause $ nTerm "pragma" [aTerm s]
 
-mkComment :: (Comment, SrcLoc.SrcLoc) -> Clause
-mkComment (c, loc) = clause $ termToClause $ nTerm "comment" [com, mkSrcLoc loc]
+private mkComment :: (Comment, SrcLoc.SrcLoc) -> Clause
+private mkComment (c, loc) = clause $ termToClause $ nTerm "comment" [com, mkSrcLoc loc]
   where
     com = case c of
       LineComment s ->  nTerm "lineComment" [aTerm s]
@@ -200,13 +193,13 @@ te expr = case expr.unLabel of
       RangeClosed a b -> nTerm "rangeClosed" [te a, te b]
       RangeEnum l -> nTerm "rangeEnum" [eList l]
 
-eList :: [LExp] -> Term
-eList l = pList h
+private eList :: [LExp] -> Term
+private eList l = pList h
   where h :: [Term]
         h = map te l
 
-tp :: LPattern -> Term
-tp pattern = case Labeled.unLabel pattern of
+private tp :: LPattern -> Term
+private tp pattern = case Labeled.unLabel pattern of
   IntPat i -> nTerm "int" [atom i]
   TruePat -> aTerm "true"
   FalsePat -> aTerm "false"
@@ -226,8 +219,8 @@ tp pattern = case Labeled.unLabel pattern of
     tpList :: String -> [LPattern] -> Term
     tpList f l =  nTerm f [pList $ map tp l]
 
-declList :: [LDecl] -> [Term]
-declList l = concatMap td l
+private declList :: [LDecl] -> [Term]
+private declList l = concatMap td l
 
 td :: LDecl -> [Term]
 td decl = case Labeled.unLabel decl of
@@ -305,28 +298,28 @@ td decl = case Labeled.unLabel decl of
     termShow :: Show a => Labeled a -> Term
     termShow = aTerm . show . Labeled.unLabel
 
-plNameTerm :: LIdent -> Term
-plNameTerm l
+private plNameTerm :: LIdent -> Term
+private plNameTerm l
     = case (uIdent.idType,uIdent.prologMode) of
         (VarID,PrologVariable) -> plVar ("_" ++ uniquePlName uIdent)
         (VarID,PrologGround)   -> term $ atom $ uniquePlName uIdent
         _             -> term $ plName l
     where uIdent = unUIdent $ Labeled.unLabel l
 
-plName :: LIdent -> Atom
-plName l
+private plName :: LIdent -> Atom
+private plName l
     = case UniqueIdent.idType uIdent of
          TransparentID -> atom $ UniqueIdent.realName uIdent
          VarID         -> error ("plName : " ++ show l)
          _             -> atom $ uniquePlName uIdent
     where uIdent = unUIdent $ Labeled.unLabel l
 
-uniquePlName :: UniqueIdent -> String
-uniquePlName = UniqueIdent.newName
+private uniquePlName :: UniqueIdent -> String
+private uniquePlName = UniqueIdent.newName
 
 
-plLoc :: Labeled x -> Term
-plLoc = mkSrcLoc . Labeled.srcLoc
+private plLoc :: Labeled x -> Term
+private plLoc = mkSrcLoc . Labeled.srcLoc
 
 -- | Translate a source location to Prolog
 mkSrcLoc :: SrcLoc.SrcLoc -> Term
@@ -384,8 +377,8 @@ mkSymbolTable ids
       PrologVariable -> "Ident (Prolog Variable)"
 
 -- | Map the abstract datatype LBuiltIn back to plain Strings for Prolog
-builtInToString :: LBuiltIn -> String
-builtInToString x = 
+private builtInToString :: LBuiltIn -> String
+private builtInToString x = 
   let (BuiltIn bi) = Labeled.unLabel x in
   case bi of
   F_STOP -> "STOP"     
@@ -439,5 +432,5 @@ builtInToString x =
   F_Interleave -> "|||"      
   F_Hiding -> "\\"        
 
-unBuiltIn :: LBuiltIn -> Const
-unBuiltIn x =  let (BuiltIn fkt) = Labeled.unLabel x in fkt
+private unBuiltIn :: LBuiltIn -> Const
+private unBuiltIn x =  let (BuiltIn fkt) = Labeled.unLabel x in fkt

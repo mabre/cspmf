@@ -14,48 +14,31 @@
 
 {-# LANGUAGE ScopedTypeVariables #-}
 module Language.CSPM.TranslateToProlog
--- (
---   toPrologVersion
---   ,translateToProlog
---   ,translateExpToPrologTerm
---   ,translateDeclToPrologTerm
--- )
 where
 
--- import Language.CSPM.Frontend as Frontend --TODO
-import Language.CSPM.AstUtils
-import Language.CSPM.Utils
-import Language.CSPM.Parser
-import Language.CSPM.Rename
-import Language.CSPM.LexHelper
-import Language.Prolog.PrettyPrint.Direct
-
-
-
+import frege.Prelude hiding (empty, display, <+>)
+import Language.CSPM.Frontend as Frontend
 import Language.CSPM.SrcLoc as SrcLoc
 import Language.CSPM.Token as Token --(lexEMsg,lexEPos,alexLine,alexCol,alexPos)
 import Language.CSPM.CompileAstToProlog (cspToProlog,mkSymbolTable,te,td)
 -- import Language.CSPM.AstToProlog (toProlog)
 import Language.Prolog.PrettyPrint.Direct
--- import Paths_CSPM_ToProlog (version)
-version = makeVersion [0,6,1,1]
 import Data.Version (Version,showVersion,makeVersion)
 import Data.Maybe
 
--- import Control.Exception
--- import System.Exit
--- import System.IO
 import Text.PrettyPrint
 
 --TODO
 import Language.CSPM.AST
 type FilePath = String
+private evaluate :: a -> IO a
+private evaluate x = (return $! x) >>= return
 
-native getCPUTime java.lang.System.currentTimeMillis :: () -> IO Long
+private native getCPUTime java.lang.System.currentTimeMillis :: () -> IO Long
 
 -- | The version of the CSPM-ToProlog library
 toPrologVersion :: Version --TODO
-toPrologVersion = version
+toPrologVersion = makeVersion [0,6,1,1]
 
 -- | 'translateExpToPrologTerm' translates a string expression
 -- to a prolog term in regard to the given CSP-M specification.
@@ -82,12 +65,12 @@ translateDeclToPrologTerm file decl = do
   where
     getDeclPlCode :: Module a -> Doc
     getDeclPlCode = addFullStopToPrologTerm . Term.unTerm . head . td . {-Frontend.-}getLastDeclaration
-	
-addFullStopToPrologTerm :: Doc -> Doc
-addFullStopToPrologTerm plTerm = plTerm <> (text ".")
 
-mainWorkSinglePlTerm :: (ModuleFromRenaming -> Doc) -> Maybe FilePath -> String -> IO String
-mainWorkSinglePlTerm termFun filePath decl = do
+private addFullStopToPrologTerm :: Doc -> Doc
+private addFullStopToPrologTerm plTerm = plTerm <> (text ".")
+
+private mainWorkSinglePlTerm :: (ModuleFromRenaming -> Doc) -> Maybe FilePath -> String -> IO String
+private mainWorkSinglePlTerm termFun filePath decl = do
   (specSrc,fileName) <- if isJust filePath then readFile (fromJust filePath) >>= \s -> return (s,fromJust filePath) else return ("","no-file-name")
   let src = specSrc ++ "\n--patch entrypoint\n"++decl ++"\n"
   ast <- {-Frontend.-}parseNamedString fileName src
@@ -126,8 +109,8 @@ main = do
       exitFailure
 -}
 
-mainWork :: FilePath -> IO String
-mainWork fileName = do
+private mainWork :: FilePath -> IO String
+private mainWork fileName = do
   src <- readFile fileName
 
   printDebug $ "Reading File " ++ fileName
@@ -160,29 +143,29 @@ mainWork fileName = do
   printDebug $ "total : " ++ showTime(time_have_ast - startTime)
   return output
 
-showTime :: Long -> String
-showTime a = show a ++ "ms"
+private showTime :: Long -> String
+private showTime a = show a ++ "ms"
 
-defaultHeader :: Doc
-defaultHeader 
+private defaultHeader :: Doc
+private defaultHeader 
   =    text ":- dynamic parserVersionNum/1, parserVersionStr/1, parseResult/5."
     $$ text ":- dynamic module/4."
     $$ simpleFact "parserVersionStr" [aTerm $ showVersion toPrologVersion]
 
-simpleFact :: String -> [Term] -> Doc
-simpleFact a l= plPrg [declGroup [clause $ termToClause $ nTerm a l]]
+private simpleFact :: String -> [Term] -> Doc
+private simpleFact a l= plPrg [declGroup [clause $ termToClause $ nTerm a l]]
 
-mkResult :: String -> String -> Int -> Int -> Int -> Doc
-mkResult var msg line col pos
+private mkResult :: String -> String -> Int -> Int -> Int -> Doc
+private mkResult var msg line col pos
   = defaultHeader   
     $$ simpleFact "parseResult" [aTerm var, aTerm msg, aTerm line, aTerm col, aTerm pos]
 
-printDebug :: String -> IO ()
+private printDebug :: String -> IO ()
 -- printDebug _ = return () -- TODO
-printDebug = putStrLn
+private printDebug = putStrLn
 
-parseErrorHandler :: ParseErrorException -> IO String
-parseErrorHandler exc = do
+private parseErrorHandler :: ParseErrorException -> IO String
+private parseErrorHandler exc = do
     printDebug "ParseError : "
     printDebug $ show err
     let loc = err.parseErrorPos
@@ -196,8 +179,8 @@ parseErrorHandler exc = do
     err = exc.get
                 
 
-lexErrorHandler :: LexErrorException -> IO String
-lexErrorHandler exc = do
+private lexErrorHandler :: LexErrorException -> IO String
+private lexErrorHandler exc = do
     printDebug "LexError : "
     printDebug $ show err
     let loc = err.lexEPos
@@ -210,8 +193,8 @@ lexErrorHandler exc = do
   where
     err = exc.get
 
-renameErrorHandler :: RenameErrorException -> IO String
-renameErrorHandler exc = do 
+private renameErrorHandler :: RenameErrorException -> IO String
+private renameErrorHandler exc = do 
     printDebug "RenamingError : "
     printDebug $ show err
     let loc = err.renameErrorLoc
@@ -224,16 +207,13 @@ renameErrorHandler exc = do
   where
     err = exc.get
 
-catchAllExceptions :: Exception -> IO String
-catchAllExceptions exc = do
+private catchAllExceptions :: Exception -> IO String
+private catchAllExceptions exc = do
     printDebug "ParserException : "
     printDebug $ show exc.getMessage
     evaluate $ show $ mkResult "exception" (exc.getMessage) 0 0 0
 
-writeFileExceptionHandler :: Exception -> IO ()
-writeFileExceptionHandler exc = do
+private writeFileExceptionHandler :: Exception -> IO ()
+private writeFileExceptionHandler exc = do
     stderr.println "output-file not written"
     stderr.println $ show exc.getMessage
-
-evaluate :: a -> IO a
-evaluate x = (return $! x) >>= return

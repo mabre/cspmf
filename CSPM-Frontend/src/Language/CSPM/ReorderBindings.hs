@@ -14,7 +14,7 @@
 -- ToDo: think if this is correct.
 -- to be safe, we must also rule out multiple recursive functions ?
 -- ToDo: add support for channel delcs and other top-level decls
-
+--TODO where is this module needed?
 module Language.CSPM.ReorderBindings
   (
   reorderModule

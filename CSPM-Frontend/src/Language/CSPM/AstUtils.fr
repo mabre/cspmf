@@ -10,21 +10,7 @@
 --
 -- Some utility functions for converting the AST
 
-module Language.CSPM.AstUtils
---   ( TODO check every module for private
---    removeSourceLocations
---   ,removeParens
---   ,removeModuleAsserts
---   ,unUniqueIdent
---   ,computeFreeNames
---   ,getModuleAsserts
---   ,setNodeIdsZero
---   ,getLastBindExpression -- used for parsing a single expression
---   ,getLastDeclaration -- used for parsing a single declaration
---   )
-where
-
--- import Debug.Trace -- TODO
+module Language.CSPM.AstUtils where
 
 import Language.CSPM.AST
 import Language.CSPM.SrcLoc(SrcLoc)

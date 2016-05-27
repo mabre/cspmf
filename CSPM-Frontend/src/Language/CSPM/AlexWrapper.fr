@@ -18,22 +18,21 @@ import Data.Char hiding (isNumber)
 -- import Data.Word (Word8)
 import Data.Bits
 import Data.List
--- TODO newtype supported by alpha
 -- #if __GLASGOW_HASKELL__ >= 710
 -- import qualified Control.Monad (ap)
 -- #endif
 
 type AlexInput = (AlexPosn,     -- current position,
                   Char,         -- previous char
-                  [Int],       -- pending bytes on current char
+                  [Int],        -- pending bytes on current char
                   String)       -- current input string
 
 type Byte = Int
 
 data AlexState = AlexState {
    alex_input :: AlexInput
-  ,!alex_scd :: Int 	-- the current startcode
-  ,!alex_cnt :: Int 	-- number of tokens
+  ,!alex_scd :: Int     -- the current startcode
+  ,!alex_cnt :: Int     -- number of tokens
   }
 
 runAlex :: String -> Alex a -> Either LexError a

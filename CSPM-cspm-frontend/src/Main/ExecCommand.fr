@@ -13,6 +13,7 @@
 module Main.ExecCommand
 where
 
+import frege.Prelude hiding (empty, display, <+>)
 import Language.CSPM.TranslateToProlog
 import Language.CSPM.LexHelper
 import Language.CSPM.Utils

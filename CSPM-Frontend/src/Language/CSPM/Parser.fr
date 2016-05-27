@@ -11,8 +11,6 @@
 -- This modules defines a Parser for CSP-M
 -- 
 -----------------------------------------------------------------------------
--- {-# LANGUAGE DeriveDataTypeable #-}
--- RecordWildCards
 
 module Language.CSPM.Parser
 
@@ -30,10 +28,8 @@ import Language.CSPM.SrcLoc
 import Language.CSPM.LexHelper (removeIgnoredToken)
 import Text.ParserCombinators.Parsec.ExprM
 
-import Text.ParserCombinators.Parsec.Prim hiding (parse, token)
-import Text.ParserCombinators.Parsec.Combinator hiding (anyToken, notFollowedBy, eof)
-import Text.ParserCombinators.Parsec.Char hiding (newline)
--- import Text.ParserCombinators.Parsec.Token as ParsecToken (TokenParser.integer)
+import Text.ParserCombinators.Parsec.Parsec
+  hiding (parse,eof,notFollowedBy,anyToken,label,ParseError,errorPos,token,newline)
 import Text.ParserCombinators.Parsec.Pos
 import Text.ParserCombinators.Parsec.Error as ParsecError hiding (ParseError, Show_ParseError)
 -- import Control.Monad.State
@@ -62,9 +58,9 @@ testParser p tokenList
   = runParser p initialPState ""
        $ removeIgnoredToken tokenList
 
--- | ParseError data type. This is an instance of Excpetion
+-- | ParseError data type. This has an wrapping ParseErrorException
 data ParseError = ParseError {
-   parseErrorMsg :: String
+   parseErrorMsg   :: String
   ,parseErrorToken :: Token
   ,parseErrorPos   :: AlexPosn
   }

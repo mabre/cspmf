@@ -1,0 +1,11 @@
+-- This "forward declares" RenameError so that the make script can compile the java dependencies.
+module Language.CSPM.Rename where
+
+import Language.CSPM.SrcLoc
+
+data RenameError
+  = RenameError {
+   renameErrorMsg :: String
+  ,renameErrorLoc :: SrcLoc
+  }
+derive Show RenameError

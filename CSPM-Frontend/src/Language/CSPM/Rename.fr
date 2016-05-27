@@ -11,25 +11,14 @@
 -- Compute the mapping between the using occurences and the defining occurences of all Identifier in a Module
 -- Also decide whether to use ground or non-ground- representaions for the translation to Prolog.
 
--- {-# LANGUAGE DeriveDataTypeable #-}
--- {-# LANGUAGE RecordWildCards #-}
--- EmptyDataDecls
--- ViewPatterns
-
 module Language.CSPM.Rename
---   (
---    renameModule
---   ,RenameError (..)
---   ,RenameInfo (..)
---   ,ModuleFromRenaming
---   ,FromRenaming
---   )
+
 where
 
 import Language.CSPM.AST
 import Language.CSPM.AST as AST()
-import Language.CSPM.SrcLoc as SrcLoc()
 import Language.CSPM.BuiltIn as BuiltIn
+import Language.CSPM.SrcLoc
 
 import Data.Data hiding (DataType)
 import Data.Generics.Schemes (everywhere)
@@ -44,7 +33,6 @@ import Data.Map (Map)
 import Data.Set as Set()
 import Data.IntMap as IntMap()
 import Data.List as List()
-import Data.Maybe
 -- import frege.data.IntMap
 
 con_FromRenaming_FromRenaming :: Constr
@@ -109,8 +97,8 @@ instance Show RenameInfo where
         show r.prologMode,
         show r.bindType]
 
-initialRState :: RenameInfo
-initialRState = RenameInfo { nameSupply    = 0,
+private initialRState :: RenameInfo
+private initialRState = RenameInfo { nameSupply    = 0,
                              localBindings = Map.empty,
                              visible       = Map.empty,
                              identDefinition = IntMap.empty,
@@ -119,15 +107,15 @@ initialRState = RenameInfo { nameSupply    = 0,
                              prologMode      = PrologVariable,
                              bindType        = NotLetBound }
 
-initPrelude :: RM ()
-initPrelude
+private initPrelude :: RM ()
+private initPrelude
     = forM_ BuiltIn.builtIns $ \bi -> do
         bindNewTopIdent BuiltInID (labeled $ Ident bi)
 
 data RenameError
   = RenameError {
    renameErrorMsg :: String
-  ,renameErrorLoc :: SrcLoc.SrcLoc
+  ,renameErrorLoc :: SrcLoc
   }
 derive Show RenameError
 
@@ -136,23 +124,23 @@ data RenameErrorException = pure native frege.language.CSPM.RenameErrorException
     pure native get getRenameError :: RenameErrorException -> RenameError
 derive Exceptional RenameErrorException
 
-throwError :: RenameError -> RM ()
-throwError e = unsafeCoerce_ $ throwIO (RenameErrorException.new e)
+private throwError :: RenameError -> RM ()
+private throwError e = unsafeCoerce_ $ throwIO (RenameErrorException.new e)
 
 -- This is a hack (obviously): We use it only if an exception is thrown within a,
 -- so we will (should) never get into trouble with incompatible types.
 private pure native unsafeCoerce_ java.util.Objects.requireNonNull :: a -> b
 
-lookupVisible :: LIdent -> RM (Maybe UniqueIdent)
-lookupVisible i = do
+private lookupVisible :: LIdent -> RM (Maybe UniqueIdent)
+private lookupVisible i = do
   vis <- gets RenameInfo.visible
   return $ Map.lookup (i.unLabel.unIdent) vis
 
-getOrigName :: LIdent -> String
-getOrigName l = l.unLabel.unIdent
+private getOrigName :: LIdent -> String
+private getOrigName l = l.unLabel.unIdent
 
-bindNewTopIdent :: IDType -> LIdent -> RM ()
-bindNewTopIdent t i = do
+private bindNewTopIdent :: IDType -> LIdent -> RM ()
+private bindNewTopIdent t i = do
   vis <- lookupVisible i
   case vis of
     Nothing -> bindNewUniqueIdent t i
@@ -160,8 +148,8 @@ bindNewTopIdent t i = do
       renameErrorMsg = "Redefinition of toplevel name " ++ getOrigName i
      ,renameErrorLoc = i.srcLoc }
 
-bindNewUniqueIdent :: IDType -> LIdent -> RM ()
-bindNewUniqueIdent iType lIdent = do
+private bindNewUniqueIdent :: IDType -> LIdent -> RM ()
+private bindNewUniqueIdent iType lIdent = do
   let origName = getOrigName lIdent
   {- check that we do not bind a variable twice i.e. in a pattern -}
   local <- gets RenameInfo.localBindings
@@ -232,8 +220,8 @@ bindNewUniqueIdent iType lIdent = do
       StateT.modify $ \s -> s.{usedNames = Set.insert nextName $ s.usedNames}
       return (nextName,n)
 
-localScope :: RM x -> RM x
-localScope h = do 
+private localScope :: RM x -> RM x
+private localScope h = do 
   vis <- gets RenameInfo.visible
   localBind <- gets RenameInfo.localBindings
   StateT.modify $ \s -> s.{localBindings = Map.empty}
@@ -243,8 +231,8 @@ localScope h = do
     ,localBindings = localBind }
   return res
 
-useIdent :: LIdent -> RM ()
-useIdent lIdent = do
+private useIdent :: LIdent -> RM ()
+private useIdent lIdent = do
   vis <- lookupVisible lIdent
   case vis of
     Nothing -> case elem (getOrigName lIdent) builtInsRename of
@@ -256,8 +244,8 @@ useIdent lIdent = do
          { identUse =  IntMap.insert 
              (lIdent.nodeId.unNodeId) defIdent $ s.identUse }
 
-addBuiltInBinding :: LIdent -> RM ()
-addBuiltInBinding lIdent = do
+private addBuiltInBinding :: LIdent -> RM ()
+private addBuiltInBinding lIdent = do
     let origName = lIdent.unLabel.unIdent
         nodeID = lIdent.nodeId
     plMode <- gets RenameInfo.prologMode
@@ -282,18 +270,18 @@ rn just walks through the AST, without modifing it.
 The actual renamings are stored in a sepearte AstAnnotation inside the RM-Monad
 -}
 
-nop :: RM ()
-nop = return ()
+private nop :: RM ()
+private nop = return ()
 
-rnModule :: ModuleFromParser -> RM ()
-rnModule = rnDeclList . ModuleFromParser.moduleDecls
+private rnModule :: ModuleFromParser -> RM ()
+private rnModule = rnDeclList . ModuleFromParser.moduleDecls
 
-rnExpList :: [LExp] -> RM ()
-rnExpList = mapM_ rnExp
+private rnExpList :: [LExp] -> RM ()
+private rnExpList = mapM_ rnExp
 
 -- rename an expression
-rnExp :: LExp -> RM ()
-rnExp expression = case expression.unLabel of
+private rnExp :: LExp -> RM ()
+private rnExp expression = case expression.unLabel of
   Var ident -> useIdent ident
   IntExp _ -> nop
   SetExp a Nothing -> rnRange a
@@ -351,17 +339,17 @@ These Constructors may only appear in later stages.
   LetI {} -> error "Rename.hs : no match for LetI"
   PrefixI {} -> error "Rename.hs : no match for PrefixI"
 
-rnRange :: LRange -> RM ()
-rnRange r = case r.unLabel of
+private rnRange :: LRange -> RM ()
+private rnRange r = case r.unLabel of
   RangeEnum l -> rnExpList l
   RangeOpen a -> rnExp a
   RangeClosed a b -> rnExp a >> rnExp b
 
-rnPatList :: [LPattern] -> RM ()
-rnPatList = mapM_ rnPattern
+private rnPatList :: [LPattern] -> RM ()
+private rnPatList = mapM_ rnPattern
 
-rnPattern :: LPattern -> RM ()
-rnPattern p = case p.unLabel of
+private rnPattern :: LPattern -> RM ()
+private rnPattern p = case p.unLabel of
   IntPat _ -> nop
   TruePat -> nop
   FalsePat -> nop
@@ -379,32 +367,32 @@ rnPattern p = case p.unLabel of
   Selectors {} -> error "Rename.hs : no match for Selectors"
   Selector {} -> error "Rename.hs : no match for Selector"
 
-rnCommField :: LCommField -> RM ()
-rnCommField f = case f.unLabel of
+private rnCommField :: LCommField -> RM ()
+private rnCommField f = case f.unLabel of
   InComm pat -> rnPattern pat
   InCommGuarded p g -> rnExp g >> rnPattern p
   OutComm e -> rnExp e
 
-inCompGenL :: LCompGenList -> RM () -> RM ()
-inCompGenL l r = inCompGen (l.unLabel) r
+private inCompGenL :: LCompGenList -> RM () -> RM ()
+private inCompGenL l r = inCompGen (l.unLabel) r
 
-inCompGen :: [LCompGen] -> RM () -> RM ()
-inCompGen (h:t) ret = localScope $ do
+private inCompGen :: [LCompGen] -> RM () -> RM ()
+private inCompGen (h:t) ret = localScope $ do
   rnCompGen h
   inCompGen t ret
-inCompGen [] ret = ret 
+private inCompGen [] ret = ret 
 
-rnCompGen :: LCompGen -> RM ()
-rnCompGen g = case g.unLabel of
+private rnCompGen :: LCompGen -> RM ()
+private rnCompGen g = case g.unLabel of
   Generator pat e -> rnExp e >> rnPattern pat
   Guard e -> rnExp e
 
-reRename :: LRename -> RM ()
-reRename r = case r.unLabel of
+private reRename :: LRename -> RM ()
+private reRename r = case r.unLabel of
   Rename e1 e2 -> rnExp e1 >> rnExp e2
 
-rnLinkList :: LLinkList -> RM ()
-rnLinkList ll = case ll.unLabel of
+private rnLinkList :: LLinkList -> RM ()
+private rnLinkList ll = case ll.unLabel of
   LinkList l -> mapM_ rnLink l
   LinkListComprehension a b -> inCompGen a (mapM_ rnLink b)
  where
@@ -412,15 +400,15 @@ rnLinkList ll = case ll.unLabel of
       Link a b -> rnExp a >> rnExp b
 
 -- rename a recursive binding group
-rnDeclList :: [LDecl] -> RM ()
-rnDeclList declList = do
+private rnDeclList :: [LDecl] -> RM ()
+private rnDeclList declList = do
   StateT.modify $ \s -> s.{prologMode = PrologGround ,bindType   = LetBound}
   forM_ declList declLHS
   StateT.modify $ \s -> s.{prologMode = PrologVariable ,bindType   = NotLetBound}
   forM_ declList declRHS
 
-declLHS :: LDecl -> RM ()
-declLHS d = case d.unLabel of
+private declLHS :: LDecl -> RM ()
+private declLHS d = case d.unLabel of
   PatBind pat _ -> rnPattern pat
    --todo : proper type-checking/counting number of Funargs
   FunBind i _ -> bindNewUniqueIdent FunID i 
@@ -445,8 +433,8 @@ declLHS d = case d.unLabel of
       (Constructor c _) -> useIdent c
 
 
-declRHS :: LDecl -> RM ()
-declRHS d = case d.unLabel of
+private declRHS :: LDecl -> RM ()
+private declRHS d = case d.unLabel of
   PatBind _ e -> rnExp e
   FunBind _ cases -> mapM_ rnFunCase cases
   Assert a -> case a.unLabel of
@@ -471,12 +459,12 @@ declRHS d = case d.unLabel of
       rc (Constructor _ Nothing ) = nop
       rc (Constructor _ (Just t)) = rnTypeDef t
 
-rnTypeDef :: LTypeDef -> RM ()
-rnTypeDef t = case t.unLabel of
+private rnTypeDef :: LTypeDef -> RM ()
+private rnTypeDef t = case t.unLabel of
   TypeDot na_tuples -> rnDotArgs na_tuples
 
-rnDotArgs :: [LNATuples] -> RM ()
-rnDotArgs na_tuples = mapM_ rnNATuples na_tuples
+private rnDotArgs :: [LNATuples] -> RM ()
+private rnDotArgs na_tuples = mapM_ rnNATuples na_tuples
   where
     rnNATuples :: LNATuples -> RM ()
     rnNATuples na_tuple = case na_tuple.unLabel of
@@ -490,12 +478,12 @@ rnTypeDef t = case t.unLabel of
   TypeDot l -> rnExpList l
 -}
 
-applyRenaming ::
+private applyRenaming ::
      ModuleFromParser
   -> AstAnnotation UniqueIdent
   -> AstAnnotation UniqueIdent
   -> ModuleFromRenaming
-applyRenaming ast defIdent usedIdent
+private applyRenaming ast defIdent usedIdent
   = castModule $ everywhere (mkT patchVarPat . mkT patchIdent) ast
   where
     patchIdent :: LIdent -> LIdent
@@ -518,8 +506,8 @@ applyRenaming ast defIdent usedIdent
 -- | If a function is defined via pattern matching for serveral cases,
 -- | the parser returns each case as an individual declaration.
 -- | mergeFunBinds merges contiguous cases of the same function into one declaration.
-mergeFunBinds :: ModuleFromParser -> ModuleFromParser
-mergeFunBinds = everywhere (mkT patchModule . mkT patchLet)
+private mergeFunBinds :: ModuleFromParser -> ModuleFromParser
+private mergeFunBinds = everywhere (mkT patchModule . mkT patchLet)
   where
     patchModule :: ModuleFromParser -> ModuleFromParser
     patchModule m = m.{moduleDecls = mergeDecls $ m.moduleDecls}

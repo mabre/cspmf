@@ -17,5 +17,5 @@ $fregec -d $build_dir -make src/Data/Typeable.fr src/Data/Fingerprint.fr src/Dat
 success fregec $?
 
 step "Compiling everything else"
-$fregec -d $build_dir -make src/Text/PrettyPrint.fr src/System/FilePath.fr src/Data/Map.fr src/Data/IntMap.fr src/Data/Set.fr src/Data/Version.fr
+$fregec -d $build_dir -make src/Text/PrettyPrint.fr src/System/FilePath.fr src/Data/Map.fr src/Data/IntMap.fr src/Data/Set.fr src/Data/Version.fr src/Control/Monad/State.fr
 success fregec $?

@@ -3,9 +3,11 @@
 javac="javac"
 java="java"
 fregejar="/home/markus/Downloads/frege/fregec.jar"
+alex="/home/markus/.cabal/bin/alex"
 
 frege_compiler_options="-hints -O"
 
+frege="$java -Xss16m -Xmx2g -cp $fregejar:../build:./build"
 fregec="$java -Xss16m -Xmx2g -jar $fregejar $frege_compiler_options"
 
 bold=$(tput bold)
