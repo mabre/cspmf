@@ -71,7 +71,8 @@ public class Main {
                 evaluateFregeIOFunction(ExecCommand.version);
             } else if(cmdLine.hasOption("numeric-version")) {
                 evaluateFregeIOFunction(ExecCommand.numericVersion);
-            } else if(cmdLine.hasOption("verbose")) {
+            } else if(cmdLine.hasOption("verbose")
+                      || arguments.length > 0 && arguments[0].equals("info")) {
                 evaluateFregeIOFunction(ExecCommand.verbose);
             } else if(arguments.length == 2) {
                 if(arguments[0].equals("translate")) {
