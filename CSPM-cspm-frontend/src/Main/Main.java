@@ -1,3 +1,5 @@
+package frege.main;
+
 import frege.main.ExecCommand;
 import org.apache.commons.cli.*;
 import org.apache.commons.cli.Option.*;
