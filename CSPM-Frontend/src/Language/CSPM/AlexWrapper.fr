@@ -164,7 +164,7 @@ block_comment (startPos, _ ,[], input') 2 = do
   where
     go :: Int -> [Char] -> [Char] -> Maybe ([Char],[Char])
     go 0 acc rest = Just (acc, rest)
-    go nested acc rest =case toList rest of
+    go nested acc rest = case rest of
       '-' : '}' : r2 -> go (pred nested) ('}' : '-' : acc) r2
       '{' : '-'  : r2 -> go (succ nested) ('-' : '{' : acc) r2
       h:r2 -> go nested (h : acc) r2
