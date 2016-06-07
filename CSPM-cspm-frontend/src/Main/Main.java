@@ -104,6 +104,10 @@ public class Main {
                         String decl = cmdLine.getOptionValue("declarationToPrologTerm");
                         evaluateFregeIOFunction(ExecCommand.declarationToPrologTerm(src, decl));
                     }
+                    if(cmdLine.getOptions().length == 0) {
+                        System.out.println("No output option is set");
+                        System.out.println("Set '--xmlOut', '--prettyOut' or an other output option");
+                    }
                 } else {
                     System.err.println("Missing mode, wanted any of: info translate");
                 }
