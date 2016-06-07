@@ -414,7 +414,7 @@ makeTokenParser languageDef
 
 
     -- escape code tables
-    escMap          = zip ("abfnrtv\\\"\'".toList) ("\007\010\f\n\r\t\013\\\"\'".toList)
+    escMap          = zip (unpacked "abfnrtv\\\"\'") (unpacked "\007\010\f\n\r\t\013\\\"\'")
     asciiMap        = zip (ascii3codes ++ ascii2codes) (ascii3 ++ ascii2) 
 
     ascii2codes     = ["BS","HT","LF","VT","FF","CR","SO","SI","EM",
@@ -554,7 +554,7 @@ makeTokenParser languageDef
         <?> "operator" )
         
     isReservedOp name =
-        isReserved (map packed (sort (map toList languageDef.reservedOpNames))) name          
+        isReserved (map packed (sort (map unpacked languageDef.reservedOpNames))) name          
         
         
     -- --------------------------------------------------------
@@ -568,7 +568,7 @@ makeTokenParser languageDef
 
     caseString name
         | languageDef.caseSensitive = string name
-        | otherwise                 = do{ walk name.toList; return name.toList }
+        | otherwise                 = do{ walk (unpacked name); return (unpacked name) }
         where
           walk []     = return ()
           walk (c:cs) = do{ caseChar c <?> msg; walk cs }
@@ -669,7 +669,7 @@ makeTokenParser languageDef
         <|> do{ oneOf startEnd                        ; inCommentMulti }
         <?> "end of comment"  
         where
-          startEnd   = packed $ nub (languageDef.commentEnd ++ languageDef.commentStart).toList
+          startEnd   = packed $ nub (unpacked $ languageDef.commentEnd ++ languageDef.commentStart)
 
     inCommentSingle
         =   do{ try (string (languageDef.commentEnd)); return () }
@@ -677,5 +677,5 @@ makeTokenParser languageDef
         <|> do{ oneOf startEnd                       ; inCommentSingle }
         <?> "end of comment"
         where
-          startEnd   = packed $ nub (languageDef.commentEnd ++ languageDef.commentStart).toList
+          startEnd   = packed $ nub (unpacked $ languageDef.commentEnd ++ languageDef.commentStart)
 

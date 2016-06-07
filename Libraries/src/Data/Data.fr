@@ -843,19 +843,19 @@ isNorepType dt = case dt.datarep of
 -- drop *.*.*... before name
 --
 tyconUQname :: String -> String
-tyconUQname x = let x' = dropWhile (not . (==) '.') x.toList
+tyconUQname x = let x' = dropWhile (not . (==) '.') (unpacked x)
                 in if x' == [] then x else tyconUQname $ packed (tail x')
 
 
 -- | Gets the module of a type constructor:
 -- take *.*.*... before name
 tyconModule :: String -> String
-tyconModule x = let (a,b) = break ((==) '.') x.toList
+tyconModule x = let (a,b) = break ((==) '.') (unpacked x)
                  in if b == []
                       then packed b
                       else packed $ a ++ tyconModule' (tail b)
   where
-    tyconModule' y = let y' = toList $ tyconModule $ packed y
+    tyconModule' y = let y' = unpacked $ tyconModule $ packed y
                       in if y' == [] then [] else ('.':y')
 
 

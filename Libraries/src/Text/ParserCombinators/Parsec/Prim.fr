@@ -152,7 +152,7 @@ data State tok st       = State { stateInput :: [tok]
 parseFromFile :: Parser a -> SourceName -> IO (Either ParseError a)
 parseFromFile p fname
     = do{ input <- readFile fname
-        ; return (parse p fname input.toList)
+        ; return (parse p fname (unpacked input))
         }
 
 -- | The expression @parseTest p input@ applies a parser @p@ against

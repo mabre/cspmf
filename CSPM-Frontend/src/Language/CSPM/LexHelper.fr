@@ -91,7 +91,7 @@ private scanInclude incl (h:rest) = case h of
     Token _ _ _ T_WhiteSpace _ -> scanInclude incl rest
     Token _ _ _ L_String fname -> do
        r <- splitIncludes [] rest
-       let fileName = packed $ reverse $ tail $ reverse $ tail $ toList fname -- remove quotes
+       let fileName = packed $ reverse $ tail $ reverse $ tail $ unpacked fname -- remove quotes
        return $ (Include fileName) : r
     _ -> Left $ LexError {
        lexEPos = incl.tokenStart

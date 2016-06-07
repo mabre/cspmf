@@ -18,7 +18,7 @@ getTopdecls :: String -> [Either ParseError Topdecl]
 getTopdecls str = map (parse topdeclParser "") topdecls
     where 
         topdecls :: [[Char]]
-        topdecls = map ("data ".toList ++) $ drop 1 $ map toList $ ´data ´.splitted str
+        topdecls = map ((unpacked "data ") ++) $ drop 1 $ map unpacked $ ´data ´.splitted str
 
 -- | Parses one data declaration according to this grammar (simplified version
 -- of the grammar for Algebraic Data type Declaration in Frege, eg. "abstract",

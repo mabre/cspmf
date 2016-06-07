@@ -20,7 +20,7 @@ preprocess content = (p, m, decls)
 
 -- | Removes all block comments ({- -}) in s, excluding magic comments ({-# #-}).
 private removeBlockComments :: String -> String
-private removeBlockComments s = packed $ rm s.toList 0
+private removeBlockComments s = packed $ rm (unpacked s) 0
     where
         rm :: [Char] -> Int -> [Char]
         rm []              _ = []

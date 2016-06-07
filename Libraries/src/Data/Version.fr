@@ -80,7 +80,7 @@ derive Show Version
 
 instance Eq Version where
   v1 == v2  = v1.versionBranch == v2.versionBranch
-                && sort (v1.versionTags.toList) == sort (v2.versionTags.toList)
+                && sort v1.versionTags == sort v2.versionTags
                 -- tags may be in any order
   hashCode v = hashCode $ show v.versionBranch ++ show v.versionTags
 

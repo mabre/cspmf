@@ -143,7 +143,7 @@ block_comment (startPos, _ ,[], input') 2 = do
     let input = tail $ tail input'
     if (head input' /= '{' && head (tail input') /= '-')
     then error "internal Error : block_comment called with bad args"
-    else case go 1 ['-','{'] (toList input) of
+    else case go 1 ['-','{'] (unpacked input) of
       Nothing -> Alex $ \_-> Left $ LexError {
         lexEPos = startPos
         ,lexEMsg = "Unclosed Blockcomment"
@@ -195,13 +195,13 @@ stringchars (startPos, _, [], input') 1 = do
   where
     go :: Int -> String -> String -> Maybe (String,String)
     go 0 acc rest = Just (acc, rest)
-    go nested acc rest = case toList rest of
+    go nested acc rest = case unpacked rest of
       '\"' : r2 -> go (pred nested) ("\"" ++ acc) (packed r2)
       '\"' : r2 -> go (succ nested) ("\"" ++ acc) (packed r2)
       h:r2 -> go nested (ctos h ++ acc) (packed r2)
       [] -> Nothing
     reverse' :: String -> [Char]
-    reverse' = reverse . toList
+    reverse' = reverse . unpacked
 
 lexError :: String -> Alex a
 lexError s = do

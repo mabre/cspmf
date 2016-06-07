@@ -115,9 +115,9 @@ plVar s
         where
            escapeBadChars x = concatMap esc x
            esc :: Char -> [Char]
-           esc '\'' = "_quote".toList
+           esc '\'' = unpacked "_quote"
            esc x = [x]
-           (a@(h:_)) = toList s
+           (a@(h:_)) = unpacked s
 
 plWildCard :: Term
 plWildCard = Term $ text "_"
@@ -151,10 +151,10 @@ quoteString sl
   = packed $ ['\''] ++ concatMap escapeChar s ++ ['\'']
   where
     s :: [Char]
-    s = sl.toList
+    s = unpacked sl
     escapeChar :: Char -> [Char]
     escapeChar a = if isBadChar a
-      then toList $ "\\x" ++ (ord a).toHexString ++ "\\"
+      then unpacked $ "\\x" ++ (ord a).toHexString ++ "\\"
       else [a]
     isBadChar :: Char -> Bool
     isBadChar a = case ord a of
