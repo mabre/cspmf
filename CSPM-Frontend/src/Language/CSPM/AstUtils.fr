@@ -62,7 +62,7 @@ unUniqueIdent ast
 -- | Compute the "FreeNames" of an Expression.
 -- This function does only work after renaming has been done.
 -- This implementation is inefficient.
-computeFreeNames :: Data b => b -> FreeNames
+computeFreeNames :: Data b => b -> FreeNames -- TODO is this needed?
 computeFreeNames syntax
   = IntMap.difference (IntMap.fromList used) (IntMap.fromList def)
   where
