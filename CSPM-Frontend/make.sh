@@ -82,11 +82,13 @@ $fregec -d $build_dir -make -sp __DataTypeable AST.fr UnicodeSymbols.fr LexHelpe
 success fregec $?
 
 if [ ! -e $build_dir/frege/language/CSPM/ParseError.class ]; then
-    $fregec -d $build_dir -make -sp __DataTypeable Parser__ParseError.fr Rename__RenameError.fr
+    $fregec -d $build_dir -make -sp __DataTypeable Parser__ParseError.fr 
     success fregec $?
-    compiledForwardDecs=true
-    touch __DataTypeable/Parser.fr __DataTypeable/Rename.fr
+    touch __DataTypeable/Parser.fr 
 fi
+
+$fregec -d $build_dir -make -sp __DataTypeable Rename__RenameError.fr
+success fregec $?
 
 $javac -d $build_dir -cp $build_dir:$fregejar src/Language/CSPM/ParseErrorException.java src/Language/CSPM/RenameErrorException.java
 success javac $?

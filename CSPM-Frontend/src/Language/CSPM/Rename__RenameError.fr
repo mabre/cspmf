@@ -1,5 +1,4 @@
--- This "forward declares" RenameError so that the make script can compile the java dependencies.
-module Language.CSPM.Rename where
+module Language.CSPM.Rename__RenameError where
 
 import Language.CSPM.SrcLoc
 
