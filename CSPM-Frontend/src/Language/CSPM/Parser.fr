@@ -22,6 +22,7 @@ import Language.CSPM.AST
 import Language.CSPM.Token (Token,AlexPosn)
 import Language.CSPM.TokenClasses as TokenClasses
 import Language.CSPM.Token as Token()
+import Language.CSPM.Parser_ParseError public
 
 import Language.CSPM.SrcLoc
 
@@ -57,14 +58,6 @@ testParser :: PT a -> [Token] -> Either ParsecError.ParseError a
 testParser p tokenList
   = runParser p initialPState ""
        $ removeIgnoredToken tokenList
-
--- | ParseError data type. This has an wrapping ParseErrorException
-data ParseError = ParseError {
-   parseErrorMsg   :: String
-  ,parseErrorToken :: Token
-  ,parseErrorPos   :: AlexPosn
-  }
-derive Show ParseError
 
 data ParseErrorException = pure native frege.language.CSPM.ParseErrorException where
     pure native new new           :: ParseError -> ParseErrorException

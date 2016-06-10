@@ -1,5 +1,4 @@
--- This "forward declares" ParseError so that the make script can compile the java dependencies.
-module Language.CSPM.Parser where
+module Language.CSPM.Parser_ParseError where
 
 import Language.CSPM.Token (Token,AlexPosn)
 
