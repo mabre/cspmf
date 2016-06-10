@@ -1,14 +1,14 @@
 package frege.language.CSPM;
 
-import frege.language.CSPM.Token;
+import frege.language.CSPM.Token__LexError;
 
 public class LexErrorException extends Exception {
-    Token.TLexError lexError;
-    public LexErrorException(Token.TLexError err) {
-        super("LexErrorException: " +  Token.IShow_LexError.show(err));
+    Token__LexError.TLexError lexError;
+    public LexErrorException(Token__LexError.TLexError err) {
+        super("LexErrorException: " +  Token__LexError.IShow_LexError.show(err));
         lexError = err;
     }
-    public Token.TLexError getLexError() {
+    public Token__LexError.TLexError getLexError() {
         return lexError;
     }
 }
