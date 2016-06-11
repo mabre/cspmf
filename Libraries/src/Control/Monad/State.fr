@@ -1,16 +1,16 @@
 --- The strict 'State' 'Monad'
 
 module frege.control.monad.MState
---          inline  (
---                  State.State.>>=, 
---                  State.State.>>,
---                  State.State.pure, 
---                  State.State.get,
---                  -- State.run,
---                  StateT.>>=, 
---                  StateT.>>, 
---                  StateT.pure, StateT.get,
---                  StateT.lift, StateT.liftIO) 
+         inline  (
+                 MState.State.>>=, 
+                 MState.State.>>,
+                 MState.State.pure, 
+                 MState.State.get,
+                 -- State.run,
+                 StateT.>>=, 
+                 StateT.>>, 
+                 StateT.pure, StateT.get,
+                 StateT.lift, StateT.liftIO) 
     where
 
 import frege.control.monad.trans.MonadTrans
