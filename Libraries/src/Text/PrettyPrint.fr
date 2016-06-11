@@ -872,8 +872,8 @@ class Pretty a where
     pPrintList l = brackets . fsep . punctuate comma . map (pPrintPrec l 0)
 
 -- | Pretty print a value with the 'prettyNormal' level.
-prettyShow :: (Pretty a) => a -> [Char]
-prettyShow = render . pPrint
+prettyShow :: (Pretty a) => a -> String
+prettyShow = packed . render . pPrint
 
 private pPrint0 :: (Pretty a) => PrettyLevel -> a -> Doc
 private pPrint0 l = pPrintPrec l 0

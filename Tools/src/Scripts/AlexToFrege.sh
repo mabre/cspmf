@@ -31,12 +31,16 @@ grep -v "^#" $1                             | # remove cpp includes starting wit
 # split long arrays to prevent "code too large" message from JVM
 for array in "alex_table" "alex_check"; do
     line=`grep "$array = " $outfile`
-    name=`echo $line | cut -d " " -f2`
-    ints=`echo $line | sed -E "s/.*\[(.*)\].*/\1/"`
-    splitted=`$2 ArraySplitter $name $ints | sed "s/\"//g"`
-    newlines=`echo $line | cut -d " " -f1-5`" $ $splitted"
-    esc_line=`echo $line | sed -e 's/[][]/\\\\&/g'`
-    esc_newlines=`echo $newlines | sed -e 's/[][]/\\\\&/g'`
+    name=`echo "$line" | cut -d " " -f2`
+    ints=`echo "$line" | sed -E "s/.*\[(.*)\].*/\1/"`
+    splitted=`$2 ArraySplitter $name $ints`
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
+    splitted=`echo "$splitted" | sed "s/\"//g"`
+    newlines=`echo "$line" | cut -d " " -f1-5`" $ $splitted"
+    esc_line=`echo "$line" | sed -e 's/[][]/\\\\&/g'`
+    esc_newlines=`echo "$newlines" | sed -e 's/[][]/\\\\&/g'`
     sed -i "s/$esc_line/$esc_newlines/" $outfile
 done
 
