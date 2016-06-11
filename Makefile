@@ -16,6 +16,8 @@ FREGEC      = $(FREGEC0) $(FREGEC_ARGS)
 FREGE       = $(JAVA) -Xss16m -Xmx2g -cp $(FREGEJAR):${BUILD}:${BUILD_TOOLS}
 
 
+#dist: TODO copy *class, *jar to /dist, change *.sh, rm make.sh
+
 cspmf: cspm-frontend cspm-toprolog cspm-cspm-frontend
 	@echo "[1;42mMade $@[0m"
 
@@ -75,7 +77,7 @@ cspm-frontend: tools libraries
 	$(FREGEC0) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
 		Rename.fr
 	
-	$(FREGEC0) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
+	$(FREGEC) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
 		Utils.fr \
 		AstUtils.fr \
 		Frontend.fr
@@ -119,7 +121,7 @@ misclibs:
 		Data/Set.fr \
 		Data/Version.fr \
 		System/FilePath.fr \
-		Text/PrettyPrint.fr \
+		Text/PrettyPrint.fr
 
 
 tools: arraysplitter dataderiver
