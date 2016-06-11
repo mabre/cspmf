@@ -148,13 +148,13 @@ plPrg l = vcat $ map Decl.unDecl l
 
 quoteString :: String -> String
 quoteString sl
-  = packed $ ['\''] ++ concatMap escapeChar s ++ ['\'']
+  = packed $! ['\''] ++ concatMap escapeChar s ++ ['\'']
   where
     s :: [Char]
     s = unpacked sl
     escapeChar :: Char -> [Char]
     escapeChar a = if isBadChar a
-      then unpacked $ "\\x" ++ (ord a).toHexString ++ "\\"
+      then unpacked $! "\\x" ++ (ord a).toHexString ++ "\\"
       else [a]
     isBadChar :: Char -> Bool
     isBadChar a = case ord a of
