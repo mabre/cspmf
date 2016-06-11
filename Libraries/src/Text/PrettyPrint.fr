@@ -14,6 +14,9 @@
 -- Johan Jeuring and Erik Meijer (eds), LNCS 925
 -- <http://www.cs.chalmers.se/~rjmh/Papers/pretty.ps>
 --
+-- Frege port from https://github.com/datatyped/pretty,
+-- but String has been replaced by [Char] because of better prepend
+-- performance in txtPrinter.
 -----------------------------------------------------------------------------
 
 module Text.PrettyPrint where
@@ -163,8 +166,8 @@ type RDoc = Doc
 -- A TextDetails represents a fragment of text that will be
 -- output at some point.
 data TextDetails = Chr  Char   -- ^ A single Char fragment
-                 | Str  String -- ^ A whole String fragment
-                 | PStr String -- ^ Used to represent a Fast String fragment
+                 | Str  [Char] -- ^ A whole [Char] fragment
+                 | PStr [Char] -- ^ Used to represent a Fast [Char] fragment
                                --   but now deprecated and identical to the
                                --   Str constructor.
 
@@ -175,9 +178,9 @@ instance Monoid Doc where
 
 instance Show Doc where
   show x = shows x ""
-  showsPrec _ doc cont = fullRender (Style.mode style) (Style.lineLength style)
+  showsPrec _ doc cont = packed $ fullRender (Style.mode style) (Style.lineLength style)
                                     (Style.ribbonsPerLine style)
-                                    txtPrinter cont doc
+                                    txtPrinter (unpacked cont) doc
 
 -- ---------------------------------------------------------------------------
 -- Values and Predicates on GDocs and TextDetails
@@ -196,15 +199,15 @@ char c = textBeside_ (Chr c) 1 Empty
 -- The side condition on the last law is necessary because @'text' \"\"@
 -- has height 1, while 'empty' has no height.
 text :: String -> Doc
-text s = case length s of {sl -> textBeside_ (Str s)  sl Empty}
+text s = case length s of {sl -> textBeside_ (Str (unpacked s))  sl Empty}
 
 -- | Same as @text@. Used to be used for Bytestrings.
 ptext :: String -> Doc
-ptext s = case length s of {sl -> textBeside_ (PStr s) sl Empty}
+ptext s = case length s of {sl -> textBeside_ (PStr (unpacked s)) sl Empty}
 
 -- | Some text with any width. (@text s = sizedText (length s) s@)
 sizedText :: Int -> String -> Doc
-sizedText l s = textBeside_ (Str s) l Empty
+sizedText l s = textBeside_ (Str (unpacked s)) l Empty
 
 -- | Some text, but without any width. Use for non-printing text
 -- such as a HTML or Latex tags
@@ -225,8 +228,8 @@ isEmpty _     = false
 -- | Produce spacing for indenting the amount specified.
 --
 -- an old version inserted tabs being 8 columns apart in the output.
-indent :: Int -> String
-indent !n = packed (replicate n ' ')
+indent :: Int -> [Char]
+indent !n = replicate n ' '
 
 {-
 Q: What is the reason for negative indentation (i.e. argument to indent
@@ -740,19 +743,20 @@ data Mode = PageMode     -- ^ Normal
           | LeftMode     -- ^ No indentation, infinitely long lines
           | OneLineMode  -- ^ All on one line
 
--- | Render the @Doc@ to a String using the default @Style@.
-render :: Doc -> String
+-- | Render the @Doc@ to a [Char] using the default @Style@.
+render :: Doc -> [Char]
 render doc = fullRender (Style.mode style) (Style.lineLength style) (Style.ribbonsPerLine style)
-                        txtPrinter "" doc
+                        txtPrinter [] doc
 
--- | Render the @Doc@ to a String using the given @Style@.
+-- | Render the @Doc@ to a [Char] using the given @Style@.
 renderStyle :: Style -> Doc -> String
-renderStyle s doc = fullRender (Style.mode s) (Style.lineLength s) (Style.ribbonsPerLine s)
-                    txtPrinter "" doc
+renderStyle s doc = packed $ fullRender (Style.mode s) (Style.lineLength s) (Style.ribbonsPerLine s)
+                    txtPrinter [] doc
 
 -- | Default TextDetails printer
-txtPrinter :: TextDetails -> String -> String
-txtPrinter (Chr c)   s  = ctos c ++ s
+txtPrinter :: TextDetails -> [Char] -> [Char]
+-- txtPrinter a b | traceLn (show b) = undefined
+txtPrinter (Chr c)   s  =  c : s
 txtPrinter (Str s1)  s2 = s1 ++ s2
 txtPrinter (PStr s1) s2 = s1 ++ s2
 
@@ -811,13 +815,13 @@ display m !page_width !ribbon_width txt end doc
             = case m of
                     ZigZagMode |  k >= gap_width
                                -> nl_text `txt` (
-                                  Str (packed $ replicate shift '/') `txt` (
+                                  Str (replicate shift '/') `txt` (
                                   nl_text `txt`
                                   lay1 (k - shift) s sl p ))
 
                                |  k < 0
                                -> nl_text `txt` (
-                                  Str (packed $ replicate shift '\\') `txt` (
+                                  Str (replicate shift '\\') `txt` (
                                   nl_text `txt`
                                   lay1 (k + shift) s sl p ))
 
@@ -868,7 +872,7 @@ class Pretty a where
     pPrintList l = brackets . fsep . punctuate comma . map (pPrintPrec l 0)
 
 -- | Pretty print a value with the 'prettyNormal' level.
-prettyShow :: (Pretty a) => a -> String
+prettyShow :: (Pretty a) => a -> [Char]
 prettyShow = render . pPrint
 
 private pPrint0 :: (Pretty a) => PrettyLevel -> a -> Doc
