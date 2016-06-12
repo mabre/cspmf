@@ -70,7 +70,8 @@ execStateT s z = snd <$> runStateT s z
 
 --- > StateT s m a
 --- A stateful computation that transforms an inner 'Monad' _m_
-{-abstract-} data StateT s m a = StateT { !run ::  s -> m (a,s) } where
+{-abstract-}
+data StateT s m a = StateT { !run ::  s -> m (a,s) } where
     public get   = StateT (\s -> pure (s, s)) 
     public put s = StateT (\_ -> pure ((), s))
     public modify f = StateT (\s -> pure ((), f s))

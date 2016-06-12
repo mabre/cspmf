@@ -375,7 +375,7 @@ instance (Typeable a, Typeable b, Typeable c, Typeable d, Typeable e, Typeable f
 -- 	you had better get it right, otherwise segmentation faults await. It is generally
 -- 	used when you want to write a program that you know is well-typed, but where Frege\'s
 -- 	type system is not expressive enough to prove that it is well typed.
-pure native unsafeCoerce_ java.util.Objects.requireNonNull {-{a}-} :: a -> b
+pure native unsafeCoerce_ java.util.Objects.requireNonNull {a} :: a -> b
 
 -- | The type-safe cast operation
 cast :: (Typeable a, Typeable b) => a -> Maybe b

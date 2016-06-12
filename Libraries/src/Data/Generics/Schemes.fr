@@ -63,20 +63,21 @@ everywhere f = f . gmapT (everywhere f)
 
 
 -- | Apply a transformation everywhere in top-down manner
-everywhere' :: (forall a. Data a => a -> a)
-            -> (forall a. Data a => a -> a)
+everywhere' :: (forall a4. Data a4 => a4 -> a4)
+            -> (forall a5. Data a5 => a5 -> a5)
 
 -- Arguments of (.) are flipped compared to everywhere
 everywhere' f = gmapT (everywhere' f) . f
 
 
+-- TODO frege #277, can be workarounded by inlining GenericQ and renaming type variables
 -- | Variation on everywhere with an extra stop condition
-everywhereBut :: GenericQ Bool -> GenericT -> GenericT
+-- everywhereBut :: GenericQ Bool -> GenericT -> GenericT
 
 -- Guarded to let traversal cease if predicate q holds for x
-everywhereBut q f x
-    | q x       = x
-    | otherwise = f (gmapT (everywhereBut q f) x)
+-- everywhereBut q f x
+--     | q x       = x
+--     | otherwise = f (gmapT (everywhereBut q f) x)
 
 
 -- | Monadic variation on everywhere
@@ -108,11 +109,11 @@ everything :: forall a2 b6. Data b6 => (a2 -> a2 -> a2) -> (forall a6. Data a6 =
 everything k f x = fold k (f x) (gmapQ (everything k f) x)
 
 -- | Variation of "everything" with an added stop condition
-everythingBut :: (r -> r -> r) -> GenericQ (r, Bool) -> GenericQ r
-everythingBut k f x = let (v, stop) = f x
-                      in if stop
-                           then v
-                           else foldl k v (gmapQ (everythingBut k f) x)
+-- everythingBut :: (r -> r -> r) -> GenericQ (r, Bool) -> GenericQ r
+-- everythingBut k f x = let (v, stop) = f x
+--                       in if stop
+--                            then v
+--                            else foldl k v (gmapQ (everythingBut k f) x)
 
 -- | Get a list of all entities that meet a predicate
 listify :: (Data a6', Typeable o1) => (o1 -> Bool) -> a6' -> [o1]
@@ -121,12 +122,12 @@ listify p = everything (++) ([] `mkQ` (\x -> if p x then [x] else []))
 
 
 -- | Look up a subterm by means of a maybe-typed filter
-something :: GenericQ (Maybe u) -> GenericQ (Maybe u)
+-- something :: GenericQ (Maybe u) -> GenericQ (Maybe u)
 
 -- "something" can be defined in terms of "everything"
 -- when a suitable "choice" operator is used for reduction
 -- 
-something = everything orElse
+-- something = everything orElse
 
 
 -- | Bottom-up synthesis of a data structure;
@@ -134,8 +135,8 @@ something = everything orElse
 --   2nd argument o is for reduction of results from subterms;
 --   3rd argument f updates the synthesised data according to the given term
 --
-synthesize :: s  -> (t -> s -> s) -> GenericQ (s -> t) -> GenericQ t
-synthesize z o f x = f x (foldr o z (gmapQ (synthesize z o f) x))
+-- synthesize :: s  -> (t -> s -> s) -> GenericQ (s -> t) -> GenericQ t
+-- synthesize z o f x = f x (foldr o z (gmapQ (synthesize z o f) x))
 
 
 -- | Compute size of an arbitrary data structure
@@ -144,23 +145,23 @@ gsize t = 1 + sum (gmapQ gsize t)
 
 
 -- | Count the number of immediate subterms of the given term
-glength :: GenericQ Int
-glength = length . gmapQ (const ())
+-- glength :: GenericQ Int
+-- glength = length . gmapQ (const ())
 
 
 -- | Determine depth of the given term
-gdepth :: GenericQ Int
-gdepth = (+) 1 . foldr max 0 . gmapQ gdepth
+-- gdepth :: GenericQ Int
+-- gdepth = (+) 1 . foldr max 0 . gmapQ gdepth
 
 
 -- | Determine the number of all suitable nodes in a given term
-gcount :: GenericQ Bool -> GenericQ Int
-gcount p =  everything (+) (\x -> if p x then 1 else 0)
+-- gcount :: GenericQ Bool -> GenericQ Int
+-- gcount p =  everything (+) (\x -> if p x then 1 else 0)
 
 
 -- | Determine the number of all nodes in a given term
-gnodecount :: GenericQ Int
-gnodecount = gcount (const True)
+-- gnodecount :: GenericQ Int
+-- gnodecount = gcount (const True)
 
 
 -- | Determine the number of nodes of a given type in a given term

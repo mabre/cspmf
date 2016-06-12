@@ -97,7 +97,7 @@ instance Ord Version where
 showVersion :: Version -> String
 showVersion (Version branch tags)
   = concat (intersperse "." (map show branch)) ++
-     concatMap ("-" ++) tags
+     concat (map ("-" ++) tags)
 
 -- -- | A parser for versions in the format produced by 'showVersion'.
 -- --

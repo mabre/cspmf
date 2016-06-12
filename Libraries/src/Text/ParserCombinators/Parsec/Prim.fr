@@ -229,7 +229,7 @@ private parsecMap f (Parser p)
 -- not part of the mathematical definition of a monad.
 -----------------------------------------------------------    
 instance Monad (GenParser tok st) where
-  return x   = parsecReturn x  
+  pure x     = parsecReturn x  
   p >>= f    = parsecBind p f
 instance MonadFail (GenParser tok st) where
   fail msg   = parsecFail msg

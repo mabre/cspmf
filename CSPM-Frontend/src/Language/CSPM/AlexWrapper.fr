@@ -65,7 +65,7 @@ instance Monad Alex where
   m >>= k  = Alex $ \s -> case Alex.unAlex m s of
                             Left msg -> Left msg
                             Right (s',a) -> Alex.unAlex (k a) s'
-  return a = Alex $ \s -> Right (s,a)
+  pure a   = Alex $ \s -> Right (s,a)
 
 alexGetInput :: Alex AlexInput
 alexGetInput
@@ -219,5 +219,5 @@ lexError s = do
 alexEOF :: Alex Token
 alexEOF = return (Token (mkTokenId 0) (AlexPn 0 0 0) 0 L_EOF "")
 
-alexInputPrevChar :: AlexInput -> Char
+alexInputPrevChar :: AlexInput -> Int
 alexInputPrevChar (_p, _c, _,_s) = error "alex-input-prev-char not supported ??!"

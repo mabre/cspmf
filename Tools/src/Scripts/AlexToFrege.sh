@@ -10,12 +10,9 @@ outfile="${1%.*}.fr"
 xfile="${1%.*}.x"
 
 grep -v "^#" $1                             | # remove cpp includes starting with #
-    sed "s/\t/        /"                    | # alex generates tabs!?
-    grep -vE "^(\(|scanner|\))$"            | # remove export lines
     sed "s/^import qualified /import /"     | # remove qualified keyword (not needed)
     grep -v "(unsafeAt)"                    | # remove unneeded imports
     grep -v "import Array"                  |
-    sed "s/^where$/where\nimport frege.Prelude hiding (Byte)/" | # AlexWrapper.Byte shadows Lang.Byte
     sed "s/!AlexInput/AlexInput/"           | # remove strictness flags
     sed "s/!Int/Int/"                       |
     sed "s/ ! / !! /"                       | # replace Array.! with Array.!!
