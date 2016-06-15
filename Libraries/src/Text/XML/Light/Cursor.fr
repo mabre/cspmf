@@ -14,7 +14,7 @@
 --
 
 module Text.XML.Light.Cursor
-  ( Tag(..), getTag, setTag, fromTag
+  {-( Tag(..), getTag, setTag, fromTag TODO
   , Cursor(..), Path
 
   -- * Conversions
@@ -67,30 +67,31 @@ module Text.XML.Light.Cursor
   , removeGoRight
   , removeGoUp
 
-  ) where
+  )-} where
 
 import Text.XML.Light.Types
 import Data.Maybe(isNothing)
-import Control.Monad(mplus)
+-- import Control.Monad(mplus)
 
 data Tag = Tag { tagName    :: QName
                , tagAttribs :: [Attr]
                , tagLine    :: Maybe Line
-               } deriving (Show)
+               }
+derive Show Tag
 
 getTag :: Element -> Tag
-getTag e = Tag { tagName = elName e
-               , tagAttribs = elAttribs e
-               , tagLine = elLine e
+getTag e = Tag { tagName = e.elName
+               , tagAttribs = e.elAttribs
+               , tagLine = e.elLine
                }
 
 setTag :: Tag -> Element -> Element
-setTag t e = fromTag t (elContent e)
+setTag t e = fromTag t e.elContent
 
 fromTag :: Tag -> [Content] -> Element
-fromTag t cs = Element { elName    = tagName t
-                       , elAttribs = tagAttribs t
-                       , elLine    = tagLine t
+fromTag t cs = Element { elName    = t.tagName
+                       , elAttribs = t.tagAttribs
+                       , elLine    = t.tagLine
                        , elContent = cs
                        }
 
@@ -102,18 +103,19 @@ data Cursor = Cur
   , lefts   :: [Content]    -- ^ Siblings on the left, closest first.
   , rights  :: [Content]    -- ^ Siblings on the right, closest first.
   , parents :: Path -- ^ The contexts of the parent elements of this location.
-  } deriving (Show)
+  }
+derive Show Cursor
 
 -- Moving around ---------------------------------------------------------------
 
 -- | The parent of the given location.
 parent :: Cursor -> Maybe Cursor
 parent loc =
-  case parents loc of
+  case loc.parents of
     (pls,v,prs) : ps -> Just
       Cur { current = Elem
                     (fromTag v
-                    (combChildren (lefts loc) (current loc) (rights loc)))
+                    (combChildren (loc.lefts) (loc.current) (loc.rights)))
           , lefts = pls, rights = prs, parents = ps
           }
     [] -> Nothing
@@ -126,16 +128,16 @@ root loc = maybe loc root (parent loc)
 -- | The left sibling of the given location.
 left :: Cursor -> Maybe Cursor
 left loc =
-  case lefts loc of
-    t : ts -> Just loc { current = t, lefts = ts
-                                    , rights = current loc : rights loc }
+  case loc.lefts of
+    t : ts -> Just loc.{ current = t, lefts = ts
+                                    , rights = loc.current : loc.rights }
     []     -> Nothing
 
 -- | The right sibling of the given location.
 right :: Cursor -> Maybe Cursor
 right loc =
-  case rights loc of
-    t : ts -> Just loc { current = t, lefts = current loc : lefts loc
+  case loc.rights of
+    t : ts -> Just loc.{ current = t, lefts = loc.current : loc.lefts
                                     , rights = ts }
     []     -> Nothing
 
@@ -193,9 +195,9 @@ getChild n loc =
 -- | private: computes the parent for "down" operations.
 downParents :: Cursor -> Maybe ([Content], Path)
 downParents loc =
-  case current loc of
-    Elem e -> Just ( elContent e
-                   , (lefts loc, getTag e, rights loc) : parents loc
+  case loc.current of
+    Elem e -> Just ( e.elContent
+                   , (loc.lefts, getTag e, loc.rights) : loc.parents
                    )
     _      -> Nothing
 
@@ -217,26 +219,26 @@ fromForest []     = Nothing
 
 -- | Computes the tree containing this location.
 toTree :: Cursor -> Content
-toTree loc = current (root loc)
+toTree loc = (root loc).current
 
 -- | Computes the forest containing this location.
 toForest :: Cursor -> [Content]
-toForest loc = let r = root loc in combChildren (lefts r) (current r) (rights r)
+toForest loc = let r = root loc in combChildren r.lefts r.current r.rights
 
 
 -- Queries ---------------------------------------------------------------------
 
 -- | Are we at the top of the document?
 isRoot :: Cursor -> Bool
-isRoot loc = null (parents loc)
+isRoot loc = null loc.parents
 
 -- | Are we at the left end of the the document?
 isFirst :: Cursor -> Bool
-isFirst loc = null (lefts loc)
+isFirst loc = null (loc.lefts)
 
 -- | Are we at the right end of the document?
 isLast :: Cursor -> Bool
-isLast loc = null (rights loc)
+isLast loc = null (loc.rights)
 
 -- | Are we at the bottom of the document?
 isLeaf :: Cursor -> Bool
@@ -248,7 +250,7 @@ isChild loc = not (isRoot loc)
 
 -- | Get the node index inside the sequence of children
 getNodeIndex :: Cursor -> Int
-getNodeIndex loc = length (lefts loc)
+getNodeIndex loc = length (loc.lefts)
 
 -- | Do we have children?
 hasChildren :: Cursor -> Bool
@@ -260,69 +262,69 @@ hasChildren loc = not (isLeaf loc)
 
 -- | Change the current content.
 setContent :: Content -> Cursor -> Cursor
-setContent t loc = loc { current = t }
+setContent t loc = loc.{ current = t }
 
 -- | Modify the current content.
 modifyContent :: (Content -> Content) -> Cursor -> Cursor
-modifyContent f loc = setContent (f (current loc)) loc
+modifyContent f loc = setContent (f (loc.current)) loc
 
 -- | Modify the current content, allowing for an effect.
 modifyContentM :: Monad m => (Content -> m Content) -> Cursor -> m Cursor
-modifyContentM f loc = do x <- f (current loc)
+modifyContentM f loc = do x <- f (loc.current)
                           return (setContent x loc)
 
 -- | Insert content to the left of the current position.
 insertLeft :: Content -> Cursor -> Cursor
-insertLeft t loc = loc { lefts = t : lefts loc }
+insertLeft t loc = loc.{ lefts = t : loc.lefts }
 
 -- | Insert content to the right of the current position.
 insertRight :: Content -> Cursor -> Cursor
-insertRight t loc = loc { rights = t : rights loc }
+insertRight t loc = loc.{ rights = t : loc.rights }
 
 -- | Remove the content on the left of the current position, if any.
 removeLeft :: Cursor -> Maybe (Content,Cursor)
-removeLeft loc = case lefts loc of
-                   l : ls -> return (l,loc { lefts = ls })
+removeLeft loc = case loc.lefts of
+                   l : ls -> return (l,loc.{ lefts = ls })
                    [] -> Nothing
 
 -- | Remove the content on the right of the current position, if any.
 removeRight :: Cursor -> Maybe (Content,Cursor)
-removeRight loc = case rights loc of
-                    l : ls -> return (l,loc { rights = ls })
+removeRight loc = case loc.rights of
+                    l : ls -> return (l,loc.{ rights = ls })
                     [] -> Nothing
 
 
 -- | Insert content to the left of the current position.
 -- The new content becomes the current position.
 insertGoLeft :: Content -> Cursor -> Cursor
-insertGoLeft t loc = loc { current = t, rights = current loc : rights loc }
+insertGoLeft t loc = loc.{ current = t, rights = loc.current : loc.rights }
 
 -- | Insert content to the right of the current position.
 -- The new content becomes the current position.
 insertGoRight :: Content -> Cursor -> Cursor
-insertGoRight t loc = loc { current = t, lefts = current loc : lefts loc }
+insertGoRight t loc = loc.{ current = t, lefts = loc.current : loc.lefts }
 
 -- | Remove the current element.
 -- The new position is the one on the left.
 removeGoLeft :: Cursor -> Maybe Cursor
-removeGoLeft loc = case lefts loc of
-                     l : ls -> Just loc { current = l, lefts = ls }
+removeGoLeft loc = case loc.lefts of
+                     l : ls -> Just loc.{ current = l, lefts = ls }
                      []     -> Nothing
 
 -- | Remove the current element.
 -- The new position is the one on the right.
 removeGoRight :: Cursor -> Maybe Cursor
-removeGoRight loc = case rights loc of
-                     l : ls -> Just loc { current = l, rights = ls }
+removeGoRight loc = case loc.rights of
+                     l : ls -> Just loc.{ current = l, rights = ls }
                      []     -> Nothing
 
 -- | Remove the current element.
 -- The new position is the parent of the old position.
 removeGoUp :: Cursor -> Maybe Cursor
 removeGoUp loc =
-  case parents loc of
+  case loc.parents of
     (pls,v,prs) : ps -> Just
-      Cur { current = Elem (fromTag v (reverse (lefts loc) ++ rights loc))
+      Cur { current = Elem (fromTag v (reverse (loc.lefts) ++ loc.rights))
           , lefts = pls, rights = prs, parents = ps
           }
     [] -> Nothing

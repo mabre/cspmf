@@ -6,10 +6,10 @@ import Text.XML.Light.Types
 
 import Data.Char (chr,isSpace)
 import Numeric (readHex)
-import qualified Data.ByteString      as S
-import qualified Data.ByteString.Lazy as L
-import qualified Data.Text            as TS
-import qualified Data.Text.Lazy       as TL
+import Data.ByteString      as S
+import Data.ByteString.Lazy as L
+import Data.Text            as TS
+import Data.Text.Lazy       as TL
 
 
 class XmlSource s where

@@ -12,14 +12,14 @@
 --
 
 module Text.XML.Light.Output
-  ( showTopElement, showContent, showElement, showCData, showQName, showAttr
+ {- ( showTopElement, showContent, showElement, showCData, showQName, showAttr TODO
   , ppTopElement, ppContent, ppElement
   , ppcTopElement, ppcContent, ppcElement
   , ConfigPP
   , defaultConfigPP, prettyConfigPP
   , useShortEmptyTags, useExtraWhiteSpace
   , tagEnd, xml_header
-  ) where
+  )-} where
 
 import Text.XML.Light.Types
 import Data.Char
@@ -48,14 +48,14 @@ defaultConfigPP = ConfigPP { shortEmptyTag = const True
 -- some XML-ish standards (such as certain versions of HTML) where some
 -- empty tags should always be displayed in the <TAG></TAG> form.
 useShortEmptyTags :: (QName -> Bool) -> ConfigPP -> ConfigPP
-useShortEmptyTags p c = c { shortEmptyTag = p }
+useShortEmptyTags p c = c.{ shortEmptyTag = p }
 
 
 -- | Specify if we should use extra white-space to make document more readable.
 -- WARNING: This adds additional white-space to text elements,
 -- and so it may change the meaning of the document.
 useExtraWhiteSpace :: Bool -> ConfigPP -> ConfigPP
-useExtraWhiteSpace p c  = c { prettify = p }
+useExtraWhiteSpace p c  = c.{ prettify = p }
 
 -- | A configuration that tries to make things pretty
 -- (possibly at the cost of changing the semantics a bit
@@ -109,24 +109,24 @@ ppContentS c i x xs = case x of
                         CRef r -> showCRefS r xs
 
 ppElementS         :: ConfigPP -> String -> Element -> ShowS
-ppElementS c i e xs = i ++ (tagStart (elName e) (elAttribs e) $
-  case elContent e of
-    [] | "?" `isPrefixOf` qName name -> " ?>" ++ xs
-       | shortEmptyTag c name  -> " />" ++ xs
+ppElementS c i e xs = i ++ (tagStart (e.elName) (e.elAttribs) $
+  case e.elContent of
+    [] | ['?'] `isPrefixOf` (unpacked name.qName) -> " ?>" ++ xs
+       | c.shortEmptyTag name  -> " />" ++ xs
     [Text t] -> ">" ++ ppCDataS c "" t (tagEnd name xs)
-    cs -> '>' : nl ++ foldr ppSub (i ++ tagEnd name xs) cs
+    cs -> ">" ++ nl ++ foldr ppSub (i ++ tagEnd name xs) cs
       where ppSub e1 = ppContentS c (sp ++ i) e1 . showString nl
-            (nl,sp)  = if prettify c then ("\n","  ") else ("","")
+            (nl,sp)  = if c.prettify then ("\n","  ") else ("","")
   )
-  where name = elName e
+  where name = e.elName
 
 ppCDataS           :: ConfigPP -> String -> CData -> ShowS
-ppCDataS c i t xs   = i ++ if cdVerbatim t /= CDataText || not (prettify c)
+ppCDataS c i t xs   = i ++ if t.cdVerbatim /= CDataText || not (c.prettify)
                              then showCDataS t xs
-                             else foldr cons xs (showCData t)
+                             else packed $ foldr cons (unpacked xs) (unpacked (showCData t))
 
-  where cons         :: Char -> String -> String
-        cons '\n' ys  = "\n" ++ i ++ ys
+  where cons         :: Char -> [Char] -> [Char]
+        cons '\n' ys  = '\n' : (unpacked i) ++ ys
         cons y ys     = y : ys
 
 
@@ -148,22 +148,24 @@ showCData c         = ppCDataS defaultConfigPP "" c ""
 
 -- Note: crefs should not contain '&', ';', etc.
 showCRefS          :: String -> ShowS
-showCRefS r xs      = '&' : r ++ ';' : xs
+showCRefS r xs      = "&" ++ r ++ ";" ++ xs
 
 -- | Convert a text element to characters.
 showCDataS         :: CData -> ShowS
 showCDataS cd =
- case cdVerbatim cd of
-   CDataText     -> escStr (cdData cd)
-   CDataVerbatim -> showString "<![CDATA[" . escCData (cdData cd)
+ case cd.cdVerbatim of
+   CDataText     -> escStr cd.cdData
+   CDataVerbatim -> showString "<![CDATA[" . escCData cd.cdData
                                            . showString "]]>"
-   CDataRaw      -> \ xs -> cdData cd ++ xs
+   CDataRaw      -> \ xs -> cd.cdData ++ xs
 
 --------------------------------------------------------------------------------
-escCData           :: String -> ShowS
-escCData (']' : ']' : '>' : cs) = showString "]]]]><![CDATA[>" . escCData cs
-escCData (c : cs)               = showChar c . escCData cs
-escCData []                     = id
+escCData :: String -> ShowS
+escCData = escCData' . unpacked
+escCData' :: [Char] -> ShowS
+escCData' (']' : ']' : '>' : cs) = showString "]]]]><![CDATA[>" . escCData' cs
+escCData' (c : cs)               = showChar c . escCData' cs
+escCData' []                     = id
 
 escChar            :: Char -> ShowS
 escChar c = case c of
@@ -183,21 +185,21 @@ escChar c = case c of
       where oc = ord c
 
 escStr             :: String -> ShowS
-escStr cs rs        = foldr escChar rs cs
+escStr cs rs        = foldr escChar (rs) (unpacked cs)
 
 tagEnd             :: QName -> ShowS
-tagEnd qn rs        = '<':'/':showQName qn ++ '>':rs
+tagEnd qn rs        = "</" ++ showQName qn ++ ">" ++ rs
 
 tagStart           :: QName -> [Attr] -> ShowS
-tagStart qn as rs   = '<':showQName qn ++ as_str ++ rs
- where as_str       = if null as then "" else ' ' : unwords (map showAttr as)
+tagStart qn as rs   = "<" ++ showQName qn ++ as_str ++ rs
+    where as_str       = if null as then "" else " " ++ unwords (map showAttr as)
 
 showAttr           :: Attr -> String
-showAttr (Attr qn v) = showQName qn ++ '=' : '"' : escStr v "\""
+showAttr (Attr qn v) = showQName qn ++ "=" ++ "\"" ++ escStr v "\""
 
 showQName          :: QName -> String
-showQName q         = pre ++ qName q
-  where pre = case qPrefix q of
+showQName q         = pre ++ q.qName
+  where pre = case q.qPrefix of
                 Nothing -> ""
                 Just p  -> p ++ ":"
 

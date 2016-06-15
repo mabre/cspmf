@@ -1,22 +1,25 @@
 BUILD       = build
 BUILD_TOOLS = Tools/build
 BUILD_DIRS  = $(BUILD) $(BUILD_TOOLS)
+DIST        = dist
 
 FREGEJAR = /home/markus/Downloads/frege/fregec.jar
 ALEX     = /home/markus/.cabal/bin/alex
-JAVAC    = javac -cp $(FREGEJAR):${BUILD}:Libraries/commons-cli-1.3.1.jar
+CLIJAR   = Libraries/commons-cli-1.3.1.jar
+JAVAC    = javac -cp $(FREGEJAR):${BUILD}:$(CLIJAR)
 JAVA     = java
 MKDIR_P  = mkdir -p
 RM       = rm -rf
 BASH     = bash
+CP       = cp
+CP_P     = cp --parents
+CLASS_FILES = `find $(BUILD) -name "*class"`
 
 FREGEC_ARGS = -hints -O
 FREGEC0     = $(JAVA) -Xss16m -Xmx2g -jar $(FREGEJAR) -fp ${BUILD}:${BUILD_TOOLS}
 FREGEC      = $(FREGEC0) $(FREGEC_ARGS)
 FREGE       = $(JAVA) -Xss16m -Xmx2g -cp $(FREGEJAR):${BUILD}:${BUILD_TOOLS}
 
-
-#dist: TODO copy *class, *jar to /dist, change *.sh, rm make.sh
 
 cspmf: cspm-frontend cspm-toprolog cspm-cspm-frontend
 	@echo "[1;42mMade $@[0m"
@@ -141,6 +144,15 @@ dataderiver: syb parsec
 		Main.fr \
 		Parser.fr \
 		Preprocessor.fr
+
+
+dist:
+	@echo "[1;42mMade $@[0m"
+	$(MKDIR_P) $(DIST)
+	$(CP_P) $(CLASS_FILES) $(DIST)
+	$(CP) $(FREGEJAR) $(DIST)/frege.jar
+	$(CP) $(CLIJAR) $(DIST)/commons-cli.jar
+
 
 clean:
 	@echo "[1;42mMaking $@[0m"

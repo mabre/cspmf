@@ -47,11 +47,14 @@ translateExpToPrologTerm ::
   -> String
   -> IO ()
 translateExpToPrologTerm file expr = do
-    r <- mainWorkSinglePlTerm getExpPlCode file ("x__entrypoint_expression = " ++ expr)
+    r <- mainWorkSinglePlTerm getExpPlCode file ("x__entrypoint_expression = " ++ expr) --`catch` handleTranslationError
     putStrLn r
   where
     getExpPlCode :: Module a -> Doc
     getExpPlCode = addFullStopToPrologTerm . Term.unTerm . te . {-Frontend.-}getLastBindExpression
+
+handleTranslationError :: RenameErrorException -> IO String --TODO
+handleTranslationError err = return $ show err.get
 
 -- | 'translateDeclToPrologTerm' translates a string declaration
 -- to a prolog term in regard to the given CSP-M specification.
@@ -130,10 +133,8 @@ private mainWork fileName = do
   let
       plCode = cspToProlog astNew
       symbolTable = mkSymbolTable $ renaming.identDefinition
-      -- moduleFact  = toProlog astNew
   output <- evaluate $ show $ vcat [ 
         mkResult "ok" "" 0 0 0
-        -- ,moduleFact -- writing original ast to .pl file
         ,plCode
         ,symbolTable
         ]

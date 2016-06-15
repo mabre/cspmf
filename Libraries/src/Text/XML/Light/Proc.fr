@@ -21,7 +21,7 @@ import Data.List(find)
 -- | Get the text value of an XML element.  This function
 -- ignores non-text elements, and concatenates all text elements.
 strContent         :: Element -> String
-strContent e        = concatMap cdData $ onlyText $ elContent e
+strContent e        = concatMap CData.cdData $ onlyText e.elContent
 
 -- | Select only the elements from a list of XML content.
 onlyElems          :: [Content] -> [Element]
@@ -29,7 +29,7 @@ onlyElems xs        = [ x | Elem x <- xs ]
 
 -- | Select only the elements from a parent.
 elChildren         :: Element -> [Element]
-elChildren e        = [ x | Elem x <- elContent e ]
+elChildren e        = [ x | Elem x <- e.elContent ]
 
 -- | Select only the text from a list of XML content.
 onlyText           :: [Content] -> [CData]
@@ -37,16 +37,16 @@ onlyText xs         = [ x | Text x <- xs ]
 
 -- | Find all immediate children with the given name.
 findChildren       :: QName -> Element -> [Element]
-findChildren q e    = filterChildren ((q ==) . elName) e
+findChildren q e    = filterChildren ((q ==) . Element.elName) e
 
 -- | Filter all immediate children wrt a given predicate.
 filterChildren       :: (Element -> Bool) -> Element -> [Element]
-filterChildren p e    = filter p (onlyElems (elContent e))
+filterChildren p e    = filter p (onlyElems (e.elContent))
 
 
 -- | Filter all immediate children wrt a given predicate over their names.
 filterChildrenName      :: (QName -> Bool) -> Element -> [Element]
-filterChildrenName p e   = filter (p.elName) (onlyElems (elContent e))
+filterChildrenName p e   = filter (p . Element.elName) (onlyElems (e.elContent))
 
 
 -- | Find an immediate child with the given name.
@@ -85,17 +85,17 @@ findElements qn e = filterElementsName (qn==) e
 filterElements       :: (Element -> Bool) -> Element -> [Element]
 filterElements p e
  | p e        = [e]
- | otherwise  = concatMap (filterElements p) $ onlyElems $ elContent e
+ | otherwise  = concatMap (filterElements p) $ onlyElems $ e.elContent
 
 -- | Find all non-nested occurences of an element wrt a predicate over element names.
 -- (i.e., once we have found an element, we do not search
 -- for more occurances among the element's children).
 filterElementsName       :: (QName -> Bool) -> Element -> [Element]
-filterElementsName p e = filterElements (p.elName) e
+filterElementsName p e = filterElements (p . Element.elName) e
 
 -- | Lookup the value of an attribute.
 findAttr          :: QName -> Element -> Maybe String
-findAttr x e       = lookupAttr x (elAttribs e)
+findAttr x e       = lookupAttr x (e.elAttribs)
 
 -- | Lookup attribute name from list.
 lookupAttr        :: QName -> [Attr] -> Maybe String
@@ -103,12 +103,12 @@ lookupAttr x       = lookupAttrBy (x ==)
 
 -- | Lookup the first attribute whose name satisfies the given predicate.
 lookupAttrBy       :: (QName -> Bool) -> [Attr] -> Maybe String
-lookupAttrBy p as   = attrVal `fmap` find (p . attrKey) as
+lookupAttrBy p as   = Attr.attrVal `fmap` find (p . Attr.attrKey) as
 
 -- | Lookup the value of the first attribute whose name
 -- satisfies the given predicate.
 findAttrBy         :: (QName -> Bool) -> Element -> Maybe String
-findAttrBy p e      = lookupAttrBy p (elAttribs e)
+findAttrBy p e      = lookupAttrBy p (e.elAttribs)
 
 
 
