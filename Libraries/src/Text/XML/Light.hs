@@ -22,20 +22,12 @@
 -- * "Text.XML.Light.Output"
 --
 
-module Text.XML.Light (
+module Text.XML.Light where
 
-    module Text.XML.Light,
-    module Text.XML.Light.Types,
-    module Text.XML.Light.Proc,
-    module Text.XML.Light.Input,
-    module Text.XML.Light.Output
-
-  ) where
-
-import Text.XML.Light.Types
-import Text.XML.Light.Proc
-import Text.XML.Light.Input
-import Text.XML.Light.Output
+import Text.XML.Light.Types public
+import Text.XML.Light.Proc public
+-- import Text.XML.Light.Input public --TODO
+import Text.XML.Light.Output public
 
 -- | Add an attribute to an element.
 add_attr :: Attr -> Element -> Element
@@ -43,11 +35,11 @@ add_attr a e = add_attrs [a] e
 
 -- | Add some attributes to an element.
 add_attrs :: [Attr] -> Element -> Element
-add_attrs as e = e { elAttribs = as ++ elAttribs e }
+add_attrs as e = e.{ elAttribs = as ++ elAttribs e }
 
 -- | Create an unqualified name.
 unqual :: String -> QName
-unqual x = blank_name { qName = x }
+unqual x = blank_name.{ qName = x }
 
 -- | A smart element constructor which uses the type of its argument
 -- to determine what sort of element to make.
@@ -55,7 +47,7 @@ class Node t where
   node :: QName -> t -> Element
 
 instance Node ([Attr],[Content]) where
-  node n (attrs,cont) = blank_element { elName     = n
+  node n (attrs,cont) = blank_element.{ elName     = n
                                       , elAttribs  = attrs
                                       , elContent  = cont
                                       }
@@ -86,7 +78,7 @@ instance Node [CData]            where node n es     = node n ([]::[Attr],es)
 instance Node CData              where node n e      = node n [e]
 
 instance Node ([Attr],String)    where
-  node n (as,t) = node n (as,blank_cdata { cdData = t })
+  node n (as,t) = node n (as,blank_cdata.{ cdData = t })
 
 instance Node (Attr,String)      where node n (a,t)  = node n ([a],t)
 instance Node [Char]             where node n t      = node n ([]::[Attr],t)
