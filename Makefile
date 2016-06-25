@@ -56,7 +56,9 @@ cspm-frontend: tools libraries
 	$(ALEX) CSPM-Frontend/src/Language/CSPM/Lexer.x
 	$(BASH) Tools/src/Scripts/AlexToFrege.sh CSPM-Frontend/src/Language/CSPM/Lexer.hs "$(FREGE)"
 	@echo "Compiling the lexer can take a while ..."
-	$(FREGEC) -d $(BUILD) -make CSPM-Frontend/src/Language/CSPM/Lexer.fr
+	$(FREGEC) -j -d $(BUILD) -make CSPM-Frontend/src/Language/CSPM/Lexer.fr
+	sed "s/  */ /g" -i $(BUILD)/frege/language/CSPM/Lexer.java
+	$(JAVAC) -J-Xss16m -J-Xmx2g -cp $(FREGEJAR):${BUILD}:${BUILD_TOOLS} -d $(BUILD) -sourcepath . -encoding UTF-8 $(BUILD)/frege/language/CSPM/Lexer.java
 	
 	$(FREGEC) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
 		AST.fr \

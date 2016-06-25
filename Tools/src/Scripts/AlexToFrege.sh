@@ -23,6 +23,7 @@ grep -v "^#" $1                             | # remove cpp includes starting wit
     sed -E "s/private (module|where|import|scanner|data|instance|type)/\1/" |
     sed "s/case new_s of/if new_s == -1/"   | # workaround for frege bug #26 (Pattern support)
     sed "s/(-1) ->/then/"                   |
+    sed "s/r undefined/r (undefined::Bool)/"| # workaround for frege bug #285 (cannot find symbol class β)
     sed "s/_ -> alex_/else alex_/" > $outfile
 
 # split long arrays to prevent "code too large" message from JVM

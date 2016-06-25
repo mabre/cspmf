@@ -66,12 +66,12 @@ prettyOut src rename outFile = handleException $ do
 addUnicode :: FilePath -> FilePath -> IO ()
 addUnicode src outFile = handleException $ do
     tokens <- readFile src >>= lexInclude src >>= eitherToExc throwLexError
-    writeFile outFile $ concatMap unicodeTokenString tokens
+    writeFile outFile $ concat $ map unicodeTokenString tokens
 
 removeUnicode :: FilePath -> FilePath -> IO ()
 removeUnicode src outFile = handleException $ do
     tokens <- readFile src >>= lexInclude src >>= eitherToExc throwLexError
-    writeFile outFile $ concatMap asciiTokenString tokens
+    writeFile outFile $ concat $ map asciiTokenString tokens
 
 prologOut :: FilePath -> FilePath -> IO ()
 prologOut src outFile = do -- exception handling is done in translateToProlog
@@ -88,3 +88,7 @@ declarationToPrologTerm "no-file" str = handleException $ do
     translateDeclToPrologTerm Nothing str
 declarationToPrologTerm src str = handleException $ do
     translateDeclToPrologTerm (Just src) str
+
+--- not to be called directly, only for testing purpose, use frege.main.Main instead
+main args = do
+    prologOut (args !! 0) (args !! 1)

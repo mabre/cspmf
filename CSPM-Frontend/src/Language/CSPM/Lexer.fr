@@ -346,7 +346,7 @@ data AlexReturn a
 
 -- alexScan :: AlexInput -> StartCode -> AlexReturn a
 private alexScan input (sc)
-  = alexScanUser undefined input (sc)
+  = alexScanUser (undefined::Bool) input (sc)
 
 private alexScanUser user input (sc)
   = case alex_scan_tkn user input (0) input sc AlexNone of

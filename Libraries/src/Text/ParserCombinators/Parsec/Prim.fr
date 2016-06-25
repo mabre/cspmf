@@ -317,7 +317,7 @@ private parsecPlus (Parser p1) (Parser p2)
 -----------------------------------------------------------
 
 instance Applicative (GenParser tok st) where
-  pure x = return x
+  pure x = parsecReturn x
   mf <*> mx = mf `ap` mx
 
 -- instance Alternative (GenParser tok st) where -- TODO
