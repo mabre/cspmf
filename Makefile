@@ -41,7 +41,7 @@ cspm-toprolog: cspm-frontend
 		CSPM/TranslateToProlog.fr \
 		Prolog/PrettyPrint/Direct.fr
 
-cspm-frontend: tools libraries
+cspm-frontend: dataderiver libraries
 	@echo "[1;42mMaking $@[0m"
 	$(BASH) Tools/src/Scripts/DeriveDataTypeable.sh "$(FREGE)"
 	
@@ -57,11 +57,10 @@ cspm-frontend: tools libraries
 		Token.fr
 	
 	$(ALEX) CSPM-Frontend/src/Language/CSPM/Lexer.x
-	$(BASH) Tools/src/Scripts/AlexToFrege.sh CSPM-Frontend/src/Language/CSPM/Lexer.hs "$(FREGE)"
-	@echo "Compiling the lexer can take a while ..."
-	$(FREGEC) -d $(BUILD) -make CSPM-Frontend/src/Language/CSPM/Lexer.fr
+	$(BASH) Tools/src/Scripts/AlexToFrege.sh CSPM-Frontend/src/Language/CSPM/Lexer.hs
 	
 	$(FREGEC) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
+		Lexer.fr \
 		AST.fr \
 		UnicodeSymbols.fr \
 		LexHelper.fr \
@@ -146,8 +145,8 @@ dataderiver: syb parsec
 		Preprocessor.fr
 
 
-dist:
-	@echo "[1;42mMade $@[0m"
+dist: cspmf
+	@echo "[1;42mMake $@[0m"
 	$(MKDIR_P) $(DIST)
 	$(CP_P) $(CLASS_FILES) $(DIST)
 	$(CP) $(FREGEJAR) $(DIST)/frege.jar

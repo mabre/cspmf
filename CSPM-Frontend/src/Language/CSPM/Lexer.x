@@ -6,14 +6,13 @@
 -- {-# OPTIONS_GHC -fno-warn-lazy-unlifted-bindings #-}
 {-# OPTIONS_GHC -cpp #-}
 
-module Language.CSPM.Lexer 
-(
-scanner
-)
+module Language.CSPM.Lexer
 where
+import frege.Prelude hiding (Byte)
 import Language.CSPM.Token
 import Language.CSPM.TokenClasses
 import Language.CSPM.AlexWrapper
+import Data.JSON
 }
 
 $whitechar = [\ \t\r\n\f\v]
@@ -237,11 +236,11 @@ alexMonadScan = do
     AlexError _
          -> lexError "lexical error"
     AlexSkip  inp' len -> do
-	alexSetInput inp'
-	alexMonadScan
+        alexSetInput inp'
+        alexMonadScan
     AlexToken inp' len action -> do
-	alexSetInput inp'
-	action inp len
+        alexSetInput inp'
+        action inp len
 
 scanner str = runAlex str $ scannerAcc []
   where
