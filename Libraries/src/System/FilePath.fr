@@ -58,7 +58,7 @@
 --
 -- References:
 -- [1] <http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247.aspx Naming Files, Paths and Namespaces> (Microsoft MSDN)
-module System.FilePath where -- TODO rethink [Char]/String
+module System.FilePath where
 
 import Data.Char(toLower, toUpper, isAsciiLower, isAsciiUpper)
 import Data.List(stripPrefix)

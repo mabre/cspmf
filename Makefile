@@ -60,7 +60,7 @@ cspm-frontend: dataderiver libraries
 	$(BASH) Tools/src/Scripts/AlexToFrege.sh CSPM-Frontend/src/Language/CSPM/Lexer.hs
 	
 	$(FREGEC) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
-		Lexer.fr \
+		CSPM-Frontend/src/Language/CSPM/Lexer.fr \
 		AST.fr \
 		UnicodeSymbols.fr \
 		LexHelper.fr \
