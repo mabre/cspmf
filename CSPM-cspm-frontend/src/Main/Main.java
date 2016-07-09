@@ -1,8 +1,11 @@
 package frege.main;
 
 import frege.main.ExecCommand;
+import frege.runtime.Lambda;
 import org.apache.commons.cli.*;
 import org.apache.commons.cli.Option.*;
+
+import static frege.main.FregeInterface.evaluateIOUnitFunction;
 
 public class Main {
 
@@ -70,39 +73,39 @@ public class Main {
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.printHelp("cspmf translate", options);
             } else if(cmdLine.hasOption("version")) {
-                evaluateFregeIOFunction(ExecCommand.version);
+                evaluateIOUnitFunction(ExecCommand.version);
             } else if(cmdLine.hasOption("numeric-version")) {
-                evaluateFregeIOFunction(ExecCommand.numericVersion);
+                evaluateIOUnitFunction(ExecCommand.numericVersion);
             } else if(cmdLine.hasOption("verbose")
                       || arguments.length > 0 && arguments[0].equals("info")) {
-                evaluateFregeIOFunction(ExecCommand.verbose);
+                evaluateIOUnitFunction(ExecCommand.verbose);
             } else if(arguments.length == 2) {
                 if(arguments[0].equals("translate")) {
                     String src = arguments[1];
                     boolean rename = cmdLine.hasOption("rename");
                     if(cmdLine.hasOption("prettyOut")) {
                         String outFile = cmdLine.getOptionValue("prettyOut");
-                        evaluateFregeIOFunction(ExecCommand.prettyOut(src, rename, outFile));
+                        evaluateIOUnitFunction(ExecCommand.prettyOut(src, rename, outFile));
                     }
                     if(cmdLine.hasOption("addUnicode")) {
                         String outFile = cmdLine.getOptionValue("addUnicode");
-                        evaluateFregeIOFunction(ExecCommand.addUnicode(src, outFile));
+                        evaluateIOUnitFunction(ExecCommand.addUnicode(src, outFile));
                     }
                     if(cmdLine.hasOption("removeUnicode")) {
                         String outFile = cmdLine.getOptionValue("removeUnicode");
-                        evaluateFregeIOFunction(ExecCommand.removeUnicode(src, outFile));
+                        evaluateIOUnitFunction(ExecCommand.removeUnicode(src, outFile));
                     }
                     if(cmdLine.hasOption("prologOut")) {
                         String outFile = cmdLine.getOptionValue("prologOut");
-                        evaluateFregeIOFunction(ExecCommand.prologOut(src, outFile));
+                        evaluateIOUnitFunction(ExecCommand.prologOut(src, outFile));
                     }
                     if(cmdLine.hasOption("expressionToPrologTerm")) {
                         String expr = cmdLine.getOptionValue("expressionToPrologTerm");
-                        evaluateFregeIOFunction(ExecCommand.expressionToPrologTerm(src, expr));
+                        evaluateIOUnitFunction(ExecCommand.expressionToPrologTerm(src, expr));
                     }
                     if(cmdLine.hasOption("declarationToPrologTerm")) {
                         String decl = cmdLine.getOptionValue("declarationToPrologTerm");
-                        evaluateFregeIOFunction(ExecCommand.declarationToPrologTerm(src, decl));
+                        evaluateIOUnitFunction(ExecCommand.declarationToPrologTerm(src, decl));
                     }
                     if(cmdLine.getOptions().length == 0) {
                         System.out.println("No output option is set");
@@ -117,19 +120,5 @@ public class Main {
         } catch(ParseException exp) {
             System.err.println(exp.getMessage());
         }
-    }
-
-    /**
-     * Evaluates the given return object of a (lazy) frege function with frege return type IO ()
-     * @param res The result of calling the frege function with all parameters applied
-     */
-    private static void evaluateFregeIOFunction(Object res) {
-        frege.runtime.Runtime.runMain(
-            frege.prelude.PreludeBase.TST.performUnsafe(
-                frege.runtime.Delayed.<frege.runtime.Lambda>forced(
-                    res
-                )
-            )
-        );
     }
 }

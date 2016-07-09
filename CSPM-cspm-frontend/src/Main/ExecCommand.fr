@@ -36,7 +36,7 @@ numericVersion :: IO ()
 numericVersion = putStrLn $ showVersion frontendVersion
 
 verbose :: IO ()
-verbose = do
+verbose =
     putStr $ concat
         [
         "Versions :",nl

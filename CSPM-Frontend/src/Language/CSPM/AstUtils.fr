@@ -120,3 +120,15 @@ removeModuleAsserts m = m.{ moduleDecls = mapMaybe notAssert $  m.moduleDecls}
     notAssert decl = case decl.unLabel of
       Assert _ -> Nothing
       _ -> Just decl
+
+-- | Remove source locations, tokens, comments and pragmas from a module.
+removeMetaInfo :: Data a => Module a -> Module a
+removeMetaInfo ast = removeSourceLocations
+                        ast.{moduleTokens   = Nothing
+                            ,moduleSrcLoc   = NoLocation
+                            ,moduleComments = []
+                            ,modulePragmas  = []}
+
+-- | Add module declarations of second module to the first module.
+mergeDecls :: Module a -> Module a -> Module a
+mergeDecls m1 m2 = m1.{moduleDecls <- (++ m2.moduleDecls) }

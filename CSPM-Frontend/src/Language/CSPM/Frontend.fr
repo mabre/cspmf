@@ -24,7 +24,7 @@ import Language.CSPM.SrcLoc (public  SrcLoc)
 import Language.CSPM.AstUtils 
   (public removeSourceLocations, public removeParens, public unUniqueIdent
  , public computeFreeNames, public setNodeIdsZero, public getLastBindExpression
- , public getLastDeclaration)
+ , public getLastDeclaration, public removeMetaInfo, public mergeDecls)
 import Language.CSPM.LexHelper as Lexer
   (public lexInclude, public lexPlain, public removeIgnoredToken)
 import Language.CSPM.PrettyPrinter public

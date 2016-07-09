@@ -69,6 +69,19 @@ translateDeclToPrologTerm file decl = do
     getDeclPlCode :: Module a -> Doc
     getDeclPlCode = addFullStopToPrologTerm . Term.unTerm . head . td . {-Frontend.-}getLastDeclaration
 
+-- | 'translateDeclToPrologTerm'' translates a string declaration
+-- to a prolog term in regard to the given CSP-M specification given as AST.
+-- TODO same for Expression, Tests
+translateDeclToPrologTerm' ::
+     ModuleFromParser
+  -> String
+  -> IO String
+translateDeclToPrologTerm' ast decl =
+    mainWorkSinglePlTerm' getDeclPlCode ast decl
+  where
+    getDeclPlCode :: Module a -> Doc
+    getDeclPlCode = addFullStopToPrologTerm . Term.unTerm . head . td . getLastDeclaration
+
 private addFullStopToPrologTerm :: Doc -> Doc
 private addFullStopToPrologTerm plTerm = plTerm <> (text ".")
 
@@ -81,6 +94,25 @@ private mainWorkSinglePlTerm termFun filePath decl = do
   let plTerm = termFun astNew
   output <- evaluate $ show plTerm
   return output
+  
+private mainWorkSinglePlTerm' :: (ModuleFromRenaming -> Doc) -> ModuleFromParser -> String -> IO String
+private mainWorkSinglePlTerm' termFun ast decl = do
+  ast' <- parseNamedString "no-file-name" decl
+  (astNew, _) <- eitherToExc throwRenameError $ renameModule $ mergeDecls ast ast'
+  return $! show $! termFun astNew
+
+-- | 'translateToAst' gets a CSPM specification
+-- and returns an AST containing moduleDecls only and no source locations.
+translateToAst ::
+     String            -- ^ input specification
+  -> IO ModuleFromParser
+translateToAst specSrc = do
+  ast <- parseNamedString "no-file-name" specSrc
+  return $ removeMetaInfo ast
+
+-- | 'showModuleTokens' returns the module tokens as string (for debugging)
+showModuleTokens :: ModuleFromParser -> String
+showModuleTokens mfp = show mfp.moduleTokens
 
 -- | 'translateToProlog' reads a CSPM specification from inFile
 -- and writes the Prolog representation to outFile.
