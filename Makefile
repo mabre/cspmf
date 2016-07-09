@@ -3,8 +3,8 @@ BUILD_TOOLS = Tools/build
 BUILD_DIRS  = $(BUILD) $(BUILD_TOOLS)
 DIST        = dist
 
-FREGEJAR = /home/markus/Downloads/frege/fregec.jar
-ALEX     = /home/markus/.cabal/bin/alex
+FREGEJAR = frege.jar
+ALEX     = alex
 CLIJAR   = Libraries/commons-cli-1.3.1.jar
 JAVAC    = javac -cp $(FREGEJAR):${BUILD}:$(CLIJAR)
 JAVA     = java
