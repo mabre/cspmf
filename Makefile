@@ -10,14 +10,15 @@ JAVAC    = javac -cp $(FREGEJAR):${BUILD}:$(CLIJAR)
 JAVA     = java
 MKDIR_P  = mkdir -p
 RM       = rm -rf
+MV       = mv
 BASH     = bash
 CP       = cp
 CP_P     = cp --parents
-CLASS_FILES = `find $(BUILD) -name "*class"`
+CLASS_FILES = `find build -name "*class"`
 
-FREGEC_ARGS = -hints -O
+FREGECFLAGS = -hints -O
 FREGEC0     = $(JAVA) -Xss16m -Xmx2g -jar $(FREGEJAR) -fp ${BUILD}:${BUILD_TOOLS}
-FREGEC      = $(FREGEC0) $(FREGEC_ARGS)
+FREGEC      = $(FREGEC0) $(FREGECFLAGS)
 FREGE       = $(JAVA) -Xss16m -Xmx2g -cp $(FREGEJAR):${BUILD}:${BUILD_TOOLS}
 
 
@@ -30,7 +31,7 @@ cspm-cspm-frontend: cspm-toprolog
 		ExecCommand.fr \
 		ExceptionHandler.fr
 	
-	$(JAVAC) -d $(BUILD) CSPM-cspm-frontend/src/Main/Main.java CSPM-cspm-frontend/src/Main/Benchmark.java
+	$(JAVAC) -d $(BUILD) CSPM-cspm-frontend/src/Main/Main.java CSPM-cspm-frontend/src/Main/FregeInterface.java CSPM-cspm-frontend/src/Main/Benchmark.java
 
 cspm-toprolog: cspm-frontend
 	@echo "[1;42mMaking $@[0m"
@@ -149,10 +150,13 @@ dist: cspmf
 	@echo "[1;42mMake $@[0m"
 	$(MKDIR_P) $(DIST)
 	$(CP_P) $(CLASS_FILES) $(DIST)
+	$(MV) $(DIST)/$(BUILD)/* $(DIST)/
+	$(RM) $(DIST)/$(BUILD)
 	$(CP) $(FREGEJAR) $(DIST)/frege.jar
 	$(CP) $(CLIJAR) $(DIST)/commons-cli.jar
 
 
+.PHONY: clean
 clean:
 	@echo "[1;42mMaking $@[0m"
-	$(RM) $(BUILD_DIRS)
+	$(RM) $(BUILD_DIRS) $(DIST)
