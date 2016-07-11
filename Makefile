@@ -21,12 +21,17 @@ FREGEC0     = $(JAVA) -Xss16m -Xmx2g -jar $(FREGEJAR) -fp ${BUILD}:${BUILD_TOOLS
 FREGEC      = $(FREGEC0) $(FREGECFLAGS)
 FREGE       = $(JAVA) -Xss16m -Xmx2g -cp $(FREGEJAR):${BUILD}:${BUILD_TOOLS}
 
+TESTSDIR = CSPM-Frontend/test
+TESTFILES = $(notdir $(wildcard $(TESTSDIR)/cspm/*))
+TMP = /tmp
+
 
 cspmf: cspm-frontend cspm-toprolog cspm-cspm-frontend
 	@echo "[1;42mMade $@[0m"
 
 cspm-cspm-frontend: cspm-toprolog
 	@echo "[1;42mMaking $@[0m"
+	
 	$(FREGEC) -d $(BUILD) -make -sp CSPM-cspm-frontend/src/Main \
 		ExecCommand.fr \
 		ExceptionHandler.fr
@@ -154,6 +159,25 @@ dist: cspmf
 	$(RM) $(DIST)/$(BUILD)
 	$(CP) $(FREGEJAR) $(DIST)/frege.jar
 	$(CP) $(CLIJAR) $(DIST)/commons-cli.jar
+
+
+.PHONY: test %.csp %.fdr
+test: $(TESTFILES)
+	@echo "[1;42mTesting done[0m"
+
+%.csp:
+	@echo "[1;42mTesting $@[0m"
+	$(RM) $(TMP)/$@.pl
+	./cspmf.built.sh translate --prologOut=$(TMP)/$@.pl $(TESTSDIR)/cspm/$@ #> /dev/null 2>&1
+	@diff "$(TESTSDIR)/prolog/$@.pl" $(TMP)/$@.pl || \
+	(echo "Test $@ failed" && exit 1)
+
+%.fdr2:
+	@echo "[1;42mTesting $@[0m"
+	$(RM) $(TMP)/$@.pl
+	./cspmf.built.sh translate --prologOut=$(TMP)/$@.pl $(TESTSDIR)/cspm/$@ #> /dev/null 2>&1
+	@diff "$(TESTSDIR)/prolog/$@.pl" $(TMP)/$@.pl || \
+	(echo "Test $@ failed" && exit 1)
 
 
 .PHONY: clean
