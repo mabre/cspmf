@@ -119,7 +119,7 @@ syb:
 		Generics/Schemes.fr \
 		Generics/Builders.fr
 
-misclibs:
+misclibs: syb
 	@echo "[1;42mMaking $@[0m"
 	$(MKDIR_P) $(BUILD_DIRS)
 	$(FREGEC) -d $(BUILD) -make -sp "Libraries/src" \
