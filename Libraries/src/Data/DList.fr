@@ -1,12 +1,3 @@
-{-# OPTIONS_GHC -O2 #-}
-{-# OPTIONS_HADDOCK prune #-}
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE FlexibleInstances #-}
-#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 708
--- For the IsList instance:
-{-# LANGUAGE TypeFamilies #-}
-#endif
-
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Data.DList
@@ -21,62 +12,16 @@
 --
 -----------------------------------------------------------------------------
 
-module Data.DList (
+module Data.DList where
 
-   DList
+import frege.Prelude hiding (concat, foldr, map, head, tail, replicate, toList, apply, empty)
+import Data.List()
+import Control.DeepSeq (NFData)
 
-  -- * Construction
-  ,fromList      -- :: [a] -> DList a
-  ,toList        -- :: DList a -> [a]
-  ,apply         -- :: DList a -> [a] -> [a]
+import Data.Foldable as F()
 
-  -- * Basic functions
-  ,empty         -- :: DList a
-  ,singleton     -- :: a -> DList a
-  ,cons          -- :: a -> DList a -> DList a
-  ,snoc          -- :: DList a -> a -> DList a
-  ,append        -- :: DList a -> DList a -> DList a
-  ,concat        -- :: [DList a] -> DList a
-  ,replicate     -- :: Int -> a -> DList a
-  ,list          -- :: b -> (a -> DList a -> b) -> DList a -> b
-  ,head          -- :: DList a -> a
-  ,tail          -- :: DList a -> DList a
-  ,unfoldr       -- :: (b -> Maybe (a, b)) -> b -> DList a
-  ,foldr         -- :: (a -> b -> b) -> b -> DList a -> b
-  ,map           -- :: (a -> b) -> DList a -> DList b
-
-  ) where
-
-import Prelude hiding (concat, foldr, map, head, tail, replicate)
-import qualified Data.List as List
-import Control.DeepSeq (NFData(..))
-import Control.Monad as M
-import Data.Function (on)
-import Data.String (IsString(..))
-
-import qualified Data.Foldable as F
-
-#if !MIN_VERSION_base(4,8,0)
 import Data.Monoid
 import Data.Foldable (Foldable)
-import Control.Applicative(Applicative(..))
-#endif
-
-#ifdef __GLASGOW_HASKELL__
-
-import Text.Read (Lexeme(Ident), lexP, parens, prec, readPrec, readListPrec,
-                  readListPrecDefault)
-
-#if __GLASGOW_HASKELL__ >= 708
-import GHC.Exts (IsList)
--- This is for the IsList methods, which conflict with fromList, toList:
-import qualified GHC.Exts
-#endif
-
-#endif
-
-import Control.Applicative(Alternative, (<|>))
-import qualified Control.Applicative (empty)
 
 -- | A difference list is a function that, given a list, returns the original
 -- contents of the difference list prepended to the given list.
@@ -99,7 +44,7 @@ import qualified Control.Applicative (empty)
 -- >       flatten (Leaf x)     = tell (singleton x)
 -- >       flatten (Branch x y) = flatten x >> flatten y
 --
-newtype DList a = DL { unDL :: [a] -> [a] }
+data DList a = DL { unDL :: [a] -> [a] }
 
 -- | Convert a list to a dlist
 fromList    :: [a] -> DList a
@@ -108,14 +53,14 @@ fromList    = DL . (++)
 
 -- | Convert a dlist to a list
 toList      :: DList a -> [a]
-toList      = ($[]) . unDL
+toList      = ($[]) . DList.unDL
 {-# INLINE toList #-}
 
 -- | Apply a dlist to a list to get the underlying list with an extension
 --
 -- > apply (fromList xs) ys = xs ++ ys
 apply       :: DList a -> [a] -> [a]
-apply       = unDL
+apply       = _.unDL
 
 -- | Create a dlist containing no elements
 empty       :: DList a
@@ -128,25 +73,25 @@ singleton   = DL . (:)
 {-# INLINE singleton #-}
 
 -- | /O(1)/. Prepend a single element to a dlist
-infixr `cons`
+-- infixr `cons`
 cons        :: a -> DList a -> DList a
-cons x xs   = DL ((x:) . unDL xs)
+cons x xs   = DL ((x:) . xs.unDL)
 {-# INLINE cons #-}
 
 -- | /O(1)/. Append a single element to a dlist
-infixl `snoc`
+-- infixl `snoc`
 snoc        :: DList a -> a -> DList a
-snoc xs x   = DL (unDL xs . (x:))
+snoc xs x   = DL (xs.unDL . (x:))
 {-# INLINE snoc #-}
 
 -- | /O(1)/. Append dlists
 append       :: DList a -> DList a -> DList a
-append xs ys = DL (unDL xs . unDL ys)
+append xs ys = DL (xs.unDL . ys.unDL)
 {-# INLINE append #-}
 
 -- | /O(spine)/. Concatenate dlists
 concat       :: [DList a] -> DList a
-concat       = List.foldr append empty
+concat       = Prelude.foldr append empty
 {-# INLINE concat #-}
 
 -- | /O(n)/. Create a dlist of the given number of elements
@@ -180,7 +125,7 @@ unfoldr pf b =
 
 -- | /O(n)/. Foldr over difference lists
 foldr        :: (a -> b -> b) -> b -> DList a -> b
-foldr f b    = List.foldr f b . toList
+foldr f b    = Prelude.foldr f b . toList
 {-# INLINE foldr #-}
 
 -- | /O(n)/. Map over difference lists.
@@ -190,29 +135,18 @@ map f        = foldr (cons . f) empty
 
 instance Eq a => Eq (DList a) where
     (==) = (==) `on` toList
+    hashCode = hashCode . toList
 
 instance Ord a => Ord (DList a) where
     compare = compare `on` toList
+    (<=>) = compare
 
 -- The Read and Show instances were adapted from Data.Sequence.
 
-instance Read a => Read (DList a) where
-#ifdef __GLASGOW_HASKELL__
-  readPrec = parens $ prec 10 $ do
-    Ident "fromList" <- lexP
-    dl <- readPrec
-    return (fromList dl)
-  readListPrec = readListPrecDefault
-#else
-  readsPrec p = readParen (p > 10) $ \r -> do
-    ("fromList", s) <- lex r
-    (dl, t) <- reads s
-    return (fromList dl, t)
-#endif
-
-instance Show a => Show (DList a) where
+instance (Show a) => Show (DList a) where
   showsPrec p dl = showParen (p > 10) $
     showString "fromList " . shows (toList dl)
+  show dl = (showString "fromList " . shows (toList dl)) ""
 
 instance Monoid (DList a) where
     mempty  = empty
@@ -226,9 +160,9 @@ instance Applicative DList where
     pure  = return
     (<*>) = ap
 
-instance Alternative DList where
-    empty = empty
-    (<|>) = append
+-- instance Alternative DList where
+--     empty = empty
+--     (<|>) = append
 
 instance Monad DList where
   m >>= k
@@ -243,6 +177,7 @@ instance Monad DList where
   return x = singleton x
   {-# INLINE return #-}
 
+instance MonadFail DList where
   fail _   = empty
   {-# INLINE fail #-}
 
@@ -257,42 +192,18 @@ instance Foldable DList where
   foldMap f   = F.foldMap f . toList
   {-# INLINE foldMap #-}
 
-  foldr f x   = List.foldr f x . toList
+  foldr f x   = Prelude.foldr f x . toList
   {-# INLINE foldr #-}
 
-  foldl f x   = List.foldl f x . toList
+  foldl f x   = Prelude.foldl f x . toList
   {-# INLINE foldl #-}
 
-  foldr1 f    = List.foldr1 f . toList
+  foldr1 f    = Prelude.foldr1 f . toList
   {-# INLINE foldr1 #-}
 
-  foldl1 f    = List.foldl1 f . toList
+  foldl1 f    = Prelude.foldl1 f . toList
   {-# INLINE foldl1 #-}
 
--- CPP: foldl', foldr' added to Foldable in 7.6.1
--- http://www.haskell.org/ghc/docs/7.6.1/html/users_guide/release-7-6-1.html
-#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 706
-  foldl' f x  = List.foldl' f x . toList
-  {-# INLINE foldl' #-}
-
-  foldr' f x  = F.foldr' f x . toList
-  {-# INLINE foldr' #-}
-#endif
-
-instance NFData a => NFData (DList a) where
+instance (NFData a) => NFData (DList a) where
   rnf = rnf . toList
   {-# INLINE rnf #-}
-
-instance IsString (DList Char) where
-  fromString = fromList
-  {-# INLINE fromString #-}
-
-#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 708
-instance IsList (DList a) where
-  type Item (DList a) = a
-  fromList = fromList
-  {-# INLINE fromList #-}
-  toList = toList
-  {-# INLINE toList #-}
-#endif
-
