@@ -11,7 +11,7 @@ CSPM-ToProlog contains a translation from a CSPM AST to the representation used
 by the [ProB](https://www3.hhu.de/stups/prob/index.php/Main_Page) tool. This
 code is only interesting for ProB developers.
 
-CSPM-cspm-frontend conatins the code for cspmf, a small command line tool for
+CSPM-cspm-frontend contains the code for cspmf, a small command line tool for
 parsing CSPM specifications. It supports serveral modes of parsing.
 
 ```
@@ -24,8 +24,9 @@ parsing CSPM specifications. It supports serveral modes of parsing.
 ## Compiling cspmf
 
 First make sure that all paths and command in the Makefile match your system.
-[Frege](https://github.com/Frege/frege/releases) is required in version 3.23.
+[Frege](https://github.com/Frege/frege/releases) is required in version
+3.23.422-ga05a487.
+
 ```
 make dist
 ```
-

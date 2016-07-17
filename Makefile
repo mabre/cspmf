@@ -91,7 +91,7 @@ cspm-frontend: dataderiver libraries
 		Frontend.fr
 
 
-libraries: parsec syb misclibs
+libraries: parsec syb backports misclibs
 
 parsec:
 	@echo "[1;42mMaking $@[0m"
@@ -107,7 +107,7 @@ parsec:
 		Token.fr \
 		Language.fr
 
-syb:
+syb: backports
 	@echo "[1;42mMaking $@[0m"
 	$(MKDIR_P) $(BUILD_DIRS)
 	$(JAVAC) -d $(BUILD) Libraries/src/com/netflix/frege/runtime/Fingerprint.java
@@ -118,6 +118,14 @@ syb:
 		Generics/Aliases.fr \
 		Generics/Schemes.fr \
 		Generics/Builders.fr
+
+backports:
+	@echo "[1;42mMaking $@[0m"
+	$(MKDIR_P) $(BUILD_DIRS)
+	$(FREGEC) -d $(BUILD) -make -sp "Libraries/src" \
+		Data/Array.fr \
+		System/Environment.fr \
+		System/Exit.fr
 
 misclibs: syb
 	@echo "[1;42mMaking $@[0m"
