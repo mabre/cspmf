@@ -1,5 +1,7 @@
 # cspmf
 
+[![Build Status](https://travis-ci.org/mabre/cspmf.svg?branch=master)](https://travis-ci.org/mabre/cspmf)
+
 CSP-M is the machine readable syntax of CSP (concurrent sequential processes) as
 used by the formal methods tools FDR, Probe and ProB.
 
