@@ -1,5 +1,8 @@
 language: haskell
 
+dist: trusty
+sudo: required
+
 jdk:
   - oraclejdk8
 
@@ -10,7 +13,10 @@ addons:
 
 install:
   - curl -L -o frege.jar https://github.com/Frege/frege/releases/download/3.23.288/frege3.23.422-ga05a487.jar
+  - sudo apt-get install -yq cabal-install
+  - cabal update
   - cabal install alex-3.1.7
+  - PATH=$PATH:$HOME/.cabal/bin
 
 script:
 - make dist
