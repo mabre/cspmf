@@ -15,7 +15,9 @@
 'parserVersionNum'([0,11,0,1]).
 'parserVersionStr'('CSPM-Frontent-0.11.0.1').
 'dataTypeDef'('FRUIT',['constructor'('apples'),'constructor'('oranges')]).
-'comment'('lineComment'('-- Simple demonstration of FDR2'),'src_position'(1,1,0,31)).
-'symbol'('FRUIT','FRUIT','src_span'(2,10,2,15,41,5),'Datatype').
-'symbol'('apples','apples','src_span'(2,18,2,24,49,6),'Constructor of Datatype').
-'symbol'('oranges','oranges','src_span'(2,27,2,34,58,7),'Constructor of Datatype').
+'bindval'('N','int'(42),'src_span'(3,1,3,7,109,6)).
+'comment'('lineComment'('-- Used for testing --declarationToPrologTerm and --expressionToPrologTerm'),'src_position'(1,1,0,74)).
+'symbol'('FRUIT','FRUIT','src_span'(2,10,2,15,84,5),'Datatype').
+'symbol'('apples','apples','src_span'(2,18,2,24,92,6),'Constructor of Datatype').
+'symbol'('oranges','oranges','src_span'(2,27,2,34,101,7),'Constructor of Datatype').
+'symbol'('N','N','src_span'(3,1,3,2,109,1),'Ident (Groundrep.)').
