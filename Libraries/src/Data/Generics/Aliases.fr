@@ -1,22 +1,21 @@
 {-# OPTIONS_GHC -cpp                  #-}
 {-# LANGUAGE Rank2Types               #-}
 
------------------------------------------------------------------------------
--- |
--- Module      :  Data.Generics.Aliases
--- Copyright   :  (c) The University of Glasgow, CWI 2001--2004
--- License     :  BSD-style (see the LICENSE file)
--- 
--- Maintainer  :  generics@haskell.org
--- Stability   :  experimental
--- Portability :  non-portable (local universal quantification)
---
--- \"Scrap your boilerplate\" --- Generic programming in Haskell 
--- See <http://www.cs.vu.nl/boilerplate/>. The present module provides
--- a number of declarations for typical generic function types,
--- corresponding type case, and others.
---
------------------------------------------------------------------------------
+{--
+    "Scrap your boilerplate" — Generic programming in Haskell
+    
+    See 'http://www.cs.vu.nl/boilerplate/'. The present module provides
+    a number of declarations for typical generic function types,
+    corresponding type case, and others.
+   
+    [Module]      Data.Generics.Aliases
+    [Copyright]   (c) The University of Glasgow, CWI 2001--2004
+    [License]     BSD-style (see the LICENSE file)
+    
+    [Maintainer]  generics@haskell.org
+    [Stability]   experimental
+    [Portability] non-portable (local universal quantification)
+-}
 
 module Data.Generics.Aliases {-(
 
@@ -62,24 +61,20 @@ module Data.Generics.Aliases {-(
 
   )-} where
 
--- #ifdef __HADDOCK__
--- import Prelude
--- #endif
 -- import Control.Monad
 import frege.Prelude hiding (GT, orElse)
 import Data.Data
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      Combinators to "make" generic functions
 --      We use type-safe cast in a number of ways to make generic functions.
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
--- | Make a generic transformation;
---   start from a type-specific case;
---   preserve the term otherwise
---
+--- Make a generic transformation;
+---   start from a type-specific case;
+---   preserve the term otherwise
 mkT :: ( Typeable a
        , Typeable b
        )
@@ -89,10 +84,9 @@ mkT :: ( Typeable a
 mkT = extT id
 
 
--- | Make a generic query;
---   start from a type-specific case;
---   return a constant otherwise
---
+--- Make a generic query;
+---   start from a type-specific case;
+---   return a constant otherwise
 mkQ :: ( Typeable a
        , Typeable b
        )
@@ -105,10 +99,9 @@ mkQ :: ( Typeable a
                         Nothing -> r
 
 
--- | Make a generic monadic transformation;
---   start from a type-specific case;
---   resort to return otherwise
---
+--- Make a generic monadic transformation;
+---   start from a type-specific case;
+---   resort to return otherwise
 mkM :: ( Monad m
        , Typeable a
        , Typeable b
@@ -128,9 +121,8 @@ use a point-free style whenever possible.
 -}
 
 
--- | Make a generic monadic transformation for MonadPlus;
---   use \"const mzero\" (i.e., failure) instead of return as default.
---
+--- Make a generic monadic transformation for MonadPlus;
+---   use \"const mzero\" (i.e., failure) instead of return as default.
 mkMp :: ( MonadPlus m
         , Typeable a
         , Typeable b
@@ -141,10 +133,9 @@ mkMp :: ( MonadPlus m
 mkMp = extM (const mzero)
 
 
--- | Make a generic builder;
---   start from a type-specific ase;
---   resort to no build (i.e., mzero) otherwise
---
+--- Make a generic builder;
+---   start from a type-specific ase;
+---   resort to no build (i.e., mzero) otherwise
 mkR :: ( MonadPlus m
        , Typeable a
        , Typeable b
@@ -153,12 +144,12 @@ mkR :: ( MonadPlus m
 mkR f = mzero `extR` f
 
 
--- | Flexible type extension
+--- Flexible type extension
 ext0 :: (Typeable a, Typeable b) => c a -> c b -> c a
 ext0 def ext = maybe def id (gcast ext)
 
 
--- | Extend a generic transformation by a type-specific case
+--- Extend a generic transformation by a type-specific case
 extT :: ( Typeable a
         , Typeable b
         )
@@ -169,7 +160,7 @@ extT :: ( Typeable a
 extT def ext = T.unT ((T def) `ext0` (T ext))
 
 
--- | Extend a generic query by a type-specific case
+--- Extend a generic query by a type-specific case
 extQ :: ( Typeable a
         , Typeable b
         )
@@ -180,7 +171,7 @@ extQ :: ( Typeable a
 extQ f g a = maybe (f a) g (cast a)
 
 
--- | Extend a generic monadic transformation by a type-specific case
+--- Extend a generic monadic transformation by a type-specific case
 extM :: ( Monad m
         , Typeable a
         , Typeable b
@@ -189,7 +180,7 @@ extM :: ( Monad m
 extM def ext = M.unM ((M def) `ext0` (M ext))
 
 
--- | Extend a generic MonadPlus transformation by a type-specific case
+--- Extend a generic MonadPlus transformation by a type-specific case
 extMp :: ( MonadPlus m
          , Typeable a
          , Typeable b
@@ -198,7 +189,7 @@ extMp :: ( MonadPlus m
 extMp = extM
 
 
--- | Extend a generic builder
+--- Extend a generic builder
 extB :: ( Typeable a
         , Typeable b
         )
@@ -206,7 +197,7 @@ extB :: ( Typeable a
 extB a = maybe a id . cast
 
 
--- | Extend a generic reader
+--- Extend a generic reader
 extR :: ( Monad m
         , Typeable a
         , Typeable b
@@ -216,63 +207,56 @@ extR def ext = R.unR ((R def) `ext0` (R ext))
 
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      Type synonyms for generic function types
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 
--- | Generic transformations,
---   i.e., take an \"a\" and return an \"a\"
---
+--- Generic transformations,
+---   i.e., take an \"a\" and return an \"a\"
 type GenericT = forall a. Data a => a -> a
 
 
--- | Generic queries of type \"r\",
---   i.e., take any \"a\" and return an \"r\"
---
+--- Generic queries of type \"r\",
+---   i.e., take any \"a\" and return an \"r\"
 type GenericQ r = forall a. Data a => a -> r
 
 
--- | Generic monadic transformations,
---   i.e., take an \"a\" and compute an \"a\"
---
+--- Generic monadic transformations,
+---   i.e., take an \"a\" and compute an \"a\"
 type GenericM m = forall a. Data a => a -> m a
 
 
--- | Generic builders
---   i.e., produce an \"a\".
---
+--- Generic builders
+---   i.e., produce an \"a\".
 type GenericB = forall a. Data a => a
 
 
--- | Generic readers, say monadic builders,
---   i.e., produce an \"a\" with the help of a monad \"m\".
---
+--- Generic readers, say monadic builders,
+---   i.e., produce an \"a\" with the help of a monad \"m\".
 type GenericR m = forall a. Data a => m a
 
 
--- | The general scheme underlying generic functions
---   assumed by gfoldl; there are isomorphisms such as
---   GenericT = Generic T.
---
+--- The general scheme underlying generic functions
+---   assumed by gfoldl; there are isomorphisms such as
+---   GenericT = Generic T.
 type Generic c = forall a. Data a => a -> c a
 
 
--- | Wrapped generic functions;
---   recall: [Generic c] would be legal but [Generic' c] not.
---
+--- Wrapped generic functions;
+---   recall: [Generic c] would be legal but [Generic' c] not.
 data Generic' c = Generic' { unGeneric' :: Generic c }
 
 
--- | Other first-class polymorphic wrappers
+--- Other first-class polymorphic wrappers
 data GenericT'   = GT { unGT :: forall a. Data a => a -> a }
 data GenericQ' r = GQ { unGQ :: GenericQ r }
 data GenericM' m = GM { unGM :: forall a. Data a => a -> m a }
 
 
--- | Left-biased choice on maybes
+--- Left-biased choice on maybes
 orElse :: Maybe a -> Maybe a -> Maybe a
 x `orElse` y = case x of
                  Just _  -> x
@@ -291,32 +275,32 @@ queries a given constant is returned.
 
 -}
 
--- | Choice for monadic transformations
+--- Choice for monadic transformations
 choiceMp :: MonadPlus m => GenericM m -> GenericM m -> GenericM m
 choiceMp f g x = f x `mplus` g x
 
 
--- | Choice for monadic queries
+--- Choice for monadic queries
 choiceQ :: MonadPlus m => GenericQ (m r) -> GenericQ (m r) -> GenericQ (m r)
 choiceQ f g x = f x `mplus` g x
 
 
--- | Recover from the failure of monadic transformation by identity
+--- Recover from the failure of monadic transformation by identity
 recoverMp :: MonadPlus m => GenericM m -> GenericM m
 recoverMp f = f `choiceMp` return
 
 
--- | Recover from the failure of monadic query by a constant
+--- Recover from the failure of monadic query by a constant
 recoverQ :: MonadPlus m => r -> GenericQ (m r) -> GenericQ (m r)
 recoverQ r f = f `choiceQ` const (return r)
 
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --      Type extension for unary type constructors
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
--- | Flexible type extension
+--- Flexible type extension
 ext1 :: (Data a, Typeable1 t, Typeable t)
      => c a
      -> (forall d. Data d => c (t d))
@@ -324,7 +308,7 @@ ext1 :: (Data a, Typeable1 t, Typeable t)
 ext1 def ext = maybe def id (dataCast1 ext)
 
 
--- | Type extension of transformations for unary type constructors
+--- Type extension of transformations for unary type constructors
 ext1T :: (Data d, Typeable1 t, Typeable t)
       => (forall e. Data e => e -> e)
       -> (forall f. Data f => t f -> t f)
@@ -332,7 +316,7 @@ ext1T :: (Data d, Typeable1 t, Typeable t)
 ext1T def ext = T.unT ((T def) `ext1` (T ext))
 
 
--- | Type extension of monadic transformations for type constructors
+--- Type extension of monadic transformations for type constructors
 ext1M :: (Monad m, Data d, Typeable1 t, Typeable t)
       => (forall e. Data e => e -> m e)
       -> (forall f. Data f => t f -> m (t f))
@@ -340,7 +324,7 @@ ext1M :: (Monad m, Data d, Typeable1 t, Typeable t)
 ext1M def ext = M.unM ((M def) `ext1` (M ext))
 
 
--- | Type extension of queries for type constructors
+--- Type extension of queries for type constructors
 ext1Q :: (Data d, Typeable1 t, Typeable t)
       => (d -> q)
       -> (forall e. Data e => t e -> q)
@@ -348,7 +332,7 @@ ext1Q :: (Data d, Typeable1 t, Typeable t)
 ext1Q def ext = Q.unQ ((Q def) `ext1` (Q ext))
 
 
--- | Type extension of readers for type constructors
+-- - Type extension of readers for type constructors
 -- ext1R :: (Monad m, Data d, Typeable1 t, Typeable t)
 --       => m d
 --       -> (forall e. Data e => m (t e))
@@ -363,11 +347,11 @@ ext1Q def ext = Q.unQ ((Q def) `ext1` (Q ext))
 --       -> a
 -- ext1B def ext = B.unB ((B def) `ext1` (B ext))
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --      Type extension for binary type constructors
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
--- | Flexible type extension
+--- Flexible type extension
 ext2 :: (Data a, Typeable2 t, Typeable t)
      => c a
      -> (forall d1 d2. (Data d1, Data d2) => c (t d1 d2))
@@ -375,7 +359,7 @@ ext2 :: (Data a, Typeable2 t, Typeable t)
 ext2 def ext = maybe def id (dataCast2 ext)
 
 
--- | Type extension of transformations for unary type constructors
+--- Type extension of transformations for unary type constructors
 ext2T :: (Data d, Typeable2 t, Typeable t)
       => (forall e. Data e => e -> e)
       -> (forall d1 d2. (Data d1, Data d2) => t d1 d2 -> t d1 d2)
@@ -383,7 +367,7 @@ ext2T :: (Data d, Typeable2 t, Typeable t)
 ext2T def ext = T.unT ((T def) `ext2` (T ext))
 
 
--- | Type extension of monadic transformations for type constructors
+--- Type extension of monadic transformations for type constructors
 ext2M :: (Monad m, Data d, Typeable2 t, Typeable t)
       => (forall e. Data e => e -> m e)
       -> (forall d1 d2. (Data d1, Data d2) => t d1 d2 -> m (t d1 d2))
@@ -391,7 +375,7 @@ ext2M :: (Monad m, Data d, Typeable2 t, Typeable t)
 ext2M def ext = M.unM ((M def) `ext2` (M ext))
 
 
--- | Type extension of queries for type constructors
+--- Type extension of queries for type constructors
 ext2Q :: (Data d, Typeable2 t, Typeable t)
       => (d -> q)
       -> (forall d1 d2. (Data d1, Data d2) => t d1 d2 -> q)
@@ -414,24 +398,24 @@ ext2Q def ext = Q.unQ ((Q def) `ext2` (Q ext))
 --       -> a
 -- ext2B def ext = B.unB ((B def) `ext2` (B ext))
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      Type constructors for type-level lambdas
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 
--- | The type constructor for transformations
+--- The type constructor for transformations
 data T x = T { unT :: x -> x }
 
--- | The type constructor for transformations
+--- The type constructor for transformations
 data M m x = M { unM :: x -> m x }
 
--- | The type constructor for queries
+--- The type constructor for queries
 data Q q x = Q { unQ :: x -> q }
 
--- | The type constructor for readers
+--- The type constructor for readers
 data R m x = R { unR :: m x }
 
--- | The type constructor for builders
+--- The type constructor for builders
 data B x = B {unB :: x}

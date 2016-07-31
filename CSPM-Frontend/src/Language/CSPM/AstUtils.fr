@@ -1,14 +1,13 @@
------------------------------------------------------------------------------
--- |
--- Module      :  Language.CSPM.AstUtils
--- Copyright   :  (c) Fontaine 2008 - 2011
--- License     :  BSD3
--- 
--- Maintainer  :  Fontaine@cs.uni-duesseldorf.de
--- Stability   :  experimental
--- Portability :  GHC-only
---
--- Some utility functions for converting the AST
+{--
+    Some utility functions for converting the AST
+    
+    [Module]    Language.CSPM.AstUtils
+    [Copyright]   (c) Fontaine 2008 - 2011
+    [License]    BSD3
+    
+    [Maintainer] Fontaine@cs.uni-duesseldorf.de
+    [Stability] experimental
+-}
 
 module Language.CSPM.AstUtils where
 
@@ -21,7 +20,7 @@ import Data.Maybe
 import Data.Generics.Schemes (everywhere,listify)
 import Data.Generics.Aliases (mkT)
 
--- | 'removeSourceLocations' sets all locationsInfos to 'NoLocation'
+--- 'removeSourceLocations' sets all locationsInfos to 'NoLocation'
 removeSourceLocations :: Data b => b -> b
 removeSourceLocations ast 
   = everywhere (mkT patchLabel) ast
@@ -29,8 +28,8 @@ removeSourceLocations ast
     patchLabel :: SrcLoc.SrcLoc -> SrcLoc.SrcLoc
     patchLabel _ = SrcLoc.NoLocation
 
--- | 'removeParens' removes all occurences of of Parens,
--- i.e. explicit parentheses from the AST
+--- 'removeParens' removes all occurrences of of Parens,
+--- i.e. explicit parentheses from the AST
 removeParens :: Data b => b -> b
 removeParens ast 
   = everywhere (mkT patchExp) ast
@@ -40,7 +39,7 @@ removeParens ast
       Parens e -> e
       _ -> x
 
--- | Set all NodeIds to zero.
+--- Set all NodeIds to zero.
 setNodeIdsZero :: Data b => b -> b
 setNodeIdsZero ast 
   = everywhere (mkT nID) ast
@@ -48,9 +47,9 @@ setNodeIdsZero ast
     nID :: NodeId -> NodeId
     nID _ = NodeId { unNodeId = 0 }
 
--- | unUniqueIdent replaces the all UIdent with the Ident of the the new name,
--- thus forgetting additional information like the bindingside, etc.
--- Usefull to get a smaller AST.
+--- unUniqueIdent replaces the all UIdent with the Ident of the new name,
+--- thus forgetting additional information like the bindingside, etc.
+--- Useful to get a smaller AST.
 unUniqueIdent :: Data b => b -> b
 unUniqueIdent ast
   = everywhere (mkT patchIdent) ast
@@ -59,9 +58,9 @@ unUniqueIdent ast
     patchIdent (UIdent u) = Ident $ u.newName
     patchIdent _ = error "unUniqueIdent : did not expect and 'Ident' in the AST"
 
--- | Compute the "FreeNames" of an Expression.
--- This function does only work after renaming has been done.
--- This implementation is inefficient.
+--- Compute the "FreeNames" of an Expression.
+--- This function does only work after renaming has been done.
+--- This implementation is inefficient.
 computeFreeNames :: Data b => b -> FreeNames -- TODO is this needed?
 computeFreeNames syntax
   = IntMap.difference (IntMap.fromList used) (IntMap.fromList def)
@@ -95,7 +94,7 @@ computeFreeNames syntax
     unDecl (FunBind x _) = x
     unDecl _ = error "computeFreeNames : expecting FunBind"
 
--- | Get the assert declarations of a module.
+--- Get the assert declarations of a module.
 getModuleAsserts :: Module a -> [LAssertDecl]
 getModuleAsserts = mapMaybe justAssert . Module.moduleDecls
   where
@@ -113,7 +112,7 @@ getLastBindExpression = justDeclExp . last . Module.moduleDecls
 getLastDeclaration :: Module a -> LDecl
 getLastDeclaration = last . Module.moduleDecls
 
--- | Remove assert declarations from a module.
+--- Remove assert declarations from a module.
 removeModuleAsserts :: Module a -> Module a
 removeModuleAsserts m = m.{ moduleDecls = mapMaybe notAssert $  m.moduleDecls}
   where
@@ -121,7 +120,7 @@ removeModuleAsserts m = m.{ moduleDecls = mapMaybe notAssert $  m.moduleDecls}
       Assert _ -> Nothing
       _ -> Just decl
 
--- | Remove source locations, tokens, comments and pragmas from a module.
+--- Remove source locations, tokens, comments and pragmas from a module.
 removeMetaInfo :: Data a => Module a -> Module a
 removeMetaInfo ast = removeSourceLocations
                         ast.{moduleTokens   = Nothing
@@ -129,6 +128,6 @@ removeMetaInfo ast = removeSourceLocations
                             ,moduleComments = []
                             ,modulePragmas  = []}
 
--- | Add module declarations of second module to the first module.
+--- Add module declarations of second module to the first module.
 mergeDecls :: Module a -> Module a -> Module a
 mergeDecls m1 m2 = m1.{moduleDecls <- (++ m2.moduleDecls) }

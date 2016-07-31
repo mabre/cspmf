@@ -1,16 +1,13 @@
-----------------------------------------------------------------------------
--- |
--- Module      :  Parser
--- Copyright   :  (c) Fontaine 2008 - 2011
--- License     :  BSD3
--- 
--- Maintainer  :  fontaine@cs.uni-duesseldorf.de, me@dobrikov.biz
--- Stability   :  experimental
--- Portability :  GHC-only
---
--- This modules defines a Parser for CSP-M
--- 
------------------------------------------------------------------------------
+{--
+    This modules defines a Parser for CSP-M
+    
+    [Module]     Parser
+    [Copyright]  (c) Fontaine 2008 - 2011
+    [License]    BSD3
+    
+    [Maintainer] fontaine@cs.uni-duesseldorf.de, me@dobrikov.biz
+    [Stability]  experimental
+-}
 
 module Language.CSPM.Parser
 
@@ -33,14 +30,13 @@ import Text.ParserCombinators.Parsec.Parsec
   hiding (parse,eof,notFollowedBy,anyToken,label,ParseError,errorPos,token,newline)
 import Text.ParserCombinators.Parsec.Pos
 import Text.ParserCombinators.Parsec.Error as ParsecError hiding (ParseError, Show_ParseError)
--- import Control.Monad.State
 import Data.List
 
 type PT a = GenParser Token PState a
 
--- | The 'parse' function parses a List of 'Token'.
--- It returns a 'ParseError' or a 'Labled' 'Module'.
--- The 'SourceName' argument is currently not used.
+--- The 'parse' function parses a List of 'Token'.
+--- It returns a 'ParseError' or a 'Labled' 'Module'.
+--- The 'SourceName' argument is currently not used.
 parse :: 
       SourceName
    -> [Token]
@@ -53,7 +49,7 @@ parse filename tokenList
         filename
         (removeIgnoredToken tokenList)
 
--- | Wrapper for testing sub parsers
+--- Wrapper for testing sub parsers
 testParser :: PT a -> [Token] -> Either ParsecError.ParseError a
 testParser p tokenList
   = runParser p initialPState ""
@@ -266,7 +262,7 @@ private compGenerator = try $ withLoc $ do
   exp <- parseExp_noPrefix
   return $ Generator pat exp
 
--- replicated operations use comprehensions with a differen Syntax
+--- replicated operations use comprehensions with a different Syntax
 private comprehensionRep :: PT LCompGenList
 private comprehensionRep = withLoc $ do
   l <- sepByComma (repGenerator <|> compGuard)
@@ -435,7 +431,7 @@ private parseExpBase =
      <?> "core-expression" 
 
 
-{-
+{--
 maybe need a Ast-node for parenExp for prettyPrint-Printing
 parenExps are now a special case of TupleExps
 -}
@@ -449,7 +445,7 @@ private parenExpOrTupleEnum = withLoc $ do
     _ -> return  $ TupleExp body
 
 
-{-
+{--
 Warning :
 the expression parser does not accept nested Postfix and Prefix expressions
  "not not true" does not parse !!
@@ -574,21 +570,21 @@ If a gtLimit is set, we only accept a maximum number of gt symbols
             if cnt < x then return ()
                        else fail "(Gt token belongs to sequence expression)"
 
--- | Parser for CSP-M expressions
+--- Parser for CSP-M expressions
 parseExp :: PT LExp
 parseExp
   = do (parseDotExpOf $ buildExpressionParser procTable parseProcReplicatedExp)
   <?> "expression"
 
 
--- todo : check if we need parseExp_noPrefix or if we can use parseExp_noProc
+--- todo : check if we need parseExp_noPrefix or if we can use parseExp_noProc
 parseExp_noPrefix :: PT LExp
 parseExp_noPrefix = parseDotExpOf parseExp_noPrefix_NoDot
    where
      parseExp_noPrefix_NoDot :: PT LExp
      parseExp_noPrefix_NoDot = buildExpressionParser opTable parseExpBase
 
--- todo :: parseExpBase does include STOP and SKIP 
+--- todo :: parseExpBase does include STOP and SKIP 
 private parseExp_noProc :: PT LExp
 private parseExp_noProc
   = parseDotExpOf $ buildExpressionParser baseTable parseExpBase
@@ -602,7 +598,7 @@ private parseDotExpOf baseExp = do
      [x] -> return x
      l -> mkLabeledNode (mkSrcSpan sPos ePos) $ DotTuple l
 
-{-
+{--
 place (term) as a suffix behind any term to
 make a function application
 used a lot in CspBook -examples
@@ -616,7 +612,7 @@ private funApplyImplicit = do
   pos <-getPos
   return $ (\fkt -> mkLabeledNode pos $ CallFunction fkt args )
 
-{-
+{--
 parse an sequenceexpression <...>
 we have to be carefull not to parse the end of sequence ">"
 as comparision
@@ -644,7 +640,7 @@ private betweenLtGt parser = do
       s <- parseWithGtLimit (cnt) parser
       token_gt
       return s
-{-
+{--
 parse an expression which contains as most count Greater-symbols (">"
 the last ">" is left as end of sequence
 attention: this can be nested !!
@@ -718,7 +714,7 @@ private parseRename= withLoc $ do
   e2<-parseExp_noPrefix
   return $ Rename e1 e2
 
--- | Parser for CSP-M patterns
+--- Parser for CSP-M patterns
 parsePattern :: PT LPattern
 parsePattern = (<?> "pattern")  $ do
   sPos <- getNextPos
@@ -769,7 +765,7 @@ private parsePatternCore =
     tuplePatEnum = inSpan TuplePat $ inParens (sepByComma parsePattern)
 
 
--- FixMe: do not use patBind to parse variable bindings ?
+--- FixMe: do not use patBind to parse variable bindings ?
 
 private patBind :: PT LDecl
 private patBind = withLoc $ do
@@ -778,7 +774,7 @@ private patBind = withLoc $ do
   expo <- parseExp
   return $ PatBind pat expo
 
--- parse a single function-case
+--- parse a single function-case
 private funBind :: PT LDecl
 private funBind = try $ do
   fname <- ident
@@ -787,7 +783,7 @@ private funBind = try $ do
   expo <-parseExp
   mkLabeledNode fname.srcLoc $ FunBind fname [FunCase patl expo]
 
-{-
+{--
 in CSP f(x)(y), f(x,y) , f((x,y)) are all different
 we parse a function pattern as a list of curryargs (a)(b)( )( )..
 each of with can be a comma-seperated list of args that do not allow
@@ -995,7 +991,7 @@ topDeclList = sepByNewLine topDecl
     e <- parseExp
     return $ Print e
 
-{- Replicated Expressions in Prefix form -}
+{-- Replicated Expressions in Prefix form -}
 
 private parseProcReplicatedExp :: PT LProc
 private parseProcReplicatedExp
@@ -1040,7 +1036,7 @@ private parseProcReplicatedExp
     body <- parseExp
     return $ ProcRepSharing gen al body
 
-{-
+{--
 parsePrefixExp either parses a prefix, or just an regular expression
 
 prefix binds stronger than any operator (except dot-operator)
@@ -1067,7 +1063,7 @@ private parsePrefixExp = do
     return (commfields,expo)
 
 
-{-
+{--
 this is not what fdr really does
 fdr parse ch?x.y:a as ch?((x.y):a)
 -}

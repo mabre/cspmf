@@ -1,16 +1,14 @@
------------------------------------------------------------------------------
--- |
--- Module      :  Language.CSPM.TranslateToProlog
--- Copyright   :  (c) Fontaine 2010 - 2011
--- License     :  BSD3
---
--- Maintainer  :  fontaine@cs.uni-duesseldorf.de
--- Stability   :  experimental
--- Portability :  GHC-only
---
--- Translate a CSPM-specification to Prolog.
--- This is the interface used by Prolog
------------------------------------------------------------------------------
+{--
+    Translate a CSPM-specification to Prolog.
+    This is the interface used by Prolog
+    
+    [Module]     Language.CSPM.TranslateToProlog
+    [Copyright]  (c) Fontaine 2010 - 2011
+    [License]    BSD3
+    
+    [Maintainer] fontaine@cs.uni-duesseldorf.de
+    [Stability]  experimental
+-}
 
 {-# LANGUAGE ScopedTypeVariables #-}
 module Language.CSPM.TranslateToProlog
@@ -19,7 +17,7 @@ where
 import frege.Prelude hiding (empty, display, <+>)
 import Language.CSPM.Frontend as Frontend
 import Language.CSPM.SrcLoc as SrcLoc
-import Language.CSPM.Token as Token --(lexEMsg,lexEPos,alexLine,alexCol,alexPos)
+import Language.CSPM.Token as Token
 import Language.CSPM.CompileAstToProlog (cspToProlog,mkSymbolTable,te,td)
 -- import Language.CSPM.AstToProlog (toProlog)
 import Language.Prolog.PrettyPrint.Direct
@@ -28,20 +26,18 @@ import Data.Maybe
 
 import Text.PrettyPrint
 
---TODO
-import Language.CSPM.AST
 type FilePath = String
 private evaluate :: a -> IO a
 private evaluate x = (return $! x) >>= return
 
 private native getCPUTime java.lang.System.currentTimeMillis :: () -> IO Long
 
--- | The version of the CSPM-ToProlog library
+--- The version of the CSPM-ToProlog library
 toPrologVersion :: Version --TODO
 toPrologVersion = makeVersion [0,6,1,1]
 
--- | 'translateExpToPrologTerm' translates a string expression
--- to a prolog term in regard to the given CSP-M specification.
+--- 'translateExpToPrologTerm' translates a string expression
+--- to a prolog term in regard to the given CSP-M specification.
 translateExpToPrologTerm ::
      Maybe FilePath
   -> String
@@ -56,8 +52,8 @@ translateExpToPrologTerm file expr = do
 handleTranslationError :: RenameErrorException -> IO String --TODO
 handleTranslationError err = return $ show err.get
 
--- | 'translateDeclToPrologTerm' translates a string declaration
--- to a prolog term in regard to the given CSP-M specification.
+--- 'translateDeclToPrologTerm' translates a string declaration
+--- to a prolog term in regard to the given CSP-M specification.
 translateDeclToPrologTerm ::
      Maybe FilePath
   -> String
@@ -69,9 +65,9 @@ translateDeclToPrologTerm file decl = do
     getDeclPlCode :: Module a -> Doc
     getDeclPlCode = addFullStopToPrologTerm . Term.unTerm . head . td . {-Frontend.-}getLastDeclaration
 
--- | 'translateDeclToPrologTerm'' translates a string declaration
--- to a prolog term in regard to the given CSP-M specification given as AST.
--- TODO same for Expression, Tests
+--- 'translateDeclToPrologTerm'' translates a string declaration
+--- to a prolog term in regard to the given CSP-M specification given as AST.
+--- TODO same for Expression, Tests
 translateDeclToPrologTerm' ::
      ModuleFromParser
   -> String
@@ -101,8 +97,8 @@ private mainWorkSinglePlTerm' termFun ast decl = do
   (astNew, _) <- eitherToExc throwRenameError $ renameModule $ mergeDecls ast ast'
   return $! show $! termFun astNew
 
--- | 'translateToAst' gets a CSPM specification
--- and returns an AST containing moduleDecls only and no source locations.
+--- 'translateToAst' gets a CSPM specification
+--- and returns an AST containing moduleDecls only and no source locations.
 translateToAst ::
      String            -- ^ input specification
   -> IO ModuleFromParser
@@ -110,13 +106,13 @@ translateToAst specSrc = do
   ast <- parseNamedString "no-file-name" specSrc
   return $ removeMetaInfo ast
 
--- | 'showModuleTokens' returns the module tokens as string (for debugging)
+--- 'showModuleTokens' returns the module tokens as string (for debugging)
 showModuleTokens :: ModuleFromParser -> String
 showModuleTokens mfp = show mfp.moduleTokens
 
--- | 'translateToProlog' reads a CSPM specification from inFile
--- and writes the Prolog representation to outFile.
--- It handles all lexer and parser errors and catches all exceptions.
+--- 'translateToProlog' reads a CSPM specification from inFile
+--- and writes the Prolog representation to outFile.
+--- It handles all lexer and parser errors and catches all exceptions.
 translateToProlog ::
      FilePath -- ^ filename input
   -> FilePath -- ^ filename output

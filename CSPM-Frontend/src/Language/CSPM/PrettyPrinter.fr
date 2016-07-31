@@ -1,17 +1,14 @@
-----------------------------------------------------------------------------
--- |
--- Module      :  Language.CSPM.PrettyPrinter
--- Copyright   :  (c) Ivaylo Dobrikov 2010,2013
--- License     :  BSD
--- 
--- Maintainer  :  Ivaylo Dobrikov (dobrikov84@yahoo.com)
--- Stability   :  experimental
--- Portability :  GHC-only
--- 
--- This module defines functions for pretty-printing the 
--- Abstract Syntax Tree to CSPM syntax.
------------------------------------------------------------------------------
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{--
+    This module defines functions for pretty-printing the 
+    Abstract Syntax Tree to CSPM syntax.
+    
+    [Module]     Language.CSPM.PrettyPrinter
+    [Copyright]  (c) Ivaylo Dobrikov 2010,2013
+    [License]    BSD
+    
+    [Maintainer] Ivaylo Dobrikov (dobrikov84@yahoo.com)
+    [Stability]  experimental
+-}
 
 module Language.CSPM.PrettyPrinter
 where
@@ -207,9 +204,9 @@ instance Pretty Rename where
 private separateGen :: Bool -> [LCompGen] -> Doc
 private separateGen b lgen = hsep $ punctuate comma $ map (pPrintCompGen b) lgen
 
--- the generators of the comprehension sets, lists (all after the |) and 
--- inside replicated processes (like "x: {1..10}", in this case the bool variable must be true,
--- otherwise false)
+--- the generators of the comprehension sets, lists (all after the |) and 
+--- inside replicated processes (like "x: {1..10}", in this case the bool variable must be true,
+--- otherwise false)
 private pPrintCompGen :: Bool -> LCompGen -> Doc
 private pPrintCompGen b gen = case gen.unLabel of
   (Generator pat expr) -> (pPrint pat) <+> case b of
@@ -217,24 +214,24 @@ private pPrintCompGen b gen = case gen.unLabel of
            True  -> text ":"  <+> (pPrint expr)
   (Guard expr)         -> pPrint expr
 
--- the range of sets and lists
+--- the range of sets and lists
 instance Pretty Range where
   pPrint r = case r of
     RangeEnum expr -> hsepPrintunctuate comma expr
     RangeClosed a b -> pPrint a <> text ".." <> pPrint b
     RangeOpen expr -> pPrint expr <> text ".."
 
--- unwrapPrint the BuiltIn-oparator
+--- unwrapPrint the BuiltIn-oparator
 instance Pretty BuiltIn where
   pPrint (BuiltIn c) = pPrint c
 
--- the communication fields
+--- the communication fields
 instance Pretty CommField where
   pPrint (InComm pat)            = text "?" <> pPrint pat
   pPrint (InCommGuarded pat expr) = text "?" <> pPrint pat <> text ":" <> pPrint expr
   pPrint (OutComm expr)           = text "!" <> pPrint expr
 
--- pretty-printing for CSPM-Patterns
+--- pretty-printing for CSPM-Patterns
 instance Pretty Pattern where
   pPrint pattern = case pattern of
     IntPat n         -> integer n
@@ -259,7 +256,7 @@ instance Pretty Pattern where
         DotPat {} -> parens $ pPrint p
         x -> pPrint x
 
--- external function for Also-Patterns for a better look
+--- external function for Also-Patterns for a better look
 private pPrintAlso :: Pattern -> Doc
 private pPrintAlso (Also [])    = text ""
 private pPrintAlso (Also (h:t)) =
@@ -272,7 +269,7 @@ private pPrintAlso (Also (h:t)) =
                                  else pPrint h
 private pPrintAlso _ = text ""
 
--- disticts the cases for different syntax-records for the Ident datatype
+--- disticts the cases for different syntax-records for the Ident datatype
 private printIdent :: Ident -> Doc
 private printIdent ident = 
   case ident of 

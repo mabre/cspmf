@@ -2,7 +2,7 @@ module Language.CSPM.Parser_ParseError where
 
 import Language.CSPM.Token (Token,AlexPosn)
 
--- | ParseError data type. This has an wrapping ParseErrorException
+--- ParseError data type. This has an wrapping ParseErrorException.
 data ParseError = ParseError {
    parseErrorMsg   :: String
   ,parseErrorToken :: Token

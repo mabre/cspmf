@@ -1,18 +1,19 @@
------------------------------------------------------------------------------
--- |
--- Module      :  Data.DList
--- Copyright   :  (c) 2006-2009 Don Stewart, 2013-2014 Sean Leather
--- License     :  See LICENSE file
---
--- Maintainer  :  sean.leather@gmail.com
--- Stability   :  stable
--- Portability :  portable
---
--- Difference lists: a data structure for /O(1)/ append on lists.
---
------------------------------------------------------------------------------
+{--
+    Difference lists: a data structure for /O(1)/ append on lists.
 
-module Data.DList where
+    [Module]      Data.DList
+    [Copyright]   (c) 2006-2009 Don Stewart, 2013-2014 Sean Leather
+    [License]     See LICENSE file
+    
+    [Maintainer]  sean.leather@gmail.com
+    [Stability]   stable
+    [Portability] portable
+-}
+
+module Data.DList
+    inline(fromList, toList, empty, singleton, cons, snoc, append, concat,
+           replicate, map, foldr)
+where
 
 import frege.Prelude hiding (concat, foldr, map, head, tail, replicate, toList, apply, empty)
 import Data.List()
@@ -23,112 +24,112 @@ import Data.Foldable as F()
 import Data.Monoid
 import Data.Foldable (Foldable)
 
--- | A difference list is a function that, given a list, returns the original
--- contents of the difference list prepended to the given list.
---
--- This structure supports /O(1)/ append and snoc operations on lists, making it
--- very useful for append-heavy uses (esp. left-nested uses of 'List.++'), such
--- as logging and pretty printing.
---
--- Here is an example using DList as the state type when printing a tree with
--- the Writer monad:
---
--- > import Control.Monad.Writer
--- > import Data.DList
--- >
--- > data Tree a = Leaf a | Branch (Tree a) (Tree a)
--- >
--- > flatten_writer :: Tree x -> DList x
--- > flatten_writer = snd . runWriter . flatten
--- >     where
--- >       flatten (Leaf x)     = tell (singleton x)
--- >       flatten (Branch x y) = flatten x >> flatten y
---
+--- A difference list is a function that, given a list, returns the original
+--- contents of the difference list prepended to the given list.
+---
+--- This structure supports /O(1)/ append and snoc operations on lists, making it
+--- very useful for append-heavy uses (esp. left-nested uses of 'List.++'), such
+--- as logging and pretty printing.
+---
+--- Here is an example using DList as the state type when printing a tree with
+--- the Writer monad:
+---
+--- > import Control.Monad.Writer
+--- > import Data.DList
+--- >
+--- > data Tree a = Leaf a | Branch (Tree a) (Tree a)
+--- >
+--- > flatten_writer :: Tree x -> DList x
+--- > flatten_writer = snd . runWriter . flatten
+--- >     where
+--- >       flatten (Leaf x)     = tell (singleton x)
+--- >       flatten (Branch x y) = flatten x >> flatten y
+---
 data DList a = DL { unDL :: [a] -> [a] }
 
--- | Convert a list to a dlist
+--- Convert a list to a dlist
 fromList    :: [a] -> DList a
 fromList    = DL . (++)
 {-# INLINE fromList #-}
 
--- | Convert a dlist to a list
+--- Convert a dlist to a list
 toList      :: DList a -> [a]
 toList      = ($[]) . DList.unDL
 {-# INLINE toList #-}
 
--- | Apply a dlist to a list to get the underlying list with an extension
---
--- > apply (fromList xs) ys = xs ++ ys
+--- Apply a dlist to a list to get the underlying list with an extension
+---
+--- > apply (fromList xs) ys = xs ++ ys
 apply       :: DList a -> [a] -> [a]
 apply       = _.unDL
 
--- | Create a dlist containing no elements
+--- Create a dlist containing no elements
 empty       :: DList a
 empty       = DL id
 {-# INLINE empty #-}
 
--- | Create dlist with a single element
+--- Create dlist with a single element
 singleton   :: a -> DList a
 singleton   = DL . (:)
 {-# INLINE singleton #-}
 
--- | /O(1)/. Prepend a single element to a dlist
+--- /O(1)/. Prepend a single element to a dlist
 -- infixr `cons`
 cons        :: a -> DList a -> DList a
 cons x xs   = DL ((x:) . xs.unDL)
 {-# INLINE cons #-}
 
--- | /O(1)/. Append a single element to a dlist
+--- /O(1)/. Append a single element to a dlist
 -- infixl `snoc`
 snoc        :: DList a -> a -> DList a
 snoc xs x   = DL (xs.unDL . (x:))
 {-# INLINE snoc #-}
 
--- | /O(1)/. Append dlists
+--- /O(1)/. Append dlists
 append       :: DList a -> DList a -> DList a
 append xs ys = DL (xs.unDL . ys.unDL)
 {-# INLINE append #-}
 
--- | /O(spine)/. Concatenate dlists
+--- /O(spine)/. Concatenate dlists
 concat       :: [DList a] -> DList a
 concat       = Prelude.foldr append empty
 {-# INLINE concat #-}
 
--- | /O(n)/. Create a dlist of the given number of elements
+--- /O(n)/. Create a dlist of the given number of elements
 replicate :: Int -> a -> DList a
 replicate n x = DL $ \xs -> let go m | m <= 0    = xs
                                      | otherwise = x : go (m-1)
                             in go n
 {-# INLINE replicate #-}
 
--- | /O(n)/. List elimination for dlists
+--- /O(n)/. List elimination for dlists
 list :: b -> (a -> DList a -> b) -> DList a -> b
 list nill consit dl =
   case toList dl of
     [] -> nill
     (x : xs) -> consit x (fromList xs)
 
--- | /O(n)/. Return the head of the dlist
+--- /O(n)/. Return the head of the dlist
 head :: DList a -> a
 head = list (error "Data.DList.head: empty dlist") const
 
--- | /O(n)/. Return the tail of the dlist
+--- /O(n)/. Return the tail of the dlist
 tail :: DList a -> DList a
 tail = list (error "Data.DList.tail: empty dlist") (flip const)
 
--- | /O(n)/. Unfoldr for dlists
+--- /O(n)/. Unfoldr for dlists
 unfoldr :: (b -> Maybe (a, b)) -> b -> DList a
 unfoldr pf b =
   case pf b of
     Nothing     -> empty
     Just (a, b') -> cons a (unfoldr pf b')
 
--- | /O(n)/. Foldr over difference lists
+--- /O(n)/. Foldr over difference lists
 foldr        :: (a -> b -> b) -> b -> DList a -> b
 foldr f b    = Prelude.foldr f b . toList
 {-# INLINE foldr #-}
 
--- | /O(n)/. Map over difference lists.
+--- /O(n)/. Map over difference lists.
 map          :: (a -> b) -> DList a -> DList b
 map f        = foldr (cons . f) empty
 {-# INLINE map #-}

@@ -1,11 +1,10 @@
-----------------------------------------------------------------------------
--- |
--- Module      :  Language.CSPM.UnicodeSymbols
---
--- Stability   :  experimental
--- Portability :  GHC-only
---
--- Unicode symbols for CPSM operators
+{-
+    Unicode symbols for CPSM operators
+    
+    [Module]     Language.CSPM.UnicodeSymbols
+    
+    [Stability]  experimental
+-}
 
 module Language.CSPM.UnicodeSymbols
 where

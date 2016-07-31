@@ -1,4 +1,4 @@
-module Language.CSPM.LexHelper
+module Language.CSPM.LexHelper inline (eitherT, hoistEither)
 
 where
 
@@ -10,41 +10,39 @@ import frege.control.monad.trans.MonadIO
 import frege.data.Set (Set)
 
 -- import Data.DList as DList() --TODO performance
-import frege.control.monad.trans.EitherT
-import System.FilePath(FilePath,isAbsolute,splitDirectories,normalise,joinPath)
-
-
 type DList = []
--- TODO
--- https://hackage.haskell.org/package/either-4.4.1/docs/src/Control-Monad-Trans-Either.html
--- | Given a pair of actions, one to perform in case of failure, and one to perform
--- in case of success, run an 'EitherT' and get back a monadic result.
+
+import System.FilePath(FilePath,isAbsolute,splitDirectories,normalise,joinPath)
+import frege.control.monad.trans.EitherT
+
+--- Given a pair of actions, one to perform in case of failure, and one to perform
+--- in case of success, run an 'EitherT' and get back a monadic result.
+--- copied from https://hackage.haskell.org/package/either-4.4.1/docs/src/Control-Monad-Trans-Either.html
 eitherT :: Monad m => (a -> m c) -> (b -> m c) -> EitherT a m b -> m c
 eitherT f g (EitherT m) = m >>= \z -> case z of
     Left a -> f a
     Right b -> g b
-{-# INLINE eitherT #-}
 
--- | Lift an 'Either' into an 'EitherT'
+--- Lift an 'Either' into an 'EitherT'
 hoistEither :: Monad m => Either e a -> EitherT e m a
 hoistEither = EitherT . return
 {-# INLINE hoistEither #-}
 
 
--- | lex a String .
+--- Lex a String.
 lexPlain :: String -> Either LexError [Token]
 lexPlain src = fmap reverse $ Lexer.scanner src
 
--- | Convert a token to a String.
---   If the tokenClasss has a Unicode symbol return the default Unicode string.
+--- Convert a token to a String.
+--- If the tokenClasss has a Unicode symbol return the default Unicode string.
 unicodeTokenString :: Token -> String
 unicodeTokenString token
   = case lookupDefaultSymbol $ token.tokenClass of
       Just (unicodeSymbol, _) -> packed [unicodeSymbol]
       Nothing -> token.tokenString
 
--- | Convert a token to a String.
---   If the tokenClasss has a Unicode symbol return the default ASCII string.
+--- Convert a token to a String.
+--- If the tokenClasss has a Unicode symbol return the default ASCII string.
 asciiTokenString :: Token -> String
 asciiTokenString token
   = case lookupDefaultSymbol $ token.tokenClass of
@@ -58,7 +56,7 @@ data FilePart
     | Include FilePath
 derive Show FilePart
 
--- | lex input-string and import all includes files
+--- lex input-string and import all includes files
 lexInclude :: FilePath -> String -> IO (Either LexError [Token])
 lexInclude srcName input
    = eitherT (return . Left) (return . Right . concat {-. DList.toList-}) $ lexInclude2 srcName input
@@ -77,7 +75,7 @@ private processPart srcName part = case part of
      where
        absolutePath = getAbsoluteIncludeFileName srcName fname 
 
--- | micro-parser for include-statements
+--- micro-parser for include-statements
 private splitIncludes :: [Token] -> [Token] -> Either LexError [FilePart]
 private splitIncludes acc  []  = return [Toks $ reverse acc]
 private splitIncludes acc (h:rest) = case h of
@@ -105,7 +103,7 @@ private scanInclude incl _ = Left $ LexError {
       }
 
 
--- | Remove comments, whitespaces and unneeded newlines.
+--- Remove comments, whitespaces and unneeded newlines.
 removeIgnoredToken :: [Token] -> [Token]
 removeIgnoredToken = soakNewlines . removeComments
   where
@@ -114,15 +112,15 @@ removeIgnoredToken = soakNewlines . removeComments
     removeComments = filter (\t -> not (tokenIsComment t || isWhiteSpace t))
     isWhiteSpace = (==) T_WhiteSpace . Token.tokenClass
 
--- | Is the token a line-comment, block-comment or a Pragma?
+--- Is the token a line-comment, block-comment or a Pragma?
 tokenIsComment :: Token -> Bool
 tokenIsComment t = tc == L_LComment || tc == L_BComment || tc == L_Pragma
   where tc = t.tokenClass
 
 
--- | remove newlines, that do not end a declaration from the token stream.
--- For example newlines next to binary operators.
--- Remove all trailing newlines.
+--- remove newlines, that do not end a declaration from the token stream.
+--- For example newlines next to binary operators.
+--- Remove all trailing newlines.
 soakNewlines :: [Token] -> [Token]
 soakNewlines = worker
   where
@@ -162,10 +160,10 @@ soakNewlines = worker
     consumeNLAfterToken
       = Set.fromList ( [T_openParen, T_openBrace, T_lt] ++ binaryOperators)
 
--- | 'getAbsoluteIncludeFileName' determines the absolute path of an include file name.
--- 'getAbsoluteIncludeFileName' makes it possible to include other CSP modules by 
--- giving the file path locally w.r.t. the current file path of the CSP module 
--- which includes the particular CSP modules.
+--- 'getAbsoluteIncludeFileName' determines the absolute path of an include file name.
+--- 'getAbsoluteIncludeFileName' makes it possible to include other CSP modules by 
+--- giving the file path locally w.r.t. the current file path of the CSP module 
+--- which includes the particular CSP modules.
 private getAbsoluteIncludeFileName :: FilePath -> FilePath -> FilePath
 private getAbsoluteIncludeFileName srcFileName inclFileName
    = case isAbsolute inclFileName of 

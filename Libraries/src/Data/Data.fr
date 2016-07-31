@@ -4,29 +4,29 @@
              AutoDeriveTypeable, TypeOperators, GADTs, FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
------------------------------------------------------------------------------
--- |
--- Module      :  Data.Data
--- Copyright   :  (c) The University of Glasgow, CWI 2001--2004
--- License     :  BSD-style (see the file libraries/base/LICENSE)
---
--- Maintainer  :  libraries@haskell.org
--- Stability   :  experimental
--- Portability :  non-portable (local universal quantification)
---
--- \"Scrap your boilerplate\" --- Generic programming in Haskell.  See
--- <http://www.haskell.org/haskellwiki/Research_papers/Generics#Scrap_your_boilerplate.21>.
--- This module provides the 'Data' class with its primitives for
--- generic programming, along with instances for many datatypes. It
--- corresponds to a merge between the previous "Data.Generics.Basics"
--- and almost all of "Data.Generics.Instances". The instances that are
--- not present in this module were moved to the
--- @Data.Generics.Instances@ module in the @syb@ package.
---
--- For more information, please visit the new
--- SYB wiki: <http://www.cs.uu.nl/wiki/bin/view/GenericProgramming/SYB>.
---
------------------------------------------------------------------------------
+{--
+    "Scrap your boilerplate" — Generic programming in Haskell.
+    
+    See 'http://www.haskell.org/haskellwiki/Research_papers/Generics#Scrap_your_boilerplate.21'.
+    
+    This module provides the 'Data' class with its primitives for
+    generic programming, along with instances for many datatypes. It
+    corresponds to a merge between the previous "Data.Generics.Basics"
+    and almost all of "Data.Generics.Instances". The instances that are
+    not present in this module were moved to the
+    @Data.Generics.Instances@ module in the @syb@ package.
+    
+    For more information, please visit the new
+    SYB wiki: 'http://www.cs.uu.nl/wiki/bin/view/GenericProgramming/SYB'.
+
+    [Module]      Data.Data
+    [Copyright]   (c) The University of Glasgow, CWI 2001--2004
+    [License]     BSD-style (see the file Libraries/LICENSE)
+    
+    [Maintainer]  libraries@haskell.org
+    [Stability]   experimental
+    [Portability] non-portable (local universal quantification)
+-}
 
 module Data.Data {-(
 
@@ -134,13 +134,13 @@ import Data.Array hiding(!!)
 -- import GHC.Arr               -- So we can give Data instance for Array
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      The Data class
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
-{- |
+{--
 The 'Data' class comprehends a fundamental primitive 'gfoldl' for
 folding over constructor applications, say terms. This primitive can
 be instantiated in several ways to map over the immediate subterms
@@ -211,13 +211,13 @@ This is suitable for datatypes that are exported transparently.
 
 class Typeable a => Data a where
 
-  -- | Left-associative fold operation for constructor applications.
-  --
-  -- The type of 'gfoldl' is a headache, but operationally it is a simple
-  -- generalisation of a list fold.
-  --
-  -- The default definition for 'gfoldl' is @'const' 'id'@, which is
-  -- suitable for abstract datatypes with no substructures.
+  --- Left-associative fold operation for constructor applications.
+  ---
+  --- The type of 'gfoldl' is a headache, but operationally it is a simple
+  --- generalisation of a list fold.
+  ---
+  --- The default definition for 'gfoldl' is @'const' 'id'@, which is
+  --- suitable for abstract datatypes with no substructures.
   gfoldl  :: (forall d b. Data d => c (d -> b) -> d -> c b)
                 -- ^ defines how nonempty constructor applications are
                 -- folded.  It takes the folded tail of the constructor
@@ -234,51 +234,51 @@ class Typeable a => Data a where
                 -- variability is achieved by means of type constructor
                 -- @c@ for the construction of the actual result type.
 
-  -- See the 'Data' instances in this file for an illustration of 'gfoldl'.
+  --- See the 'Data' instances in this file for an illustration of 'gfoldl'.
 
   gfoldl _ z = z
 
-  -- | Unfolding constructor applications
+  --- Unfolding constructor applications
   gunfold :: (forall b r. Data b => c (b -> r) -> c r)
           -> (forall r. r -> c r)
           -> Constr
           -> c a
 
-  -- | Obtaining the constructor from a given datum.
-  -- For proper terms, this is meant to be the top-level constructor.
-  -- Primitive datatypes are here viewed as potentially infinite sets of
-  -- values (i.e., constructors).
+  --- Obtaining the constructor from a given datum.
+  --- For proper terms, this is meant to be the top-level constructor.
+  --- Primitive datatypes are here viewed as potentially infinite sets of
+  --- values (i.e., constructors).
   toConstr   :: a -> Constr
 
 
-  -- | The outer type constructor of the type
+  --- The outer type constructor of the type
   dataTypeOf  :: a -> DataType
 
 
 
-  ------------------------------------------------------------------------------
+  -- ---------------------------------------------------------------------------
   --
   -- Mediate types and type constructors
   --
-  ------------------------------------------------------------------------------
+  -- ---------------------------------------------------------------------------
 
-  -- | Mediate types and unary type constructors.
-  -- In 'Data' instances of the form @T a@, 'dataCast1' should be defined
-  -- as 'gcast1'.
-  --
-  -- The default definition is @'const' 'Nothing'@, which is appropriate
-  -- for non-unary type constructors.
+  --- Mediate types and unary type constructors.
+  --- In 'Data' instances of the form @T a@, 'dataCast1' should be defined
+  --- as 'gcast1'.
+  ---
+  --- The default definition is @'const' 'Nothing'@, which is appropriate
+  --- for non-unary type constructors.
   dataCast1 :: Typeable t
             => (forall d. Data d => c (t d))
             -> Maybe (c a)
   dataCast1 _ = Nothing
 
-  -- | Mediate types and binary type constructors.
-  -- In 'Data' instances of the form @T a b@, 'dataCast2' should be
-  -- defined as 'gcast2'.
-  --
-  -- The default definition is @'const' 'Nothing'@, which is appropriate
-  -- for non-binary type constructors.
+  --- Mediate types and binary type constructors.
+  --- In 'Data' instances of the form @T a b@, 'dataCast2' should be
+  --- defined as 'gcast2'.
+  ---
+  --- The default definition is @'const' 'Nothing'@, which is appropriate
+  --- for non-binary type constructors.
   dataCast2 :: Typeable t
             => (forall d e. (Data d, Data e) => c (t d e))
             -> Maybe (c a)
@@ -286,54 +286,39 @@ class Typeable a => Data a where
 
 
 
-  ------------------------------------------------------------------------------
+  -- ---------------------------------------------------------------------------
   --
   --      Typical generic maps defined in terms of gfoldl
   --
-  ------------------------------------------------------------------------------
+  -- ---------------------------------------------------------------------------
 
 
-  -- | A generic transformation that maps over the immediate subterms
-  --
-  -- The default definition instantiates the type constructor @c@ in the
-  -- type of 'gfoldl' to an identity datatype constructor, using the
-  -- isomorphism pair as injection and projection.
+  --- A generic transformation that maps over the immediate subterms
+  ---
+  --- The default definition instantiates the type constructor @c@ in the
+  --- type of 'gfoldl' to an identity datatype constructor, using the
+  --- isomorphism pair as injection and projection.
   gmapT :: (forall b. Data b => b -> b) -> a -> a
 
-  -- Use an identity datatype constructor ID (see below)
-  -- to instantiate the type constructor c in the type of gfoldl,
-  -- and perform injections ID and projections unID accordingly.
-  --
---   gmapT f x0 = ID.unID (gfoldl k ID x0)
+  --- Use an identity datatype constructor ID (see below)
+  --- to instantiate the type constructor c in the type of gfoldl,
+  --- and perform injections ID and projections unID accordingly.
+  ---
   gmapT f x0 = ID.unID (gfoldl (\(ID c) x -> ID (c (f x))) ID x0)
---     where
---       k :: Data d => ID (d->b) -> d -> ID b
---       k (ID c) x = ID (c (f x))
 
 
-  -- | A generic query with a left-associative binary operator
+  --- A generic query with a left-associative binary operator
   gmapQl :: forall r r' a. (r -> r' -> r) -> r -> (forall d. Data d => d -> r') -> a -> r
---   gmapQl o r f = CONST.unCONST . gfoldl k z
   gmapQl o r f = CONST.unCONST . gfoldl (\c x -> CONST $ (CONST.unCONST c) `o` f x) (\_ -> CONST r)
---   gmapQl o r f = CONST.unCONST . gfoldl (\c x -> CONST $ (CONST.unCONST c) `o` f x) z
---     where
---       k :: Data d => CONST r (d->b) -> d -> CONST r b
---       k c x = CONST $ (CONST.unCONST c) `o` f x
---       z :: g -> CONST r g
---       z _   = CONST r
 
-  -- | A generic query with a right-associative binary operator
+  --- A generic query with a right-associative binary operator
   gmapQr :: forall a r r'. (r' -> r -> r) -> r -> (forall d. Data d => d -> r') -> a -> r
---   gmapQr o r0 f x0 = Qr.unQr (gfoldl k (const (Qr id)) x0) r0
   gmapQr o r0 f x0 = Qr.unQr (gfoldl (\(Qr c) x -> Qr (\r -> c (f x `o` r))) (const (Qr id)) x0) r0
---     where
---       k :: forall d r b. Data d => Qr r (d->b) -> d -> Qr r b
---       k (Qr c) x = Qr (\r -> c (f x `o` r))
 
 
-  -- | A generic query that processes the immediate subterms and returns a list
-  -- of results.  The list is given in the same order as originally specified
-  -- in the declaration of the data constructors.
+  --- A generic query that processes the immediate subterms and returns a list
+  --- of results.  The list is given in the same order as originally specified
+  --- in the declaration of the data constructors.
   gmapQ :: (forall d. Data d => d -> u) -> a -> [u]
   gmapQ f = gmapQr (:) [] f
 
@@ -421,55 +406,51 @@ was transformed successfully.
 --              )
 
 
--- | The identity type constructor needed for the definition of gmapT
+--- The identity type constructor needed for the definition of gmapT
 data ID x = ID { unID :: x }
 
 
--- | The constant type constructor needed for the definition of gmapQl
+--- The constant type constructor needed for the definition of gmapQl
 data CONST c a = CONST { unCONST :: c }
 
 
--- | Type constructor for adding counters to queries
+--- Type constructor for adding counters to queries
 data Qi q a = Qi Int (Maybe q)
 
 
--- | The type constructor used in definition of gmapQr
+--- The type constructor used in definition of gmapQr
 data Qr r a = Qr { unQr  :: r -> r }
 
 
--- | The type constructor used in definition of gmapMp
+--- The type constructor used in definition of gmapMp
 data Mp m x = Mp { unMp :: m (x, Bool) }
 
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      Generic unfolding
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 
--- | Build a term skeleton
+--- Build a term skeleton
 fromConstr :: Data a => Constr -> a
 fromConstr = fromConstrB (error "Data.Data.fromConstr")
 
 
--- | Build a term and use a generic function for subterms
+--- Build a term and use a generic function for subterms
 fromConstrB :: Data a
             => (forall d. Data d => d)
             -> Constr
             -> a
--- fromConstrB f = ID.unID . gunfold k z
 fromConstrB f = ID.unID . gunfold (\c -> ID undefined) z
  where
---   k :: forall b r. Data b => ID (b -> r) -> ID r
---   k c = ID (ID.unID c f)
-
   z :: forall r. r -> ID r
   z = ID
 
 
--- | Monadic variation on 'fromConstrB'
+--- Monadic variation on 'fromConstrB'
 fromConstrM :: forall m a. (Monad m, Data a)
             => (forall d. Data d => m d)
             -> Constr
@@ -485,17 +466,15 @@ fromConstrM f =  undefined -- TODO  gunfold (\c -> do { c' <- c; b <- f; return 
 
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      Datatype and constructor representations
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 
---
--- | Representation of datatypes.
--- A package of constructor representations with names of type and module.
---
+--- Representation of datatypes.
+--- A package of constructor representations with names of type and module.
 data DataType = DataType
                         { tycon   :: String
                         , datarep :: DataRep
@@ -503,9 +482,9 @@ data DataType = DataType
 
 derive Show DataType
 
--- | Representation of constructors. Note that equality on constructors
--- with different types may not work -- i.e. the constructors for 'False' and
--- 'Nothing' may compare equal.
+--- Representation of constructors. Note that equality on constructors
+--- with different types may not work -- i.e. the constructors for 'False' and
+--- 'Nothing' may compare equal.
 data Constr = Constr
                         { conrep    :: ConstrRep
                         , constring :: String
@@ -518,13 +497,13 @@ instance Show Constr where
  show = Constr.constring
 
 
--- | Equality of constructors
+--- Equality of constructors
 instance Eq Constr where
   c == c' = constrRep c == constrRep c'
   hashCode c = hashCode $ constrRep c
 
 
--- | Public representation of datatypes
+--- Public representation of datatypes
 data DataRep = AlgRep [Constr]
              | IntRep
              | FloatRep
@@ -537,7 +516,7 @@ derive Show DataRep
 -- The list of constructors could be an array, a balanced tree, or others.
 
 
--- | Public representation of constructors
+--- Public representation of constructors
 data ConstrRep = AlgConstr    ConIndex
                | IntConstr    Integer
                | FloatConstr  Float
@@ -548,12 +527,12 @@ derive Eq ConstrRep
 derive Show ConstrRep
 
 
--- | Unique index for datatype constructors,
--- counting from 1 in the order they are given in the program text.
+--- Unique index for datatype constructors,
+--- counting from 1 in the order they are given in the program text.
 type ConIndex = Int
 
 
--- | Fixity of constructors
+--- Fixity of constructors
 data Fixity = Prefix
             | Infix     -- Later: add associativity and precedence
 
@@ -561,35 +540,35 @@ derive Eq Fixity
 derive Show Fixity
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      Observers for datatype representations
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 
--- | Gets the type constructor including the module
+--- Gets the type constructor including the module
 dataTypeName :: DataType -> String
 dataTypeName = DataType.tycon
 
 
 
--- | Gets the public presentation of a datatype
+--- Gets the public presentation of a datatype
 dataTypeRep :: DataType -> DataRep
 dataTypeRep = DataType.datarep
 
 
--- | Gets the datatype of a constructor
+--- Gets the datatype of a constructor
 constrType :: Constr -> DataType
 constrType = Constr.datatype
 
 
--- | Gets the public presentation of constructors
+--- Gets the public presentation of constructors
 constrRep :: Constr -> ConstrRep
 constrRep = Constr.conrep
 
 
--- | Look up a constructor by its representation
+--- Look up a constructor by its representation
 repConstr :: DataType -> ConstrRep -> Constr
 repConstr dt cr =
       case (dataTypeRep dt, cr) of
@@ -601,14 +580,14 @@ repConstr dt cr =
 
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      Representations of algebraic data types
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 
--- | Constructs an algebraic datatype
+--- Constructs an algebraic datatype
 mkDataType :: String -> [Constr] -> DataType
 mkDataType str cs = DataType
                         { tycon   = str
@@ -616,7 +595,7 @@ mkDataType str cs = DataType
                         }
 
 
--- | Constructs a constructor
+--- Constructs a constructor
 mkConstr :: DataType -> String -> [String] -> Fixity -> Constr
 mkConstr dt str fields fix =
         Constr
@@ -631,7 +610,7 @@ mkConstr dt str fields fix =
                      showConstr c == str ]
 
 
--- | Gets the constructors of an algebraic datatype
+--- Gets the constructors of an algebraic datatype
 dataTypeConstrs :: DataType -> [Constr]
 dataTypeConstrs dt = case dt.datarep of
                         (AlgRep cons) -> cons
@@ -640,32 +619,32 @@ dataTypeConstrs dt = case dt.datarep of
                                     ", as it is not an algebraic data type."
 
 
--- | Gets the field labels of a constructor.  The list of labels
--- is returned in the same order as they were given in the original
--- constructor declaration.
+--- Gets the field labels of a constructor.  The list of labels
+--- is returned in the same order as they were given in the original
+--- constructor declaration.
 constrFields :: Constr -> [String]
 constrFields = Constr.confields
 
 
--- | Gets the fixity of a constructor
+--- Gets the fixity of a constructor
 constrFixity :: Constr -> Fixity
 constrFixity = Constr.confixity
 
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      From strings to constr's and vice versa: all data types
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 
--- | Gets the string for a constructor
+--- Gets the string for a constructor
 showConstr :: Constr -> String
 showConstr = Constr.constring
 
 
--- | Lookup a constructor via a string
+--- Lookup a constructor via a string
 readConstr :: DataType -> String -> Maybe Constr
 readConstr dt str =
       case dataTypeRep dt of
@@ -692,21 +671,21 @@ readConstr dt str =
     ffloat :: Float -> Constr
     ffloat =  mkPrimCon dt str . FloatConstr {-. toRational-}
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      Convenience funtions: algebraic data types
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 
--- | Test for an algebraic type
+--- Test for an algebraic type
 isAlgType :: DataType -> Bool
 isAlgType dt = case dt.datarep of
                  (AlgRep _) -> True
                  _ -> False
 
 
--- | Gets the constructor for an index (algebraic datatypes only)
+--- Gets the constructor for an index (algebraic datatypes only)
 indexConstr :: DataType -> ConIndex -> Constr
 indexConstr dt idx = case dt.datarep of
                         (AlgRep cs) -> cs !! (idx-1)
@@ -715,7 +694,7 @@ indexConstr dt idx = case dt.datarep of
                                                ", as it is not an algebraic data type."
 
 
--- | Gets the index of a constructor (algebraic datatypes only)
+--- Gets the index of a constructor (algebraic datatypes only)
 constrIndex :: Constr -> ConIndex
 constrIndex con = case constrRep con of
                     (AlgConstr idx) -> idx
@@ -724,7 +703,7 @@ constrIndex con = case constrRep con of
                                  ", as it is not an algebraic data type."
 
 
--- | Gets the maximum constructor index of an algebraic datatype
+--- Gets the maximum constructor index of an algebraic datatype
 maxConstrIndex :: DataType -> ConIndex
 maxConstrIndex dt = case dataTypeRep dt of
                         AlgRep cs -> length cs
@@ -734,34 +713,34 @@ maxConstrIndex dt = case dataTypeRep dt of
 
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      Representation of primitive types
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 
--- | Constructs the 'Int' type
+--- Constructs the 'Int' type
 mkIntType :: String -> DataType
 mkIntType = mkPrimType IntRep
 
 
--- | Constructs the 'Float' type
+--- Constructs the 'Float' type
 mkFloatType :: String -> DataType
 mkFloatType = mkPrimType FloatRep
 
 
--- | Constructs the 'Char' type
+--- Constructs the 'Char' type
 mkCharType :: String -> DataType
 mkCharType = mkPrimType CharRep
 
 
--- | Constructs the 'String' type
+--- Constructs the 'String' type
 mkStringType :: String -> DataType
 mkStringType = mkPrimType StringRep
 
 
--- | Helper for 'mkIntType', 'mkFloatType'
+--- Helper for 'mkIntType', 'mkFloatType'
 mkPrimType :: DataRep -> String -> DataType
 mkPrimType dr str = DataType
                         { tycon   = str
@@ -769,7 +748,7 @@ mkPrimType dr str = DataType
                         }
 
 
--- Makes a constructor for primitive types
+--- Makes a constructor for primitive types
 mkPrimCon :: DataType -> String -> ConstrRep -> Constr
 mkPrimCon dt str cr = Constr
                         { datatype  = dt
@@ -793,7 +772,7 @@ mkRealConstr dt f = case dt.datarep of
                                  ++ dataTypeName dt ++
                                  ", as it is not an Real data type."
 
--- | Makes a constructor for 'Char'.
+--- Makes a constructor for 'Char'.
 mkCharConstr :: DataType -> Char -> Constr
 mkCharConstr dt c = case dt.datarep of
                    CharRep -> mkPrimCon dt (show c) (CharConstr c)
@@ -801,7 +780,7 @@ mkCharConstr dt c = case dt.datarep of
                                 ++ dataTypeName dt ++
                                 ", as it is not an Char data type."
 
--- | Makes a constructor for 'String'.
+--- Makes a constructor for 'String'.
 mkStringConstr :: DataType -> String -> Constr
 mkStringConstr dt c = case dt.datarep of
                    StringRep -> mkPrimCon dt (show c) (StringConstr c)
@@ -810,21 +789,21 @@ mkStringConstr dt c = case dt.datarep of
                                 ", as it is not an String data type."
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      Non-representations for non-representable types
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 
--- | Constructs a non-representation for a non-representable type
+--- Constructs a non-representation for a non-representable type
 mkNoRepType :: String -> DataType
 mkNoRepType str = DataType
                         { tycon   = str
                         , datarep = NoRep
                         }
 
--- | Test for a non-representable type
+--- Test for a non-representable type
 isNorepType :: DataType -> Bool
 isNorepType dt = case dt.datarep of
                    NoRep -> True
@@ -832,23 +811,22 @@ isNorepType dt = case dt.datarep of
 
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      Convenience for qualified type constructors
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 
--- | Gets the unqualified type constructor:
--- drop *.*.*... before name
---
+--- Gets the unqualified type constructor:
+--- drop *.*.*... before name
 tyconUQname :: String -> String
 tyconUQname x = let x' = dropWhile (not . (==) '.') (unpacked x)
                 in if x' == [] then x else tyconUQname $ packed (tail x')
 
 
--- | Gets the module of a type constructor:
--- take *.*.*... before name
+--- Gets the module of a type constructor:
+--- take *.*.*... before name
 tyconModule :: String -> String
 tyconModule x = let (a,b) = break ((==) '.') (unpacked x)
                  in if b == []
@@ -861,13 +839,13 @@ tyconModule x = let (a,b) = break ((==) '.') (unpacked x)
 
 
 
-------------------------------------------------------------------------------
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 --
 --      Instances of the Data class for Prelude-like types.
 --      We define top-level definitions for representations.
 --
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 falseConstr :: Constr
 falseConstr  = mkConstr boolDataType "False" [] Prefix
@@ -889,7 +867,7 @@ instance Data Bool where
   dataTypeOf _ = boolDataType
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 charType :: DataType
 charType = mkCharType "Prelude.Char"
@@ -902,7 +880,7 @@ instance Data Char where
                                  ++ " is not of type Char."
   dataTypeOf _ = charType
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 -- 
 floatType :: DataType
 floatType = mkFloatType "Prelude.Float"
@@ -916,7 +894,7 @@ instance Data Float where
   dataTypeOf _ = floatType
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 -- 
 -- doubleType :: DataType
 -- doubleType = mkFloatType "Prelude.Double"
@@ -930,7 +908,7 @@ instance Data Float where
 --   dataTypeOf _ = doubleType
 -- 
 -- 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 intType :: DataType
 intType = mkIntType "Prelude.Int"
@@ -944,7 +922,7 @@ instance Data Int where
   dataTypeOf _ = intType
 
 
-------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 integerType :: DataType
 integerType = mkIntType "Prelude.Integer"

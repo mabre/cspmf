@@ -1,7 +1,10 @@
--- Module      :  Data.Arr
--- Copyright   :  (c) The University of Glasgow, 1994-2000
--- License     :  BSD Style, full text in LICENSE.txt
--- Adapted to Frege by Lech Głowiak
+{--
+    Adapted to Frege by Lech Głowiak
+    
+    [Module]     Data.Array
+    [Copyright]  (c) The University of Glasgow, 1994-2000
+    [License]    BSD Style, full text in LICENSE.txt
+-}
 
 package Data.Array where
 

@@ -1,19 +1,17 @@
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE FlexibleContexts     #-}
 
------------------------------------------------------------------------------
--- |
--- Module      :  Data.Generics.Builders
--- Copyright   :  (c) 2008 Universiteit Utrecht
--- License     :  BSD-style
--- 
--- Maintainer  :  generics@haskell.org
--- Stability   :  experimental
--- Portability :  non-portable
---
--- This module provides generic builder functions. These functions construct
--- values of a given type.
------------------------------------------------------------------------------
+{--
+    This module provides generic builder functions. These functions construct
+    values of a given type.
+    
+    [Module]     Data.Generics.Builders
+    [Copyright]  (c) 2008 Universiteit Utrecht
+    [License]    BSD-style
+    
+    [Maintainer] generics@haskell.org
+    [Stability]  experimental
+-}
 
 module Data.Generics.Builders where
 
@@ -21,8 +19,8 @@ import frege.Prelude hiding (empty)
 import Data.Data
 import Data.Generics.Aliases (extB)
 
--- | Construct the empty value for a datatype. For algebraic datatypes, the
--- leftmost constructor is chosen.
+--- Construct the empty value for a datatype. For algebraic datatypes, the
+--- leftmost constructor is chosen.
 empty :: forall a. Data a => a
 empty = ((((general 
       `extB` char) 
@@ -42,8 +40,8 @@ empty = ((((general
   double  = 0.0    :: Double
 
 
--- | Return a list of values of a datatype. Each value is one of the possible
--- constructors of the datatype, populated with 'empty' values.
+--- Return a list of values of a datatype. Each value is one of the possible
+--- constructors of the datatype, populated with 'empty' values.
 constrs :: forall a. Data a => [a]
 constrs = ((((general
       `extB` char)

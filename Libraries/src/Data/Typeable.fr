@@ -5,11 +5,11 @@ import Data.List
 
 import Data.Fingerprint public
 
--- | A concrete representation of a (monomorphic) type.  'TypeRep'
--- supports reasonably efficient equality.
+--- A concrete representation of a (monomorphic) type.  'TypeRep'
+--- supports reasonably efficient equality.
 data TypeRep = TypeRep Fingerprint TyCon [TypeRep]
 
--- Compare keys for equality
+--- Compare keys for equality
 instance Eq TypeRep where
   (TypeRep k1 _ _) == (TypeRep k2 _ _) = k1 == k2
   hashCode (TypeRep k _ _) = hashCode k
@@ -17,8 +17,8 @@ instance Eq TypeRep where
 instance Ord TypeRep where
   (TypeRep k1 _ _) <=> (TypeRep k2 _ _) = k1 <=> k2
 
--- | An abstract representation of a type constructor.  'TyCon' objects can
--- be built using 'mkTyCon'.
+--- An abstract representation of a type constructor.  'TyCon' objects can
+--- be built using 'mkTyCon'.
 data TyCon = TyCon {
    tyConHash    :: Fingerprint,
    tyConPackage :: String,
@@ -33,15 +33,15 @@ instance Eq TyCon where
 instance Ord TyCon where
   (TyCon t1 _ _ _) <=> (TyCon t2 _ _ _) = t1 <=> t2
 
------------------ Construction --------------------
+-- --------------- Construction --------------------
 
 {-# DEPRECATED mkTyCon "either derive Typeable, or use mkTyCon3 instead" #-}
--- | Backwards-compatible API
+--- Backwards-compatible API
 mkTyCon :: String       -- ^ unique string
         -> TyCon        -- ^ A unique 'TyCon' object
 mkTyCon name = TyCon (fingerprintString name) "" "" name
 
--- | Applies a type constructor to a sequence of types
+--- Applies a type constructor to a sequence of types
 mkTyConApp  :: TyCon -> [TypeRep] -> TypeRep
 mkTyConApp (tc@TyCon tc_k _ _ _) []
   = TypeRep tc_k tc [] -- optimisation: all derived Typeable instances
@@ -52,26 +52,26 @@ mkTyConApp (tc@TyCon tc_k _ _ _) args
   where
     arg_ks = [k | TypeRep k _ _ <- args]
 
--- | A special case of 'mkTyConApp', which applies the function
--- type constructor to a pair of types.
+--- A special case of 'mkTyConApp', which applies the function
+--- type constructor to a pair of types.
 mkFunTy  :: TypeRep -> TypeRep -> TypeRep
 mkFunTy f a = mkTyConApp funTc [f,a]
 
--- | Splits a type constructor application
+--- Splits a type constructor application
 splitTyConApp :: TypeRep -> (TyCon,[TypeRep])
 splitTyConApp (TypeRep _ tc trs) = (tc,trs)
 
--- | Applies a type to a function type.  Returns: @'Just' u@ if the
--- first argument represents a function of type @t -> u@ and the
--- second argument represents a function of type @t@.  Otherwise,
--- returns 'Nothing'.
+--- Applies a type to a function type.  Returns: @'Just' u@ if the
+--- first argument represents a function of type @t -> u@ and the
+--- second argument represents a function of type @t@.  Otherwise,
+--- returns 'Nothing'.
 funResultTy :: TypeRep -> TypeRep -> Maybe TypeRep
 funResultTy trFun trArg
   = case splitTyConApp trFun of
       (tc, [t1,t2]) | tc == funTc && t1 == trArg -> Just t2
       _ -> Nothing
 
--- | Adds a TypeRep argument to a TypeRep.
+--- Adds a TypeRep argument to a TypeRep.
 mkAppTy :: TypeRep -> TypeRep -> TypeRep
 mkAppTy (TypeRep _ tc trs) arg_tr = mkTyConApp tc (trs ++ [arg_tr])
    -- Notice that we call mkTyConApp to construct the fingerprint from tc and
@@ -79,13 +79,12 @@ mkAppTy (TypeRep _ tc trs) arg_tr = mkTyConApp tc (trs ++ [arg_tr])
    -- the new one won't give the same answer, but of course we want to
    -- ensure that a TypeRep of the same shape has the same fingerprint!
 
--- | Builds a 'TyCon' object representing a type constructor.  An
--- implementation of "Data.Typeable" should ensure that the following holds:
---
--- >  A==A' ^ B==B' ^ C==C' ==> mkTyCon A B C == mkTyCon A' B' C'
---
+--- Builds a 'TyCon' object representing a type constructor.  An
+--- implementation of "Data.Typeable" should ensure that the following holds:
+---
+--- >  A==A' ^ B==B' ^ C==C' ==> mkTyCon A B C == mkTyCon A' B' C'
+---
 
---
 mkTyCon3 :: String       -- ^ package name
          -> String       -- ^ module name
          -> String       -- ^ the name of the type constructor
@@ -93,29 +92,29 @@ mkTyCon3 :: String       -- ^ package name
 mkTyCon3 pkg modl name =
   TyCon (fingerprintString (pkg ++ " " ++ modl ++ " " ++ name)) pkg modl name
 
------------------ Observation ---------------------
+-- -------------- Observation ---------------------
 
--- | Observe the type constructor of a type representation
+--- Observe the type constructor of a type representation
 typeRepTyCon :: TypeRep -> TyCon
 typeRepTyCon (TypeRep _ tc _) = tc
 
--- | Observe the argument types of a type representation
+--- Observe the argument types of a type representation
 typeRepArgs :: TypeRep -> [TypeRep]
 typeRepArgs (TypeRep _ _ args) = args
 
--- | Observe string encoding of a type representation
+--- Observe string encoding of a type representation
 {-# DEPRECATED tyConString "renamed to tyConName; tyConModule and tyConPackage are also available." #-}
 tyConString :: TyCon   -> String
 tyConString = TyCon.tyConName
 
--------------------------------------------------------------
+-- ----------------------------------------------------------
 --
 --      The Typeable class and friends
 --
--------------------------------------------------------------
+-- ----------------------------------------------------------
 
--- | The class 'Typeable' allows a concrete representation of a type to
--- be calculated.
+--- The class 'Typeable' allows a concrete representation of a type to
+--- be calculated.
 class Typeable a where
   typeOf :: a -> TypeRep
   -- ^ Takes a value of type @a@ and returns a concrete representation
@@ -123,44 +122,44 @@ class Typeable a where
   -- any instance of 'Typeable', so that it is safe to pass 'undefined' as
   -- the argument.
 
--- | Variant for unary type constructors
+--- Variant for unary type constructors
 class Typeable1 t where
   typeOf1 :: t a -> TypeRep
 
--- | For defining a 'Typeable' instance from any 'Typeable1' instance.
+--- For defining a 'Typeable' instance from any 'Typeable1' instance.
 typeOfDefault :: (Typeable1 t, Typeable a) => t a -> TypeRep
 typeOfDefault x = typeOf1 x `mkAppTy` typeOf (argType x)
  where
    argType :: t a -> a
    argType = undefined
 
--- | Variant for binary type constructors
+--- Variant for binary type constructors
 class Typeable2 t where
   typeOf2 :: t a b -> TypeRep
 
--- | For defining a 'Typeable1' instance from any 'Typeable2' instance.
+--- For defining a 'Typeable1' instance from any 'Typeable2' instance.
 typeOf1Default :: (Typeable2 t, Typeable a) => t a b -> TypeRep
 typeOf1Default x = typeOf2 x `mkAppTy` typeOf (argType x)
  where
    argType :: t a b -> a
    argType = undefined
 
--- | Variant for 3-ary type constructors
+--- Variant for 3-ary type constructors
 class Typeable3 t where
   typeOf3 :: t a b c -> TypeRep
 
--- | For defining a 'Typeable2' instance from any 'Typeable3' instance.
+--- For defining a 'Typeable2' instance from any 'Typeable3' instance.
 typeOf2Default :: (Typeable3 t, Typeable a) => t a b c -> TypeRep
 typeOf2Default x = typeOf3 x `mkAppTy` typeOf (argType x)
  where
    argType :: t a b c -> a
    argType = undefined
 
--- | Variant for 4-ary type constructors
+--- Variant for 4-ary type constructors
 class Typeable4 t where
   typeOf4 :: t a b c d -> TypeRep
 
--- | For defining a 'Typeable3' instance from any 'Typeable4' instance.
+--- For defining a 'Typeable3' instance from any 'Typeable4' instance.
 typeOf3Default :: (Typeable4 t, Typeable a) => t a b c d -> TypeRep
 typeOf3Default x = typeOf4 x `mkAppTy` typeOf (argType x)
  where
@@ -170,36 +169,36 @@ typeOf3Default x = typeOf4 x `mkAppTy` typeOf (argType x)
 class Typeable5 t where
   typeOf5 :: t a b c d e -> TypeRep
 
--- | For defining a 'Typeable4' instance from any 'Typeable5' instance.
+--- For defining a 'Typeable4' instance from any 'Typeable5' instance.
 typeOf4Default :: (Typeable5 t, Typeable a) => t a b c d e -> TypeRep
 typeOf4Default x = typeOf5 x `mkAppTy` typeOf (argType x)
  where
    argType :: t a b c d e -> a
    argType = undefined
 
--- | Variant for 6-ary type constructors
+--- Variant for 6-ary type constructors
 class Typeable6 t where
   typeOf6 :: t a b c d e f -> TypeRep
 
--- | For defining a 'Typeable5' instance from any 'Typeable6' instance.
+--- For defining a 'Typeable5' instance from any 'Typeable6' instance.
 typeOf5Default :: (Typeable6 t, Typeable a) => t a b c d e f -> TypeRep
 typeOf5Default x = typeOf6 x `mkAppTy` typeOf (argType x)
  where
    argType :: t a b c d e f -> a
    argType = undefined
 
--- | Variant for 7-ary type constructors
+--- Variant for 7-ary type constructors
 class Typeable7 t where
   typeOf7 :: t a b c d e f g -> TypeRep
 
--- | For defining a 'Typeable6' instance from any 'Typeable7' instance.
+--- For defining a 'Typeable6' instance from any 'Typeable7' instance.
 typeOf6Default :: (Typeable7 t, Typeable a) => t a b c d e f g -> TypeRep
 typeOf6Default x = typeOf7 x `mkAppTy` typeOf (argType x)
  where
    argType :: t a b c d e f g -> a
    argType = undefined
 
------------------ Showing TypeReps --------------------
+-- -------------- Showing TypeReps --------------------
 
 instance Show TypeRep where
   showsPrec p (TypeRep _ tycon tys) =
@@ -242,11 +241,11 @@ showTuple args = showChar '('
                                $ map (showsPrec 10) args)
                . showChar ')'
 
--------------------------------------------------------------
+-- ----------------------------------------------------------
 --
 --      Instances of the Typeable classes for Prelude types
 --
--------------------------------------------------------------
+-- ----------------------------------------------------------
 
 unitTc :: TyCon
 unitTc = mkTyCon "()"
@@ -364,20 +363,20 @@ instance (Typeable a, Typeable b, Typeable c, Typeable d, Typeable e, Typeable f
   typeOf = typeOfDefault
 
 
--------------------------------------------------------------
+-- ----------------------------------------------------------
 --
 --              Type-safe cast
 --
--------------------------------------------------------------
+-- ----------------------------------------------------------
 
--- | The function @unsafeCoerce_@ allows you to side-step the typechecker entirely. That
--- 	is, it allows you to coerce any type into any other type. If you use this function,
--- 	you had better get it right, otherwise segmentation faults await. It is generally
--- 	used when you want to write a program that you know is well-typed, but where Frege\'s
--- 	type system is not expressive enough to prove that it is well typed.
+--- The function @unsafeCoerce_@ allows you to side-step the typechecker entirely. That
+--- 	is, it allows you to coerce any type into any other type. If you use this function,
+--- 	you had better get it right, otherwise segmentation faults await. It is generally
+--- 	used when you want to write a program that you know is well-typed, but where Frege\'s
+--- 	type system is not expressive enough to prove that it is well typed.
 pure native unsafeCoerce_ java.util.Objects.requireNonNull {-{a}-} :: a -> b
 
--- | The type-safe cast operation
+--- The type-safe cast operation
 cast :: (Typeable a, Typeable b) => a -> Maybe b
 cast x = r
        where
@@ -386,7 +385,7 @@ cast x = r
                then Just $ unsafeCoerce x
                else Nothing
 
--- | A flexible variation parameterised in a type constructor
+--- A flexible variation parameterised in a type constructor
 gcast :: (Typeable a, Typeable b) => c a -> Maybe (c b)
 gcast x = r
  where
@@ -397,7 +396,7 @@ gcast x = r
   getArg :: c x -> x
   getArg = undefined
 
--- | Cast for * -> *
+--- Cast for * -> *
 gcast1 :: (Typeable1 t, Typeable1 t') => c (t a) -> Maybe (c (t' a))
 gcast1 x = r
  where
@@ -408,7 +407,7 @@ gcast1 x = r
   getArg :: c x -> x
   getArg = undefined
 
--- | Cast for * -> * -> *
+--- Cast for * -> * -> *
 gcast2 :: (Typeable2 t, Typeable2 t') => c (t a b) -> Maybe (c (t' a b))
 gcast2 x = r
  where
@@ -419,11 +418,11 @@ gcast2 x = r
   getArg :: c x -> x
   getArg = undefined
 
--------------------------------------------------------
+-- ----------------------------------------------------
 --
 -- Generate Typeable instances for standard datatypes
 --
--------------------------------------------------------
+-- ----------------------------------------------------
 
 boolTc :: TyCon
 boolTc = mkTyCon "Bool"

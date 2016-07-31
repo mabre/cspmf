@@ -1,25 +1,20 @@
------------------------------------------------------------------------------
--- |
--- Module      :  Language.CSPM.CompileAstToProlog
--- Copyright   :  (c) Fontaine, Dobrikov 2011
--- License     :  BSD3
--- 
--- Maintainer  :  fontaine@cs.uni-duesseldorf.de
--- Stability   :  experimental
--- Portability :  GHC-only
---
--- Translation of an AST into Prolog terms, suitable for the ProB CSPM-Interpreter
--- 
------------------------------------------------------------------------------
-{-# OPTIONS_GHC -Wall -Werror -fno-warn-warnings-deprecations #-}
+{--
+    Translation of an AST into Prolog terms, suitable for the ProB CSPM-Interpreter
+    
+    [Module]     Language.CSPM.CompileAstToProlog
+    [Copyright]  (c) Fontaine, Dobrikov 2011
+    [License]    BSD3
+    
+    [Maintainer] fontaine@cs.uni-duesseldorf.de
+    [Stability]  experimental
+-}
 
 module Language.CSPM.CompileAstToProlog
 where
 
 import frege.Prelude hiding (MonadAlt.<+>, Show.display, ListEmpty.empty)
 
-import Language.CSPM.Frontend ({-TODO ModuleFromRenaming,-} frontendVersion)
-import Language.CSPM.Rename
+import Language.CSPM.Frontend (ModuleFromRenaming, frontendVersion)
 import Language.CSPM.AST
 import Language.CSPM.SrcLoc as SrcLoc
 import Language.Prolog.PrettyPrint.Direct
@@ -30,8 +25,8 @@ import Data.Set(fromList, member)
 import Data.Map(elems)
 import Data.Version
 
--- | Translate a "LModule" into a "Doc" containing a number of Prolog facts.
--- The LModule must be a renamed,i.e. contain only unique "Ident"ifier.
+--- Translate a "LModule" into a "Doc" containing a number of Prolog facts.
+--- The LModule must be a renamed,i.e. contain only unique "Ident"ifier.
 cspToProlog ::
   ModuleFromRenaming -- ^ the renamed Module
   -> Doc  -- ^ prolog facts
@@ -325,7 +320,7 @@ private uniquePlName = UniqueIdent.newName
 private plLoc :: Labeled x -> Term
 private plLoc = mkSrcLoc . Labeled.srcLoc
 
--- | Translate a source location to Prolog
+--- Translate a source location to Prolog
 mkSrcLoc :: SrcLoc.SrcLoc -> Term
 mkSrcLoc loc =  case loc of
   SrcLoc.TokPos {} ->  nTerm "src_position" 
@@ -354,7 +349,7 @@ mkSrcLoc loc =  case loc of
     iatom :: Integer -> Atom
     iatom = atom
 
--- | Translate a "AstAnnotation" with "UnqiueIdentifier" (i.e. a Symboltable)
+--- Translate a "AstAnnotation" with "UnqiueIdentifier" (i.e. a Symboltable)
 -- into a "Doc" containing Prolog facts
 mkSymbolTable :: AstAnnotation UniqueIdent -> Doc
 mkSymbolTable ids 
@@ -380,7 +375,7 @@ mkSymbolTable ids
       PrologGround -> "Ident (Groundrep.)"
       PrologVariable -> "Ident (Prolog Variable)"
 
--- | Map the abstract datatype LBuiltIn back to plain Strings for Prolog
+--- Map the abstract datatype LBuiltIn back to plain Strings for Prolog
 private builtInToString :: LBuiltIn -> String
 private builtInToString x = 
   let (BuiltIn bi) = Labeled.unLabel x in

@@ -1,15 +1,14 @@
------------------------------------------------------------------------------
--- |
--- Module      :  Language.CSPM.Rename
--- Copyright   :  (c) Fontaine 2008 - 2011
--- License     :  BSD3
--- 
--- Maintainer  :  Fontaine@cs.uni-duesseldorf.de
--- Stability   :  experimental
--- Portability :  GHC-only
---
--- Compute the mapping between the using occurences and the defining occurences of all Identifier in a Module
--- Also decide whether to use ground or non-ground- representaions for the translation to Prolog.
+{--
+    Compute the mapping between the using occurences and the defining occurences of all Identifier in a Module
+    Also decide whether to use ground or non-ground- representaions for the translation to Prolog.
+    
+    [Module]     Language.CSPM.Rename
+    [Copyright]  (c) Fontaine 2008 - 2011
+    [License]    BSD3
+    
+    [Maintainer] Fontaine@cs.uni-duesseldorf.de
+    [Stability]  experimental
+-}
 
 module Language.CSPM.Rename
 
@@ -26,7 +25,6 @@ import Data.Generics.Schemes (everywhere)
 import Data.Generics.Aliases (mkT)
 import Data.Typeable
 
--- import Control.Monad.Error
 import frege.control.monad.MState
 import Data.Set (Set)
 import Data.Map as Map()
@@ -34,7 +32,6 @@ import Data.Map (Map)
 import Data.Set as Set()
 import Data.IntMap as IntMap()
 import Data.List as List()
--- import frege.data.IntMap
 
 con_FromRenaming_FromRenaming :: Constr
 con_FromRenaming_FromRenaming = mkConstr ty_FromRenaming "con_FromRenaming_FromRenaming" [] Prefix
@@ -46,10 +43,10 @@ instance Data FromRenaming
     toConstr _ = error "instance Data FromRenaming toConstr"
     dataTypeOf _ = mkDataType "Language.CSPM.Rename.FromRenaming" []
 
--- | A module that has gone through renaming
+--- A module that has gone through renaming
 type ModuleFromRenaming = Module FromRenaming
 
--- | Tag that a module has gone through renaming.
+--- Tag that a module has gone through renaming.
 data FromRenaming = FromRenaming
 derive Show FromRenaming
 tc_FromRenaming :: TyCon
@@ -57,8 +54,8 @@ tc_FromRenaming = mkTyCon3 "Language.CSPM" "Rename" "FromRenaming"
 instance Typeable (FromRenaming ) where
     typeOf _ = mkTyConApp tc_FromRenaming []
 
--- | 'renameModule' renames a 'Module'.
--- | (also calls mergeFunBinds)
+--- 'renameModule' renames a 'Module'.
+--- (also calls mergeFunBinds)
 renameModule ::
      ModuleFromParser
   -> Either RenameError (ModuleFromRenaming, RenameInfo)
@@ -74,19 +71,19 @@ type RM x = StateT RenameInfo (Either RenameError) x
 
 type UniqueName = Int
 
--- | Gather all information about an renaming. 
+--- Gather all information about an renaming. 
 data RenameInfo = RenameInfo
   {
     nameSupply :: Int
-   ,localBindings :: Map String UniqueIdent -- used to check that we do not bind a name twice inside a pattern
-   ,visible  :: Map String UniqueIdent      -- everything that is visible
-   ,identDefinition :: AstAnnotation UniqueIdent
+   ,localBindings :: Map String UniqueIdent --- used to check that we do not bind a name twice inside a pattern
+    visible  :: Map String UniqueIdent      --- everything that is visible
+    identDefinition :: AstAnnotation UniqueIdent
    ,identUse  :: AstAnnotation UniqueIdent
    ,usedNames :: Set String
-   ,prologMode :: PrologMode -- could use a readermonad for prologMode and bindType
-   ,bindType   :: BindType
+   ,prologMode :: PrologMode --- could use a readermonad for prologMode and bindType
+    bindType   :: BindType
   }
--- derive Show RenameInfo
+
 instance Show RenameInfo where
     show r = concat [
         show r.nameSupply,
@@ -121,8 +118,8 @@ derive Exceptional RenameErrorException
 private throwError :: RenameError -> RM ()
 private throwError e = unsafeCoerce_ $ throwIO (RenameErrorException.new e)
 
--- This is a hack (obviously): We use it only if an exception is thrown within a,
--- so we will (should) never get into trouble with incompatible types.
+--- This is a hack (obviously): We use it only if an exception is thrown within a,
+--- so we will (should) never get into trouble with incompatible types.
 private pure native unsafeCoerce_ java.util.Objects.requireNonNull :: a -> b
 
 private lookupVisible :: LIdent -> RM (Maybe UniqueIdent)
@@ -273,7 +270,7 @@ private rnModule = rnDeclList . ModuleFromParser.moduleDecls
 private rnExpList :: [LExp] -> RM ()
 private rnExpList = mapM_ rnExp
 
--- rename an expression
+--- rename an expression
 private rnExp :: LExp -> RM ()
 private rnExp expression = case expression.unLabel of
   Var ident -> useIdent ident
@@ -393,7 +390,7 @@ private rnLinkList ll = case ll.unLabel of
     rnLink l = case l.unLabel of
       Link a b -> rnExp a >> rnExp b
 
--- rename a recursive binding group
+--- rename a recursive binding group
 private rnDeclList :: [LDecl] -> RM ()
 private rnDeclList declList = do
   StateT.modify $ \s -> s.{prologMode = PrologGround ,bindType   = LetBound}
@@ -497,9 +494,9 @@ private applyRenaming ast defIdent usedIdent
         _ -> ConstrPat x
     patchVarPat x = x
 
--- | If a function is defined via pattern matching for serveral cases,
--- | the parser returns each case as an individual declaration.
--- | mergeFunBinds merges contiguous cases of the same function into one declaration.
+--- If a function is defined via pattern matching for serveral cases,
+--- the parser returns each case as an individual declaration.
+--- mergeFunBinds merges contiguous cases of the same function into one declaration.
 private mergeFunBinds :: ModuleFromParser -> ModuleFromParser
 private mergeFunBinds = everywhere (mkT patchModule . mkT patchLet)
   where

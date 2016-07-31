@@ -1,11 +1,10 @@
-----------------------------------------------------------------------------
--- |
--- Module      :  Language.CSPM.AlexWrapper
--- 
--- Stability   :  experimental
--- Portability :  GHC-only
---
--- Wrapper functions for Alex
+{--
+    Wrapper functions for Alex
+    
+    [Module]     Language.CSPM.AlexWrapper
+    
+    [Stability]  experimental
+-}
 
 module Language.CSPM.AlexWrapper
 where
@@ -16,12 +15,8 @@ import Language.CSPM.Token
 import Language.CSPM.TokenClasses
 
 import Data.Char hiding (isNumber)
--- import Data.Word (Word8)
 import Data.Bits
 import Data.List
--- #if __GLASGOW_HASKELL__ >= 710
--- import qualified Control.Monad (ap)
--- #endif
 
 type AlexInput = (AlexPosn,     -- current position,
                   Char,         -- previous char
@@ -32,8 +27,8 @@ type Byte = Int
 
 data AlexState = AlexState {
    alex_input :: AlexInput
-  ,!alex_scd :: Int     -- the current startcode
-  ,!alex_cnt :: Int     -- number of tokens
+  ,!alex_scd :: Int     --- the current startcode
+   !alex_cnt :: Int     --- number of tokens
   }
 
 runAlex :: String -> Alex a -> Either LexError a
@@ -51,15 +46,6 @@ runAlex input (Alex f)
     initAlexInput = (alexStartPos,'\n',[],unpacked input)
 
 data Alex a = Alex { unAlex :: AlexState -> Either LexError (AlexState, a) }
-
--- #if __GLASGOW_HASKELL__ >= 710
--- instance Functor Alex where
---   fmap f m = do x <- m; return (f x)
--- 
--- instance Applicative Alex where
---   pure = return
---   (<*>) = Control.Monad.ap
--- #endif
 
 instance Monad Alex where
   m >>= k  = Alex $ \s -> case Alex.unAlex m s of
@@ -86,12 +72,12 @@ alexGetStartCode = Alex $ \(s@AlexState{alex_scd=sc}) -> Right (s, sc)
 alexSetStartCode :: Int -> Alex ()
 alexSetStartCode sc = Alex $ \s -> Right (s.{alex_scd=sc}, ())
 
--- increase token counter and return tokenCount
+--- increase token counter and return tokenCount
 alexCountToken :: Alex Int
 alexCountToken
   = Alex $ \s -> Right (s.{alex_cnt = succ $ s.alex_cnt}, s.alex_cnt)
 
--- taken from original Alex-Wrapper
+--- taken from original Alex-Wrapper
 alexGetByte :: AlexInput -> Maybe (Byte,AlexInput)
 alexGetByte (p,c,(b:bs),s) = Just (b,(p,c,bs,s))
 alexGetByte (_,_,[],[])    = Nothing
@@ -121,10 +107,10 @@ utf8Encode = map fromIntegral . go . ord
                         ]
 
 
--- Useful token actions
+--- Useful token actions
 type AlexAction result = AlexInput -> Int -> result
 
--- perform an action for this token, and set the start code to a new value
+--- perform an action for this token, and set the start code to a new value
 andBegin :: (t -> t1 -> Alex b) -> Int -> t -> t1 -> Alex b
 andBegin action code input len = do alexSetStartCode code; action input len
 

@@ -3,7 +3,7 @@
 # Modifies the given Haskell output file from Alex such that it can 
 # be compiled with Frege. The file modification date of the frege 
 # file will be the modification date of the corresponding x-file.
-# $1: Haskell file
+# $1: Haskell file created by Alex 3.1.7
 
 outfile="${1%.*}.fr"
 xfile="${1%.*}.x"
