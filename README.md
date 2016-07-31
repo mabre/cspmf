@@ -31,5 +31,12 @@ First make sure that all paths and command in the Makefile match your system.
 installed in version 3.1.7 (`cabal install alex-3.1.7`).
 
 ```bash
-make dist
+make cspmf
+make jar
 ```
+
+The jar is compressed using [ProGuard](http://proguard.sourceforge.net). If you cannot or do not want to build the jar, you can also run cspmf from the build directory using `./cspmf.built.sh`.
+
+Use `make test` to run the automatic tests.
+
+To generate the documentation, run `make doc`.

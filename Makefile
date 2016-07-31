@@ -6,9 +6,11 @@ DOC         = doc
 
 FREGEJAR = frege.jar
 ALEX     = alex
+PROGUARD = proguard
 CLIJAR   = Libraries/commons-cli-1.3.1.jar
 JAVAC    = javac -cp $(FREGEJAR):${BUILD}:$(CLIJAR)
 JAVA     = java
+JAR      = jar
 DIFF     = diff -Z
 MKDIR_P  = mkdir -p
 RM       = rm -rf
@@ -155,14 +157,12 @@ dataderiver: syb parsec
 		Preprocessor.fr
 
 
-dist: cspmf
+jar:
 	@echo "[1;42mMake $@[0m"
-	$(MKDIR_P) $(DIST)
-	$(CP_P) $(CLASS_FILES) $(DIST)
-	$(MV) $(DIST)/$(BUILD)/* $(DIST)/
-	$(RM) $(DIST)/$(BUILD)
-	$(CP) $(FREGEJAR) $(DIST)/frege.jar
-	$(CP) $(CLIJAR) $(DIST)/commons-cli.jar
+	@echo Note that you might have to change the paths in pg.conf.
+	@echo In case of error messages about missing symbols try running make clean \&\& make cspmf
+	proguard @pg.conf
+	$(JAR) -ufve cspmf.jar frege.main.Main
 
 
 .PHONY: doc
@@ -178,10 +178,10 @@ test: $(TESTFILES) test-toProlog
 
 test-toProlog:
 	@echo "[1;42mTesting toProlog[0m"
-	./cspmf.built.sh translate --expressionToPrologTerm="N" $(TESTSDIR)/cspm/very_simple.csp > $(TMP)/simple.csp.expression
+	./cspmf.sh translate --expressionToPrologTerm="N" $(TESTSDIR)/cspm/very_simple.csp > $(TMP)/simple.csp.expression
 	@$(DIFF) "$(TESTSDIR)/toProlog/simple.csp.expression" $(TMP)/simple.csp.expression || \
 	(echo "Test $@ failed" && exit 1)
-	./cspmf.built.sh translate --declarationToPrologTerm="datatype D = F" $(TESTSDIR)/cspm/very_simple.csp > $(TMP)/simple.csp.declaration
+	./cspmf.sh translate --declarationToPrologTerm="datatype D = F" $(TESTSDIR)/cspm/very_simple.csp > $(TMP)/simple.csp.declaration
 	@$(DIFF) "$(TESTSDIR)/toProlog/simple.csp.declaration" $(TMP)/simple.csp.declaration || \
 	(echo "Test $@ failed" && exit 1)
 
@@ -191,28 +191,28 @@ test-toProlog:
 %.csp:
 	@echo "[1;42mTesting $@[0m"
 	$(RM) $(TMP)/$@.pl
-	./cspmf.built.sh translate --prologOut=$(TMP)/$@.pl $(TESTSDIR)/cspm/$@
+	./cspmf.sh translate --prologOut=$(TMP)/$@.pl $(TESTSDIR)/cspm/$@
 	@$(DIFF) "$(TESTSDIR)/prolog/$@.pl" $(TMP)/$@.pl || \
 	(echo "Test $@ failed" && exit 1)
 	$(RM) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
 	$(TOUCH) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
-	./cspmf.built.sh translate --prettyOut=$(TMP)/$@.pretty.csp $(TESTSDIR)/cspm/$@ $(OR_TRUE)
-	./cspmf.built.sh translate --addUnicode=$(TMP)/$@.unicode.csp $(TMP)/$@.pretty.csp
-	./cspmf.built.sh translate --removeUnicode=$(TMP)/$@.nounicode.csp $(TMP)/$@.unicode.csp
+	./cspmf.sh translate --prettyOut=$(TMP)/$@.pretty.csp $(TESTSDIR)/cspm/$@ $(OR_TRUE)
+	./cspmf.sh translate --addUnicode=$(TMP)/$@.unicode.csp $(TMP)/$@.pretty.csp
+	./cspmf.sh translate --removeUnicode=$(TMP)/$@.nounicode.csp $(TMP)/$@.unicode.csp
 	@$(DIFF) "$(TMP)/$@.pretty.csp" $(TMP)/$@.nounicode.csp || \
 	(echo "Test $@ failed" && exit 1)
 
 %.fdr2:
 	@echo "[1;42mTesting $@[0m"
 	$(RM) $(TMP)/$@.pl
-	./cspmf.built.sh translate --prologOut=$(TMP)/$@.pl $(TESTSDIR)/cspm/$@
+	./cspmf.sh translate --prologOut=$(TMP)/$@.pl $(TESTSDIR)/cspm/$@
 	@$(DIFF) "$(TESTSDIR)/prolog/$@.pl" $(TMP)/$@.pl || \
 	(echo "Test $@ failed" && exit 1)
 	$(RM) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
 	$(TOUCH) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
-	./cspmf.built.sh translate --prettyOut=$(TMP)/$@.pretty.csp $(TESTSDIR)/cspm/$@ $(OR_TRUE)
-	./cspmf.built.sh translate --addUnicode=$(TMP)/$@.unicode.csp $(TMP)/$@.pretty.csp
-	./cspmf.built.sh translate --removeUnicode=$(TMP)/$@.nounicode.csp $(TMP)/$@.unicode.csp
+	./cspmf.sh translate --prettyOut=$(TMP)/$@.pretty.csp $(TESTSDIR)/cspm/$@ $(OR_TRUE)
+	./cspmf.sh translate --addUnicode=$(TMP)/$@.unicode.csp $(TMP)/$@.pretty.csp
+	./cspmf.sh translate --removeUnicode=$(TMP)/$@.nounicode.csp $(TMP)/$@.unicode.csp
 	@$(DIFF) "$(TMP)/$@.pretty.csp" $(TMP)/$@.nounicode.csp || \
 	(echo "Test $@ failed" && exit 1)
 

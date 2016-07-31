@@ -17,7 +17,11 @@ install:
   - cabal update
   - cabal install alex-3.1.7
   - PATH=$PATH:$HOME/.cabal/bin
+  - curl -L -o proguard.tgz https://sourceforge.net/projects/proguard/files/proguard/5.2/proguard5.2.1.tar.gz
+  - tar -xvzf proguard.tgz
+  - sudo ln -rs proguard5.2.1/bin/proguard.sh /usr/bin/proguard
 
 script:
-- make dist
+- make cspmf
+- make jar
 - make test
