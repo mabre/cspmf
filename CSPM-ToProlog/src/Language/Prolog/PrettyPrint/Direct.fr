@@ -128,7 +128,7 @@ instance PREDICATE Predicate where predicate = id
 
 class CLAUSE c where clause :: c -> Clause
 instance CLAUSE Clause where clause = id
--- instance PREDICATE p => CLAUSE p --NOTE TODO NEXT das einfach als clause' nehmen? mit case?
+-- instance PREDICATE p => CLAUSE p
 --   where clause x = Clause ( (unPredicate $ predicate x) <> text ".")
  
 nClause :: (PREDICATE h, PREDICATE b) => h -> [b] -> Clause

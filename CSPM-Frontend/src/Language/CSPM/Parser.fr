@@ -64,7 +64,7 @@ data ParseErrorException = pure native frege.language.CSPM.ParseErrorException w
     pure native get getParseError :: ParseErrorException -> ParseError
 derive Exceptional ParseErrorException
 
-data PState -- TODO compiler bug: if this is private: F src/Language/CSPM/Utils.hs:24:  instForClass: bad instance type Parser.PState
+data PState
  = PState {
   lastTok        :: Token
  ,gtCounter      :: Int

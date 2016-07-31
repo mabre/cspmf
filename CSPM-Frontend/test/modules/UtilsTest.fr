@@ -1,0 +1,13 @@
+module UtilsTest
+
+where
+
+import Language.CSPM.Frontend
+
+--- The first argument is the name of a cspm file.
+--- Reads the file, parses it, and writes the ast to out_fr.
+main :: [String] -> IO String
+main args = do
+    ast <- parseFile $ head args
+    writeFile "out_fr" (show ast)
+    return "ok"
