@@ -2,6 +2,7 @@ BUILD       = build
 BUILD_TOOLS = Tools/build
 BUILD_DIRS  = $(BUILD) $(BUILD_TOOLS)
 DIST        = dist
+DOC         = doc
 
 FREGEJAR = frege.jar
 ALEX     = alex
@@ -23,7 +24,7 @@ FREGECFLAGS = -hints -O
 FREGEC0     = $(JAVA) -Xss16m -Xmx2g -jar $(FREGEJAR) -fp ${BUILD}:${BUILD_TOOLS}
 FREGEC      = $(FREGEC0) $(FREGECFLAGS)
 FREGE       = $(JAVA) -Xss16m -Xmx2g -cp $(FREGEJAR):${BUILD}:${BUILD_TOOLS}
-
+ 
 TESTSDIR  = CSPM-Frontend/test
 TESTFILES = $(notdir $(wildcard $(TESTSDIR)/cspm/*))
 TMP       = /tmp
@@ -172,6 +173,13 @@ dist: cspmf
 	$(CP) $(CLIJAR) $(DIST)/commons-cli.jar
 
 
+.PHONY: doc
+doc:
+	@echo "[1;42mMake $@[0m"
+	$(MKDIR_P) $(DOC)
+	$(FREGE) frege.tools.Doc -d $(DOC) $(BUILD)
+
+
 .PHONY: test %.csp %.fdr test-toProlog
 test: $(TESTFILES) test-toProlog
 	@echo "[1;42mTesting done[0m"
@@ -220,4 +228,4 @@ test-toProlog:
 .PHONY: clean
 clean:
 	@echo "[1;42mMaking $@[0m"
-	$(RM) $(BUILD_DIRS) $(DIST)
+	$(RM) $(BUILD_DIRS) $(DIST) $(DOC)

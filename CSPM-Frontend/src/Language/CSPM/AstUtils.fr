@@ -58,7 +58,7 @@ unUniqueIdent ast
     patchIdent (UIdent u) = Ident $ u.newName
     patchIdent _ = error "unUniqueIdent : did not expect and 'Ident' in the AST"
 
---- Compute the "FreeNames" of an Expression.
+--- Compute the 'FreeNames' of an Expression.
 --- This function does only work after renaming has been done.
 --- This implementation is inefficient.
 computeFreeNames :: Data b => b -> FreeNames -- TODO is this needed?

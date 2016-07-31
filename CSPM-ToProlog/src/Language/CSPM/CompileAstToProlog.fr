@@ -25,8 +25,8 @@ import Data.Set(fromList, member)
 import Data.Map(elems)
 import Data.Version
 
---- Translate a "LModule" into a "Doc" containing a number of Prolog facts.
---- The LModule must be a renamed,i.e. contain only unique "Ident"ifier.
+--- Translate an 'LModule' into a 'Doc' containing a number of Prolog facts.
+--- The LModule must be a renamed,i.e. contain only unique 'Ident'ifier.
 cspToProlog ::
   ModuleFromRenaming -- ^ the renamed Module
   -> Doc  -- ^ prolog facts
@@ -349,8 +349,8 @@ mkSrcLoc loc =  case loc of
     iatom :: Integer -> Atom
     iatom = atom
 
---- Translate a "AstAnnotation" with "UnqiueIdentifier" (i.e. a Symboltable)
--- into a "Doc" containing Prolog facts
+--- Translate a 'AstAnnotation' with 'UnqiueIdentifier' (i.e. a Symboltable)
+-- into a 'Doc' containing Prolog facts
 mkSymbolTable :: AstAnnotation UniqueIdent -> Doc
 mkSymbolTable ids 
   = plPrg [declGroup $ map mkSymbol $ Map.elems ids]

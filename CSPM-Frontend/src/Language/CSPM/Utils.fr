@@ -1,4 +1,4 @@
-{-
+{--
     Some Utilities
     
     [Module]     Language.CSPM.Utils
@@ -24,7 +24,7 @@ type FilePath = String
 
 private native getCPUTime java.lang.System.currentTimeMillis :: () -> IO Long
 
---- "eitherToExc" returns the Right part of "Either" or throws the Left part as an dynamic exception. "throw" is a function like throwIO . NativeJavaException.new.
+--- 'eitherToExc' returns the Right part of 'Either' or throws the Left part as an dynamic exception. @throw@ is a function like @throwIO . NativeJavaException.new@.
 eitherToExc :: (a -> IO b) -> Either a b ->  IO b
 eitherToExc _     (Right r) = return r
 eitherToExc throw (Left e)  = throw e
@@ -38,7 +38,7 @@ throwParseError = (throwIO . ParseErrorException.new)
 throwRenameError :: RenameError -> IO a
 throwRenameError = (throwIO . RenameErrorException.new)
 
---- Lex and parse a file and return a "LModule", throw an exception in case of an error
+--- Lex and parse a file and return a 'LModule', throw an exception in case of an error
 parseFile :: FilePath -> IO ModuleFromParser
 parseFile fileName = do
   src <- readFile fileName

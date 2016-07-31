@@ -1,6 +1,6 @@
 {--
     Translate a CSPM-specification to Prolog.
-    This is the interface used by Prolog
+    This is the interface used by Prolog.
     
     [Module]     Language.CSPM.TranslateToProlog
     [Copyright]  (c) Fontaine 2010 - 2011
