@@ -17,6 +17,9 @@ import java.util.stream.*;
 
 public class Benchmark {
 
+    /** a remembered ast */
+    private static TModule ast;
+
     /**
      * Measures the runtime of a call with --prologOut or --translateDecl.
      * @param args[0] prologOut or translateDecl
@@ -42,8 +45,8 @@ public class Benchmark {
                 benchmark(repetitions, Main::main, cmdArgs);
                 break;
             case 't':
-                cmdArgs[0] = filename;
-                cmdArgs[1] = args.length > 2 ? args[3] : "N";
+                cmdArgs[0] = args.length > 2 ? args[3] : "N";
+                rememberAstFromFile(filename);
                 benchmark(repetitions, Benchmark::translateDeclRun, cmdArgs);
                 break;
             default:
@@ -52,47 +55,60 @@ public class Benchmark {
     }
     
     /**
-     * Calls translateDeclToPrologTerm' after generating an ast.
-     * @param args[0] CSPM file
-     * @param args[1] declaration
+     * Parses the given file to an ast and saves it in the class variable ast.
+     * @param filePath Path to the file to be parsed
      */
-    private static void translateDeclRun(String[] args) {
+    private static void rememberAstFromFile(String filePath) {
         System.out.println("Reading file ...");
+        
         String spec = "";
         try {
-            spec = new String(Files.readAllBytes(Paths.get(args[0])));
+            spec = new String(Files.readAllBytes(Paths.get(filePath)));
         } catch(IOException e) {
             System.out.println(e.getMessage());
         }
         
+        System.out.println("Tokenzing and parsing ...");
+        
+        long start = System.currentTimeMillis();
+        ast = (TModule)evaluateIOFunction(
+            TranslateToProlog.translateToAst(spec)
+        );
+        long end = System.currentTimeMillis();
+        
+        System.out.println("Done. (" + (end-start) + " ms)");
+    }
+    
+    /**
+     * Calls translateDeclToPrologTerm' on the ast with the given declaration and prints the resulting prolog term.
+     * @param decl a list containing one CSPM declaration
+     */
+    private static void translateDeclRun(String[] decl) {
         try {
-            System.out.println("Tokenzing and parsing ...");
+            System.out.println("Translating Declaration ...");
             long start = System.currentTimeMillis();
-            TModule ast = (TModule)evaluateIOFunction(
-                TranslateToProlog.translateToAst(spec)
+            String term = (String)evaluateIOFunction(
+                TranslateToProlog.translateDeclToPrologTerm$tick(
+                    ast,
+                    decl[0]
+                )
             );
             long end = System.currentTimeMillis();
             
             System.out.println("Done. (" + (end-start) + " ms)");
-            System.out.println(TranslateToProlog.showModuleTokens(ast));
             
-            System.out.println("Translating Declaration ...");
-            start = System.currentTimeMillis();
-            String term = (String)evaluateIOFunction(
-                TranslateToProlog.translateDeclToPrologTerm$tick(
-                    ast,
-                    args[1]
-                )
-            );
-            end = System.currentTimeMillis();
-            
-            System.out.println("Done. (" + (end-start) + " ms)");
             System.out.println(term);
         } catch(WrappedCheckedException e) {
             System.out.println(e.getCause().getMessage());
         }
     }
     
+    /**
+     * Calls a function several times and outputs runtime information, esp. the average of the last 50 % of the calls.
+     * @param repetitions the number of repetitions
+     * @param f the function to be called
+     * @param args list of parameters for f
+     */
     private static void benchmark(int repetitions, Consumer<String[]> f, String[] args) {
         LinkedList<Long> runtimes = new LinkedList<>();
         
