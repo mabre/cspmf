@@ -3,8 +3,7 @@
 # Modifies the given Haskell output file from Alex such that it can 
 # be compiled with Frege. The file modification date of the frege 
 # file will be the modification date of the corresponding x-file.
-# $1: Haskell file
-# $2: Frege command, including classpath
+# $1: Haskell file created by Alex 3.1.7
 
 outfile="${1%.*}.fr"
 xfile="${1%.*}.x"
@@ -24,22 +23,9 @@ grep -v "^#" $1                             | # remove cpp includes starting wit
     sed "s/case new_s of/if new_s == -1/"   | # workaround for frege bug #26 (Pattern support)
     sed "s/(-1) ->/then/"                   |
     sed "s/r undefined/r (undefined::Bool)/"| # workaround for frege bug #285 (cannot find symbol class β)
+    sed -E 's/(alex_table|alex_check)(.*)\[(.*)\]/\1\2(unJust (parseJSON "\[\3\]"))/' | # prevent "code too large" message from JVM (#287)
     sed "s/_ -> alex_/else alex_/" > $outfile
 
-# split long arrays to prevent "code too large" message from JVM
-for array in "alex_table" "alex_check"; do
-    line=`grep "$array = " $outfile`
-    name=`echo "$line" | cut -d " " -f2`
-    ints=`echo "$line" | sed -E "s/.*\[(.*)\].*/\1/"`
-    splitted=`$2 ArraySplitter $name $ints`
-    if [ $? -ne 0 ]; then
-        exit 1
-    fi
-    splitted=`echo "$splitted" | sed "s/\"//g"`
-    newlines=`echo "$line" | cut -d " " -f1-5`" $ $splitted"
-    esc_line=`echo "$line" | sed -e 's/[][]/\\\\&/g'`
-    esc_newlines=`echo "$newlines" | sed -e 's/[][]/\\\\&/g'`
-    sed -i "s/$esc_line/$esc_newlines/" $outfile
-done
-
+# set modification date of frege file to date of x file
+# (prevents unnecessary recompilations of this and depending modules)
 touch -r $xfile $outfile

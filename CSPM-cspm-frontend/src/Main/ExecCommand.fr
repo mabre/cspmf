@@ -1,26 +1,23 @@
-----------------------------------------------------------------------------
--- |
--- Module      :  Main.ExecCommand
--- Copyright   :  (c) Fontaine 2010-2011
--- License     :  BSD3
---
--- Maintainer  :  Fontaine@cs.uni-duesseldorf.de
--- Stability   :  experimental
--- Portability :  GHC-only
---
--- Comand line interface for the CSPM tools.
-----------------------------------------------------------------------------
+{--
+    Comand line interface for the CSPM tools.
+
+    [Module]     Main.ExecCommand
+    [Copyright]  (c) Fontaine 2010-2011
+    [License]    BSD3
+    
+    [Maintainer] Fontaine@cs.uni-duesseldorf.de
+    [Stability]  experimental
+-}
+
 module Main.ExecCommand
 where
 
 import frege.Prelude hiding (empty, display, <+>)
-import Language.CSPM.TranslateToProlog
-import Language.CSPM.LexHelper
-import Language.CSPM.Utils
 import Language.CSPM.Frontend
-import Language.CSPM.Rename --TODO import cleanup
-import Language.CSPM.AST
-import Language.CSPM.PrettyPrinter
+import Language.CSPM.LexHelper
+
+import Language.CSPM.TranslateToProlog
+
 import Text.PrettyPrint
 import Data.Version
 
@@ -36,7 +33,7 @@ numericVersion :: IO ()
 numericVersion = putStrLn $ showVersion frontendVersion
 
 verbose :: IO ()
-verbose = do
+verbose =
     putStr $ concat
         [
         "Versions :",nl

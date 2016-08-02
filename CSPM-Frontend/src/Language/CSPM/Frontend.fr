@@ -1,14 +1,13 @@
------------------------------------------------------------------------------
--- |
--- Module      :  Language.CSPM.Frontend
--- Copyright   :  (c) Fontaine 2008 - 2011
--- License     :  BSD3
--- 
--- Maintainer  :  Fontaine@cs.uni-duesseldorf.de
--- Stability   :  experimental
--- Portability :  GHC-only
---
--- Frontend contains some reexports from other modules
+{--
+    Frontend contains some reexports from other modules
+    
+    [Module]     Language.CSPM.Frontend
+    [Copyright]  (c) Fontaine 2008 - 2011
+    [License]    BSD3
+    
+    [Maintainer] Fontaine@cs.uni-duesseldorf.de
+    [Stability]  experimental
+-}
 
 module Language.CSPM.Frontend
 where
@@ -24,7 +23,7 @@ import Language.CSPM.SrcLoc (public  SrcLoc)
 import Language.CSPM.AstUtils 
   (public removeSourceLocations, public removeParens, public unUniqueIdent
  , public computeFreeNames, public setNodeIdsZero, public getLastBindExpression
- , public getLastDeclaration)
+ , public getLastDeclaration, public removeMetaInfo, public mergeDecls)
 import Language.CSPM.LexHelper as Lexer
   (public lexInclude, public lexPlain, public removeIgnoredToken)
 import Language.CSPM.PrettyPrinter public
@@ -33,6 +32,6 @@ import Language.CSPM.Utils
  , public parseFile, public parseString, public parseNamedString, public benchmarkFrontend)
 import Data.Version (Version, makeVersion)
 
--- | The version of the CSPM-Frontend library
+--- The version of the CSPM-Frontend library
 frontendVersion :: Version
 frontendVersion = makeVersion [0,11,0,1]

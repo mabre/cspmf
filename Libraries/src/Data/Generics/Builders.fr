@@ -1,19 +1,17 @@
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE FlexibleContexts     #-}
 
------------------------------------------------------------------------------
--- |
--- Module      :  Data.Generics.Builders
--- Copyright   :  (c) 2008 Universiteit Utrecht
--- License     :  BSD-style
--- 
--- Maintainer  :  generics@haskell.org
--- Stability   :  experimental
--- Portability :  non-portable
---
--- This module provides generic builder functions. These functions construct
--- values of a given type.
------------------------------------------------------------------------------
+{--
+    This module provides generic builder functions. These functions construct
+    values of a given type.
+    
+    [Module]     Data.Generics.Builders
+    [Copyright]  (c) 2008 Universiteit Utrecht
+    [License]    BSD-style
+    
+    [Maintainer] generics@haskell.org
+    [Stability]  experimental
+-}
 
 module Data.Generics.Builders where
 

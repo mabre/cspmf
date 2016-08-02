@@ -1,33 +1,48 @@
 BUILD       = build324
 BUILD_TOOLS = Tools/build324
 BUILD_DIRS  = $(BUILD) $(BUILD_TOOLS)
+DIST        = dist
+DOC         = doc
 
-FREGEJAR = /home/markus/Downloads/frege/frege3.24.100.jar
-ALEX     = /home/markus/.cabal/bin/alex
-JAVAC    = javac -cp $(FREGEJAR):${BUILD}:Libraries/commons-cli-1.3.1.jar
+FREGEJAR = ../frege3.24.100.jar
+ALEX     = alex
+PROGUARD = proguard
+CLIJAR   = Libraries/commons-cli-1.3.1.jar
+JAVAC    = javac -cp $(FREGEJAR):${BUILD}:$(CLIJAR)
 JAVA     = java
+JAR      = jar
+DIFF     = diff -Z
 MKDIR_P  = mkdir -p
 RM       = rm -rf
+MV       = mv
 BASH     = bash
+CP       = cp
+CP_P     = cp --parents
+OR_TRUE  = || true
+TOUCH    = touch
+CLASS_FILES = `find build -name "*class"`
 
-FREGEC_ARGS = -hints -O
+FREGECFLAGS = -hints -O
 FREGEC0     = $(JAVA) -Xss16m -Xmx2g -jar $(FREGEJAR) -fp ${BUILD}:${BUILD_TOOLS}
-FREGEC      = $(FREGEC0) $(FREGEC_ARGS)
+FREGEC      = $(FREGEC0) $(FREGECFLAGS)
 FREGE       = $(JAVA) -Xss16m -Xmx2g -cp $(FREGEJAR):${BUILD}:${BUILD_TOOLS}
+ 
+TESTSDIR  = CSPM-Frontend/test
+TESTFILES = $(notdir $(wildcard $(TESTSDIR)/cspm/*))
+TMP       = /tmp
 
-
-#dist: TODO copy *class, *jar to /dist, change *.sh, rm make.sh
 
 cspmf: cspm-frontend cspm-toprolog cspm-cspm-frontend
 	@echo "[1;42mMade $@[0m"
 
 cspm-cspm-frontend: cspm-toprolog
 	@echo "[1;42mMaking $@[0m"
+	
 	$(FREGEC) -d $(BUILD) -make -sp CSPM-cspm-frontend/src/Main \
 		ExecCommand.fr \
 		ExceptionHandler.fr
 	
-	$(JAVAC) -d $(BUILD) CSPM-cspm-frontend/src/Main/Main.java CSPM-cspm-frontend/src/Main/Benchmark.java
+	$(JAVAC) -d $(BUILD) CSPM-cspm-frontend/src/Main/Main.java CSPM-cspm-frontend/src/Main/FregeInterface.java CSPM-cspm-frontend/src/Main/Benchmark.java
 
 cspm-toprolog: cspm-frontend
 	@echo "[1;42mMaking $@[0m"
@@ -38,7 +53,7 @@ cspm-toprolog: cspm-frontend
 		CSPM/TranslateToProlog.fr \
 		Prolog/PrettyPrint/Direct.fr
 
-cspm-frontend: tools libraries
+cspm-frontend: dataderiver libraries
 	@echo "[1;42mMaking $@[0m"
 	$(BASH) Tools/src/Scripts/DeriveDataTypeable.sh "$(FREGE)"
 	
@@ -54,13 +69,10 @@ cspm-frontend: tools libraries
 		Token.fr
 	
 	$(ALEX) CSPM-Frontend/src/Language/CSPM/Lexer.x
-	$(BASH) Tools/src/Scripts/AlexToFrege.sh CSPM-Frontend/src/Language/CSPM/Lexer.hs "$(FREGE)"
-	@echo "Compiling the lexer can take a while ..."
-	$(FREGEC) -j -d $(BUILD) -make CSPM-Frontend/src/Language/CSPM/Lexer.fr
-	sed "s/  */ /g" -i $(BUILD)/frege/language/CSPM/Lexer.java
-	$(JAVAC) -J-Xss16m -J-Xmx2g -cp $(FREGEJAR):${BUILD}:${BUILD_TOOLS} -d $(BUILD) -sourcepath . -encoding UTF-8 $(BUILD)/frege/language/CSPM/Lexer.java
+	$(BASH) Tools/src/Scripts/AlexToFrege.sh CSPM-Frontend/src/Language/CSPM/Lexer.hs
 	
 	$(FREGEC) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
+		CSPM-Frontend/src/Language/CSPM/Lexer.fr \
 		AST.fr \
 		UnicodeSymbols.fr \
 		LexHelper.fr \
@@ -113,7 +125,7 @@ syb:
 		Generics/Schemes.fr \
 		Generics/Builders.fr
 
-misclibs:
+misclibs: syb
 	@echo "[1;42mMaking $@[0m"
 	$(MKDIR_P) $(BUILD_DIRS)
 	$(FREGEC) -d $(BUILD) -make -sp "Libraries/src" \
@@ -144,6 +156,68 @@ dataderiver: syb parsec
 		Parser.fr \
 		Preprocessor.fr
 
+
+jar:
+	@echo "[1;42mMake $@[0m"
+	@echo Note that you might have to change the paths in pg.conf.
+	@echo In case of error messages about missing symbols try running make clean \&\& make cspmf
+	proguard @pg.conf
+	$(JAR) -ufve cspmf.jar frege.main.Main
+
+
+.PHONY: doc
+doc:
+	@echo "[1;42mMake $@[0m"
+	$(MKDIR_P) $(DOC)
+	$(FREGE) frege.tools.Doc -d $(DOC) $(BUILD)
+
+
+.PHONY: test %.csp %.fdr test-toProlog
+test: $(TESTFILES) test-toProlog
+	@echo "[1;42mTesting done[0m"
+
+test-toProlog:
+	@echo "[1;42mTesting toProlog[0m"
+	./cspmf.sh translate --expressionToPrologTerm="N" $(TESTSDIR)/cspm/very_simple.csp > $(TMP)/simple.csp.expression
+	@$(DIFF) "$(TESTSDIR)/toProlog/simple.csp.expression" $(TMP)/simple.csp.expression || \
+	(echo "Test $@ failed" && exit 1)
+	./cspmf.sh translate --declarationToPrologTerm="datatype D = F" $(TESTSDIR)/cspm/very_simple.csp > $(TMP)/simple.csp.declaration
+	@$(DIFF) "$(TESTSDIR)/toProlog/simple.csp.declaration" $(TMP)/simple.csp.declaration || \
+	(echo "Test $@ failed" && exit 1)
+
+# Test that
+# * the output of --prologOut matches the reference output
+# * prettyOut(file) == removeUnicode(addUnicode(prettyOut(file)))
+%.csp:
+	@echo "[1;42mTesting $@[0m"
+	$(RM) $(TMP)/$@.pl
+	./cspmf.sh translate --prologOut=$(TMP)/$@.pl $(TESTSDIR)/cspm/$@
+	@$(DIFF) "$(TESTSDIR)/prolog/$@.pl" $(TMP)/$@.pl || \
+	(echo "Test $@ failed" && exit 1)
+	$(RM) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
+	$(TOUCH) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
+	./cspmf.sh translate --prettyOut=$(TMP)/$@.pretty.csp $(TESTSDIR)/cspm/$@ $(OR_TRUE)
+	./cspmf.sh translate --addUnicode=$(TMP)/$@.unicode.csp $(TMP)/$@.pretty.csp
+	./cspmf.sh translate --removeUnicode=$(TMP)/$@.nounicode.csp $(TMP)/$@.unicode.csp
+	@$(DIFF) "$(TMP)/$@.pretty.csp" $(TMP)/$@.nounicode.csp || \
+	(echo "Test $@ failed" && exit 1)
+
+%.fdr2:
+	@echo "[1;42mTesting $@[0m"
+	$(RM) $(TMP)/$@.pl
+	./cspmf.sh translate --prologOut=$(TMP)/$@.pl $(TESTSDIR)/cspm/$@
+	@$(DIFF) "$(TESTSDIR)/prolog/$@.pl" $(TMP)/$@.pl || \
+	(echo "Test $@ failed" && exit 1)
+	$(RM) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
+	$(TOUCH) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
+	./cspmf.sh translate --prettyOut=$(TMP)/$@.pretty.csp $(TESTSDIR)/cspm/$@ $(OR_TRUE)
+	./cspmf.sh translate --addUnicode=$(TMP)/$@.unicode.csp $(TMP)/$@.pretty.csp
+	./cspmf.sh translate --removeUnicode=$(TMP)/$@.nounicode.csp $(TMP)/$@.unicode.csp
+	@$(DIFF) "$(TMP)/$@.pretty.csp" $(TMP)/$@.nounicode.csp || \
+	(echo "Test $@ failed" && exit 1)
+
+
+.PHONY: clean
 clean:
 	@echo "[1;42mMaking $@[0m"
-	$(RM) $(BUILD_DIRS)
+	$(RM) $(BUILD_DIRS) $(DIST) $(DOC)

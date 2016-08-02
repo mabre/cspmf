@@ -2,10 +2,10 @@ module DataDeriver.Preprocessor where
 
 import Data.List
 
--- | Gets content from a frege file, returns its package and module name and
--- lines belonging to a date or type block annotated with {-# derive DataTypeable #-}.
--- NOTE: No exact syntactically match, but works for the needed cases.
--- (eg. strings containing "--" are detected as comment start)
+--- Gets content from a frege file, returns its package and module name and
+--- lines belonging to a date or type block annotated with {-# derive DataTypeable #-}.
+--- NOTE: No exact syntactically match, but works for the needed cases.
+--- (eg. strings containing "--" are detected as comment start)
 preprocess :: String -> (String, String, String)
 preprocess content = (p, m, decls)
     where
@@ -18,7 +18,7 @@ preprocess content = (p, m, decls)
         m = drop (mpl - 1) modulePath !! 0
         decls = unlines $ getDecls ls
 
--- | Removes all block comments ({- -}) in s, excluding magic comments ({-# #-}).
+--- Removes all block comments ({- -}) in s, excluding magic comments ({-# #-}).
 private removeBlockComments :: String -> String
 private removeBlockComments s = packed $ rm (unpacked s) 0
     where
@@ -31,12 +31,12 @@ private removeBlockComments s = packed $ rm (unpacked s) 0
         rm (h:t)           0 = h : rm t 0
         rm (h:t)           d = rm t d
 
--- | Removes line comments in ls (--).
+--- Removes line comments in ls (--).
 private removeLineComment :: String -> String
 private removeLineComment ls = ls.replaceAll ´(?m)--.*$´ ""
 
--- | Remove from ls all lines not belonging to a data definition not annotated
--- with {-# derive DataTypeable #-}.
+--- Remove from ls all lines not belonging to a data definition not annotated
+--- with {-# derive DataTypeable #-}.
 private getDecls :: [String] -> [String]
 private getDecls ls = getDecls' ls false
     where

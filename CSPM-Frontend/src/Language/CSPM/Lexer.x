@@ -13,6 +13,7 @@ import Data.Array(!!)
 import Language.CSPM.Token
 import Language.CSPM.TokenClasses
 import Language.CSPM.AlexWrapper
+import Data.JSON
 }
 
 $whitechar = [\ \t\r\n\f\v]

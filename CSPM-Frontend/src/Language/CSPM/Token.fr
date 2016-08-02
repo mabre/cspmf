@@ -1,15 +1,12 @@
------------------------------------------------------------------------------
--- |
--- Module      :  Language.CSPM.Token
--- Copyright   :  (c) Fontaine 2008
--- License     :  BSD
--- 
--- Maintainer  :  Fontaine@cs.uni-duesseldorf.de
--- Stability   :  provisional
--- Portability :  GHC-only
---
--- This module contains the data type Tokens and some helper functions
-
+{--
+    This module contains the data type Tokens and some helper functions
+    [Module]     Language.CSPM.Token
+    [Copyright]  (c) Fontaine 2008
+    [License]    BSD
+    
+    [Maintainer] Fontaine@cs.uni-duesseldorf.de
+    [Stability]  provisional
+-}
 
 module Language.CSPM.Token
 where
@@ -18,7 +15,6 @@ import Language.CSPM.TokenClasses
 import Language.CSPM.Token__LexError public
 
 import Data.Data
---import Data.Ix TODO?
 
 {-# derive DataTypeable #-}
 data TokenId = TokenId {unTokenId :: Int}

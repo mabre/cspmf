@@ -1,17 +1,13 @@
-{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
--- {-# LANGUAGE DeriveDataTypeable #-}
--- DeriveGeneric
------------------------------------------------------------------------------
--- |
--- Module      :  Language.CSPM.SrcLoc
--- Copyright   :  (c) Fontaine 2008
--- License     :  BSD
--- 
--- Maintainer  :  Fontaine@cs.uni-duesseldorf.de
--- Stability   :  provisional
--- Portability :  GHC-only
---
--- This module contains the datatype for sourcelocations and some utility functions.
+{--
+    This module contains the datatype for sourcelocations and some utility functions.
+    
+    [Module]     Language.CSPM.SrcLoc
+    [Copyright]  (c) Fontaine 2008
+    [License]    BSD
+    
+    [Maintainer] Fontaine@cs.uni-duesseldorf.de
+    [Stability]  provisional
+-}
 
 module Language.CSPM.SrcLoc
 where
@@ -26,8 +22,8 @@ import Data.Data
 data SrcLoc
   = TokIdPos TokenId
   | TokIdSpan TokenId TokenId
-  | TokSpan Token Token -- the spans are closed intervals
-                        -- single token with token x :: TokSpan x x
+  | TokSpan Token Token {-- the spans are closed intervals
+                            single token with token x :: TokSpan x x -}
   | TokPos Token
   | NoLocation
   | ! FixedLoc {
@@ -136,7 +132,7 @@ computeEndPos t = foldl' alexMove (t.tokenStart) (unpacked (t.tokenString)) -- T
 
 
 {-# DEPRECATED srcLocFromTo "sourceLoc arithmetics is not reliable" #-}
--- this is the closed Interval between s and e
+--- this is the closed Interval between s and e
 srcLocFromTo :: SrcLoc -> SrcLoc -> SrcLoc
 srcLocFromTo NoLocation _ = NoLocation
 srcLocFromTo _ NoLocation = NoLocation
@@ -152,7 +148,7 @@ srcLocFromTo s e = FixedLoc {
    }
 
 {-# DEPRECATED srcLocBetween "sourceLoc arithmetics is not reliable" #-}
--- this is the open Interval between s and e
+--- this is the open Interval between s and e
 srcLocBetween :: SrcLoc -> SrcLoc -> SrcLoc
 srcLocBetween NoLocation _ = NoLocation
 srcLocBetween _ NoLocation = NoLocation

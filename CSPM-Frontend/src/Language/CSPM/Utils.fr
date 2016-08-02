@@ -1,14 +1,13 @@
------------------------------------------------------------------------------
--- |
--- Module      :  Language.CSPM.Utils
--- Copyright   :  (c) Fontaine 2008
--- License     :  BSD
--- 
--- Maintainer  :  fontaine@cs.uni-duesseldorf.de
--- Stability   :  experimental
--- Portability :  GHC-only
---
--- Some Utilities
+{--
+    Some Utilities
+    
+    [Module]     Language.CSPM.Utils
+    [Copyright]  (c) Fontaine 2008
+    [License]    BSD
+    
+    [Maintainer] fontaine@cs.uni-duesseldorf.de
+    [Stability]  experimental
+-}
 
 module Language.CSPM.Utils
 where
@@ -25,7 +24,7 @@ type FilePath = String
 
 private native getCPUTime java.lang.System.currentTimeMillis :: () -> IO Long
 
--- | "eitherToExc" returns the Right part of "Either" or throws the Left part as an dynamic exception. "throw" is a function like throwIO . NativeJavaException.new.
+--- 'eitherToExc' returns the Right part of 'Either' or throws the Left part as an dynamic exception. @throw@ is a function like @throwIO . NativeJavaException.new@.
 eitherToExc :: (a -> IO b) -> Either a b ->  IO b
 eitherToExc _     (Right r) = return r
 eitherToExc throw (Left e)  = throw e
@@ -39,13 +38,13 @@ throwParseError = (throwIO . ParseErrorException.new)
 throwRenameError :: RenameError -> IO a
 throwRenameError = (throwIO . RenameErrorException.new)
 
--- | Lex and parse a file and return a "LModule", throw an exception in case of an error
+--- Lex and parse a file and return a 'LModule', throw an exception in case of an error
 parseFile :: FilePath -> IO ModuleFromParser
 parseFile fileName = do
   src <- readFile fileName
   parseNamedString fileName src
 
--- | Small test function which just parses a String.
+--- Small test function which just parses a String.
 parseString :: String -> IO ModuleFromParser
 parseString = parseNamedString "no-file-name"
 
@@ -54,15 +53,15 @@ parseNamedString name str = do
   tokenList <- Lexer.lexInclude name str >>= eitherToExc throwLexError
   eitherToExc throwParseError $ parse name tokenList
 
--- | Test function that parses a string and then pretty prints the produced AST
+--- Test function that parses a string and then pretty prints the produced AST
 parseAndPrettyPrint :: String -> IO String
 parseAndPrettyPrint str = do
   ast <- parseString str
   return $ show $ pPrint ast
 
--- | Lex and parse File.
--- | Return the module and print some timing infos
--- benchmarkFrontend :: FilePath -> IO (ModuleFromParser, ModuleFromRenaming)
+--- Lex and parse File.
+--- Return the module and print some timing infos
+benchmarkFrontend :: FilePath -> IO (ModuleFromParser, ModuleFromRenaming)
 benchmarkFrontend fileName = do
     src <- readFile fileName
 

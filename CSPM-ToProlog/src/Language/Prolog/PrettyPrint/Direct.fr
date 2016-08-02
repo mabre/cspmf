@@ -1,24 +1,20 @@
------------------------------------------------------------------------------
--- |
--- Module      :  Language.Prolog.PrettyPrint.Direct
--- Copyright   :  (c) Fontaine 2010 - 2011
--- License     :  BSD3
---
--- Maintainer  :  fontaine@cs.uni-duesseldorf.de
--- Stability   :  experimental
--- Portability :  GHC-only
---
--- A very simple DSL for generating for Prolog-Syntax.
--- Just some newtypes and smart-constructors.
---
------------------------------------------------------------------------------
-{-
---  this is all buggy
--- todo:
---  separate package for Prolog-Syntax
---  todo :: remove overloading /classes from Module (for TERM and CLAUSE)
---  for atom, overloading is probably ok
---  make seperate nonoverloaded functions for building terms.
+{--
+    A very simple DSL for generating for Prolog-Syntax.
+    Just some newtypes and smart-constructors.
+
+    [Module]     Language.Prolog.PrettyPrint.Direct
+    [Copyright]  (c) Fontaine 2010 - 2011
+    [License]    BSD3
+    
+    [Maintainer] fontaine@cs.uni-duesseldorf.de
+    [Stability]  experimental
+
+   this is all buggy
+   todo:
+   - separate package for Prolog-Syntax
+   - todo :: remove overloading /classes from Module (for TERM and CLAUSE)
+     for atom, overloading is probably ok
+   - make seperate nonoverloaded functions for building terms.
 -}
 
 {-# LANGUAGE TypeSynonymInstances , FlexibleInstances, UndecidableInstances  #-}
@@ -81,8 +77,8 @@ It overlapps all the other cases
 -}
 -- instance TERM t => TERMLIST t where termList a = [term a]
 
--- Frege does not support FlexibleInstances (#5), so convert
--- explicitly where necessary.
+--- Frege does not support FlexibleInstances (#5), so convert
+--- explicitly where necessary.
 termToClause :: Term -> Clause
 termToClause = predicateToClause . termToPredicate
 predicateToClause :: Predicate -> Clause
@@ -128,7 +124,7 @@ instance PREDICATE Predicate where predicate = id
 
 class CLAUSE c where clause :: c -> Clause
 instance CLAUSE Clause where clause = id
--- instance PREDICATE p => CLAUSE p --NOTE TODO NEXT das einfach als clause' nehmen? mit case?
+-- instance PREDICATE p => CLAUSE p
 --   where clause x = Clause ( (unPredicate $ predicate x) <> text ".")
  
 nClause :: (PREDICATE h, PREDICATE b) => h -> [b] -> Clause

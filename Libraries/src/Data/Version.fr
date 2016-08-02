@@ -2,38 +2,37 @@
 {-# LANGUAGE AutoDeriveTypeable #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
------------------------------------------------------------------------------
--- |
--- Module      :  Data.Version
--- Copyright   :  (c) The University of Glasgow 2004
--- License     :  BSD-style (see the file libraries/base/LICENSE)
---
--- Maintainer  :  libraries@haskell.org
--- Stability   :  experimental
--- Portability :  non-portable (local universal quantification in ReadP)
---
--- A general library for representation and manipulation of versions.
---
--- Versioning schemes are many and varied, so the version
--- representation provided by this library is intended to be a
--- compromise between complete generality, where almost no common
--- functionality could reasonably be provided, and fixing a particular
--- versioning scheme, which would probably be too restrictive.
---
--- So the approach taken here is to provide a representation which
--- subsumes many of the versioning schemes commonly in use, and we
--- provide implementations of 'Eq', 'Ord' and conversion to\/from 'String'
--- which will be appropriate for some applications, but not all.
---
------------------------------------------------------------------------------
--- Ported to Frege: Markus Brenneis
--- NOTE: parseVersion is not ported
+{--
+    A general library for representation and manipulation of versions.
+    
+    Versioning schemes are many and varied, so the version
+    representation provided by this library is intended to be a
+    compromise between complete generality, where almost no common
+    functionality could reasonably be provided, and fixing a particular
+    versioning scheme, which would probably be too restrictive.
+    
+    So the approach taken here is to provide a representation which
+    subsumes many of the versioning schemes commonly in use, and we
+    provide implementations of 'Eq', 'Ord' and conversion to\/from 'String'
+    which will be appropriate for some applications, but not all.
+
+    [Module]      Data.Version
+    [Copyright]   (c) The University of Glasgow 2004
+    [License]     BSD-style (see the file Libraries/LICENSE)
+
+    [Maintainer]  libraries@haskell.org
+    [Stability]   experimental
+    [Portability] non-portable (local universal quantification in ReadP)
+    
+    Ported to Frege: Markus Brenneis
+    NOTE: parseVersion is not ported
+-}
 
 module Data.Version where
 
 import Data.List
 
-{- |
+{--
 A 'Version' represents the version of a software entity.
 
 An instance of 'Eq' is provided, which implements exact equality
@@ -88,12 +87,12 @@ instance Ord Version where
   v1 <=> v2 = v1.versionBranch <=> v2.versionBranch
 
 -- -----------------------------------------------------------------------------
--- A concrete representation of 'Version'
+--- A concrete representation of 'Version'
 
--- | Provides one possible concrete representation for 'Version'.  For
--- a version with 'versionBranch' @= [1,2,3]@ and 'versionTags'
--- @= [\"tag1\",\"tag2\"]@, the output will be @1.2.3-tag1-tag2@.
---
+--- Provides one possible concrete representation for 'Version'.  For
+--- a version with 'versionBranch' @= [1,2,3]@ and 'versionTags'
+--- @= [\"tag1\",\"tag2\"]@, the output will be @1.2.3-tag1-tag2@.
+---
 showVersion :: Version -> String
 showVersion (Version branch tags)
   = concat (intersperse "." (map show branch)) ++
@@ -106,8 +105,8 @@ showVersion (Version branch tags)
 --                   tags   <- many (char '-' >> munch1 isAlphaNum)
 --                   return Version{versionBranch=branch, versionTags=tags}
 
--- | Construct tag-less 'Version'
---
--- @since 4.8.0.0
+--- Construct tag-less 'Version'
+---
+--- @since 4.8.0.0
 makeVersion :: [Int] -> Version
 makeVersion b = Version b []

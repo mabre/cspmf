@@ -2,21 +2,20 @@
 {-# LANGUAGE Rank2Types               #-}
 {-# LANGUAGE ScopedTypeVariables      #-}
 
------------------------------------------------------------------------------
--- |
--- Module      :  Data.Generics.Schemes
--- Copyright   :  (c) The University of Glasgow, CWI 2001--2003
--- License     :  BSD-style (see the LICENSE file)
--- 
--- Maintainer  :  generics@haskell.org
--- Stability   :  experimental
--- Portability :  non-portable (local universal quantification)
---
--- \"Scrap your boilerplate\" --- Generic programming in Haskell 
--- See <http://www.cs.vu.nl/boilerplate/>. The present module provides
--- frequently used generic traversal schemes.
---
------------------------------------------------------------------------------
+{--
+    "Scrap your boilerplate" — Generic programming in Haskell 
+    
+    See 'http://www.cs.vu.nl/boilerplate/'. The present module provides
+    frequently used generic traversal schemes.
+    
+    [Module]      Data.Generics.Schemes
+    [Copyright]   (c) The University of Glasgow, CWI 2001--2003
+    [License]     BSD-style (see the LICENSE file)
+    
+    [Maintainer]  generics@haskell.org
+    [Stability]   experimental
+    [Portability] non-portable (local universal quantification)
+-}
 
 module Data.Generics.Schemes {-(
 
@@ -40,29 +39,23 @@ module Data.Generics.Schemes {-(
 
  )-} where
 
-------------------------------------------------------------------------------
-
--- #ifdef __HADDOCK__
--- import Prelude
--- #endif
 import frege.Prelude hiding (GT, orElse)
 import Data.Data
 import Data.Generics.Aliases
 -- import Control.Monad
 
 
--- | Apply a transformation everywhere in bottom-up manner
+--- Apply a transformation everywhere in bottom-up manner
 everywhere :: (forall a. Data a => a -> a)
            -> (forall c. Data c => c -> c)
 
--- Use gmapT to recurse into immediate subterms;
--- recall: gmapT preserves the outermost constructor;
--- post-process recursively transformed result via f
--- 
+--- Use gmapT to recurse into immediate subterms;
+--- recall: gmapT preserves the outermost constructor;
+--- post-process recursively transformed result via f 
 everywhere f = f . gmapT (everywhere f)
 
 
--- | Apply a transformation everywhere in top-down manner
+--- Apply a transformation everywhere in top-down manner
 everywhere' :: (forall a4. Data a4 => a4 -> a4)
             -> (forall a5. Data a5 => a5 -> a5)
 
@@ -71,8 +64,8 @@ everywhere' f = gmapT (everywhere' f) . f
 
 
 -- TODO frege #277, can be workarounded by inlining GenericQ and renaming type variables
--- | Variation on everywhere with an extra stop condition
--- everywhereBut :: GenericQ Bool -> GenericT -> GenericT
+--- Variation on everywhere with an extra stop condition
+--- everywhereBut :: GenericQ Bool -> GenericT -> GenericT
 
 -- Guarded to let traversal cease if predicate q holds for x
 -- everywhereBut q f x
@@ -80,7 +73,7 @@ everywhere' f = gmapT (everywhere' f) . f
 --     | otherwise = f (gmapT (everywhereBut q f) x)
 
 
--- | Monadic variation on everywhere
+-- - Monadic variation on everywhere
 -- everywhereM :: Monad m => GenericM m -> GenericM m
 
 -- Bottom-up order is also reflected in order of do-actions
@@ -88,7 +81,7 @@ everywhere' f = gmapT (everywhere' f) . f
 --                      f x'
 
 
--- | Apply a monadic transformation at least somewhere
+-- - Apply a monadic transformation at least somewhere
 -- somewhere :: MonadPlus m => GenericM m -> GenericM m
 
 -- We try "f" in top-down manner, but descent into "x" when we fail
@@ -98,24 +91,23 @@ everywhere' f = gmapT (everywhere' f) . f
 -- somewhere f x = f x `mplus` gmapMp (somewhere f) x
 
 
--- | Summarise all nodes in top-down, left-to-right order
+--- Summarise all nodes in top-down, left-to-right order
 everything :: forall a2 b6. Data b6 => (a2 -> a2 -> a2) -> (forall a6. Data a6 => a6 -> a2) -> b6 -> a2
 -- everything :: (ar -> ar -> ar) -> GenericQ ar -> GenericQ ar
 
--- Apply f to x to summarise top-level node;
--- use gmapQ to recurse into immediate subterms;
--- use ordinary foldl to reduce list of intermediate results
--- 
+--- Apply f to x to summarise top-level node;
+--- use gmapQ to recurse into immediate subterms;
+--- use ordinary foldl to reduce list of intermediate results
 everything k f x = fold k (f x) (gmapQ (everything k f) x)
 
--- | Variation of "everything" with an added stop condition
+-- - Variation of "everything" with an added stop condition
 -- everythingBut :: (r -> r -> r) -> GenericQ (r, Bool) -> GenericQ r
 -- everythingBut k f x = let (v, stop) = f x
 --                       in if stop
 --                            then v
 --                            else foldl k v (gmapQ (everythingBut k f) x)
 
--- | Get a list of all entities that meet a predicate
+--- Get a list of all entities that meet a predicate
 listify :: (Data a6', Typeable o1) => (o1 -> Bool) -> a6' -> [o1]
 -- listify :: Typeable or => (or -> Bool) -> GenericQ [or]
 listify p = everything (++) ([] `mkQ` (\x -> if p x then [x] else []))
@@ -139,7 +131,8 @@ listify p = everything (++) ([] `mkQ` (\x -> if p x then [x] else []))
 -- synthesize z o f x = f x (foldr o z (gmapQ (synthesize z o f) x))
 
 
--- | Compute size of an arbitrary data structure
+
+--- Compute size of an arbitrary data structure
 gsize :: Data a => a -> Int
 gsize t = 1 + sum (gmapQ gsize t)
 
@@ -164,12 +157,13 @@ gsize t = 1 + sum (gmapQ gsize t)
 -- gnodecount = gcount (const True)
 
 
--- | Determine the number of nodes of a given type in a given term
+
+-- - Determine the number of nodes of a given type in a given term
 -- gtypecount :: Typeable a => a -> GenericQ Int TODO
 -- gtypecount (_::a) = gcount (False `mkQ` (\(_::a) -> True))
 
 
--- | Find (unambiguously) an immediate subterm of a given type
+--- Find (unambiguously) an immediate subterm of a given type
 gfindtype :: (Data x, Typeable y) => x -> Maybe y
 gfindtype = singleton
           . foldl unJust []
