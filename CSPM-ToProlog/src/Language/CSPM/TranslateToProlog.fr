@@ -47,7 +47,7 @@ translateExpToPrologTerm file expr = do
     putStrLn r
   where
     getExpPlCode :: Module a -> Doc
-    getExpPlCode = addFullStopToPrologTerm . Term.unTerm . te . {-Frontend.-}getLastBindExpression
+    getExpPlCode = addFullStopToPrologTerm . Term.unTerm . te . getLastBindExpression
 
 handleTranslationError :: RenameErrorException -> IO String --TODO
 handleTranslationError err = return $ show err.get
@@ -63,7 +63,7 @@ translateDeclToPrologTerm file decl = do
     putStrLn r
   where
     getDeclPlCode :: Module a -> Doc
-    getDeclPlCode = addFullStopToPrologTerm . Term.unTerm . head . td . {-Frontend.-}getLastDeclaration
+    getDeclPlCode = addFullStopToPrologTerm . Term.unTerm . head . td . getLastDeclaration
 
 --- 'translateDeclToPrologTerm'' translates a string declaration
 --- to a prolog term in regard to the given CSP-M specification given as AST.
@@ -85,7 +85,7 @@ private mainWorkSinglePlTerm :: (ModuleFromRenaming -> Doc) -> Maybe FilePath ->
 private mainWorkSinglePlTerm termFun filePath decl = do
   (specSrc,fileName) <- if isJust filePath then readFile (fromJust filePath) >>= \s -> return (s,fromJust filePath) else return ("","no-file-name")
   let src = specSrc ++ "\n--patch entrypoint\n"++decl ++"\n"
-  ast <- {-Frontend.-}parseNamedString fileName src
+  ast <- parseNamedString fileName src
   (astNew, _) <- eitherToExc throwRenameError $ renameModule ast
   let plTerm = termFun astNew
   output <- evaluate $ show plTerm
