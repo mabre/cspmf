@@ -87,7 +87,8 @@ cspm-frontend: dataderiver libraries
 	$(FREGEC) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
 		Parser.fr
 	
-# FATAL: Can't find context for Typeable.Typeable when run with -O --TODO bugreport
+# FATAL: Can't find context for Typeable.Typeable when run with -O
+# https://github.com/Frege/frege/issues/297
 	$(FREGEC0) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
 		Rename.fr
 	
