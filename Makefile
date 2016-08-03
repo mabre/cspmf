@@ -49,7 +49,6 @@ cspm-toprolog: cspm-frontend
 	
 	$(FREGEC) -d $(BUILD) -make -sp "CSPM-ToProlog/src/Language" \
 		CSPM/CompileAstToProlog.fr \
-		CSPM/TranslateTest.fr \
 		CSPM/TranslateToProlog.fr \
 		Prolog/PrettyPrint/Direct.fr
 
