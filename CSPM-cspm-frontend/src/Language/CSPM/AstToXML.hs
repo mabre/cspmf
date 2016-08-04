@@ -1,81 +1,76 @@
------------------------------------------------------------------------------
--- |
--- Module      :  Language.CSPM.AstToXml
--- Copyright   :  (c) Fontaine 2011
--- License     :  BSD3
--- 
--- Maintainer  :  Fontaine@cs.uni-duesseldorf.de
--- Stability   :  experimental
--- Portability :  GHC-only
---
--- Convert an AST to XML
--- TODO module AstToXml
-module Language.CSPM.AstToXML
-  (
-    moduleToXML 
-   ,astToXML
-   ,showTopElement
-  )
-where
+{--
+    Convert an AST to XML.
+    
+    [Module]     Language.CSPM.AstToXml
+    [Copyright]  (c) Fontaine 2011
+    [License]    BSD3
+    
+    [Maintainer] Fontaine@cs.uni-duesseldorf.de
+    [Stability]  experimental
+-}
 
-import Text.XML.Light
-import Data.Data
+module Language.CSPM.AstToXML where
+
+import Text.XML.Light.Light(public showTopElement)
+import Text.XML.Light.Light
+import Data.Data hiding (DataType)
 import Data.Generics.Aliases (extQ, ext1Q)
 import Language.CSPM.AST
-import Language.CSPM.SrcLoc as SrcLoc
+import Language.CSPM.SrcLoc
 
--- | Translate a Module to XML
+--- Translate a Module to XML
 moduleToXML :: Module a -> Element
 moduleToXML m
-  = unode "Module"
+  = unodeElements "Module"
     [
-       unode "moduleDecls" $ astToXML $ moduleDecls m
-      ,unode "modulePragmas" $ map
-         (unode "Pragma" . Attr (unqual "val"))
-         (modulePragmas m)
-      ,unode "moduleComments" $ astToXML $ moduleComments m
+       unodeElement "moduleDecls" $ astToXML m.moduleDecls
+      ,unodeElements "modulePragmas" $ map
+         (unodeAttr "Pragma" . Attr (unqual "val"))
+         m.modulePragmas
+      ,unodeElement "moduleComments" $ astToXML m.moduleComments
     ]
 
--- | Translate an AST node to an XML Element.
--- This is an 'almost' totally generic translation which
--- works for any Haskell type, but it handles some special cases.
+--- Translate an AST node to an XML Element.
+--- This is an 'almost' totally generic translation which
+--- works for any Haskell type, but it handles some special cases.
 astToXML :: Data a => a -> Element
 astToXML
-  = genericCase `extQ` identToXML `ext1Q` labelToXML
-     `ext1Q` listToXML `extQ` intToXML `extQ` commentToXML
+  = genericCase-- ((((genericCase `extQ` identToXML) `ext1Q` labelToXML)
+    -- `ext1Q` listToXML) `extQ` intToXML) `extQ` commentToXML
   where
     genericCase :: Data a => a -> Element
-    genericCase n = unode (showConstr $ toConstr n) $ gmapQ astToXML n
+    genericCase n = unodeElements (showConstr $ toConstr n) $ gmapQ astToXML n
 
     identToXML :: Ident -> Element
     identToXML x = case x of
-      Ident s -> unode "Ident" (Attr (unqual "unIdent") s)
-      UIdent u -> unode "UIdent" $ uniqueIdentToXML u
+      Ident s -> unodeAttr "Ident" (Attr (unqual "unIdent") s)
+      UIdent u -> unodeElement "UIdent" $ uniqueIdentToXML u
 
     labelToXML :: Data a => Labeled a -> Element
     labelToXML l = add_attrs
         ( idAttr : location)
-        ( astToXML $ unLabel l)
+        ( astToXML l.unLabel)
       where 
-        idAttr = strAttr "nodeId" $ show $ unNodeId $ nodeId l
-        location = srcLocAttr $ srcLoc l
+        idAttr = strAttr "nodeId" $ show l.nodeId.unNodeId
+        location = srcLocAttr l.srcLoc
 
     listToXML :: Data a => [a] -> Element
-    listToXML = unode "list" . map astToXML
+    listToXML = unodeElements "list" . map astToXML
 
     intToXML :: Integer -> Element
-    intToXML i = unode "Integer" $ strAttr "val" $ show i
+    intToXML i = unodeAttr "Integer" $ strAttr "val" $ show i
 
-    uniqueIdentToXML n = unode "UniqueIdent"
+    uniqueIdentToXML :: UniqueIdent -> Element
+    uniqueIdentToXML n = unodeAttrs "UniqueIdent"
      [
-      strAttr "uniqueIdentId" $ show $ uniqueIdentId n
-     ,strAttr "bindingSide" $ show $ bindingSide n
+      strAttr "uniqueIdentId" $ show n.uniqueIdentId
+     ,strAttr "bindingSide" $ show n.bindingSide
      ,strAttr "bindingLoc" $ "todo: bindingLoc"
-     ,strAttr "idType" $ show $ idType n
-     ,strAttr "realName" $ realName n
-     ,strAttr "newName" $ newName n
-     ,strAttr "prologMode" $ show $ prologMode n
-     ,strAttr "bindType" $ show $ bindType n
+     ,strAttr "idType" $ show n.idType
+     ,strAttr "realName" n.realName
+     ,strAttr "newName" n.newName
+     ,strAttr "prologMode" $ show n.prologMode
+     ,strAttr "bindType" $ show n.bindType
      ]
 
     strAttr a s = Attr (unqual a) s
@@ -111,6 +106,6 @@ astToXML
     commentToXML :: (Comment,SrcLoc.SrcLoc) -> Element
     commentToXML (comment,loc)
        = add_attrs (srcLocAttr loc) $ case comment of
-      LineComment c -> unode "LineComment" $ strAttr "val" c
-      BlockComment c -> unode "BlockComment" $ strAttr "val" c
-      PragmaComment c -> unode "PragmaComment" $ strAttr "val" c
+      LineComment c -> unodeAttr "LineComment" $ strAttr "val" c
+      BlockComment c -> unodeAttr "BlockComment" $ strAttr "val" c
+      PragmaComment c -> unodeAttr "PragmaComment" $ strAttr "val" c

@@ -17,6 +17,7 @@ import Language.CSPM.Frontend
 import Language.CSPM.LexHelper
 
 import Language.CSPM.TranslateToProlog
+import Language.CSPM.AstToXML
 
 import Text.PrettyPrint
 import Data.Version
@@ -52,13 +53,19 @@ verbose =
   where nl = "\n"
 
 prettyOut :: FilePath -> Bool -> FilePath -> IO ()
-prettyOut src rename outFile = handleException $ do
+prettyOut = genericOut prettyShow
+
+xmlOut :: FilePath -> Bool -> FilePath -> IO ()
+xmlOut = genericOut (showTopElement . moduleToXML)
+
+private genericOut :: (ModuleFromRenaming -> String) -> FilePath -> Bool -> FilePath -> IO ()
+private genericOut showModule src rename outFile = handleException $ do
     ast <- do
           ast1 <- parseFile src
           if rename
             then fmap fst $ eitherToExc throwRenameError $ renameModule ast1
             else return $ castModule ast1
-    writeFile outFile $ prettyShow ast
+    writeFile outFile $ showModule ast
 
 addUnicode :: FilePath -> FilePath -> IO ()
 addUnicode src outFile = handleException $ do

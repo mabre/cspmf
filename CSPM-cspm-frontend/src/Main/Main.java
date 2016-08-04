@@ -10,15 +10,15 @@ import static frege.main.FregeInterface.evaluateIOUnitFunction;
 public class Main {
 
     /**
-     * main-funtion for the command line.
+     * main-function for the command line.
      */
     public static void main(String[] args) {
         Options options = new Options();
-        options.addOption("?", "help", false, "Display help message");
-        options.addOption("V", "version", false, "Print version information");
+        options.addOption("?", "help", false, "display help message");
+        options.addOption("V", "version", false, "print version information");
         options.addOption(Option.builder()
                                 .longOpt("numeric-version")
-                                .desc("Print just the version number")
+                                .desc("print just the version number")
                                 .build());
         options.addOption("v", "verbose", false, "verbose");
         options.addOption(Option.builder()
@@ -26,20 +26,26 @@ public class Main {
                                 .desc("run renaming on the AST")
                                 .build());
         options.addOption(Option.builder()
+                                .longOpt("xmlOut")
+                                .desc("translate a CSP-M file to XML")
+                                .hasArg()
+                                .argName("FILE")
+                                .build());
+        options.addOption(Option.builder()
                                 .longOpt("prettyOut")
-                                .desc("prettyPrint to a file")
+                                .desc("pretty print to a file")
                                 .hasArg()
                                 .argName("FILE")
                                 .build());
         options.addOption(Option.builder()
                                 .longOpt("addUnicode")
-                                .desc("replace some CSPM symbols with unicode")
+                                .desc("replace some CSP-M symbols with unicode")
                                 .hasArg()
                                 .argName("FILE")
                                 .build());
         options.addOption(Option.builder()
                                 .longOpt("removeUnicode")
-                                .desc("replace some unicode symbols with default CSPM encoding")
+                                .desc("replace some unicode symbols with default CSP-M encoding")
                                 .hasArg()
                                 .argName("FILE")
                                 .build());
@@ -86,6 +92,10 @@ public class Main {
                     if(cmdLine.hasOption("prettyOut")) {
                         String outFile = cmdLine.getOptionValue("prettyOut");
                         evaluateIOUnitFunction(ExecCommand.prettyOut(src, rename, outFile));
+                    }
+                    if(cmdLine.hasOption("xmlOut")) {
+                        String outFile = cmdLine.getOptionValue("xmlOut");
+                        evaluateIOUnitFunction(ExecCommand.xmlOut(src, rename, outFile));
                     }
                     if(cmdLine.hasOption("addUnicode")) {
                         String outFile = cmdLine.getOptionValue("addUnicode");

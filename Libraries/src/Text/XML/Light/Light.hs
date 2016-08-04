@@ -54,7 +54,10 @@ unodeElements :: String -> [Element] -> Element
 unodeElements = unode (\n es -> node n ([]::[Attr], map Elem es))
 
 unodeAttr :: String -> Attr -> Element
-unodeAttr = unode (\n a -> node n ([a], []::[Content]))
+unodeAttr n a = unodeAttrs n [a]
+
+unodeAttrs :: String -> [Attr] -> Element
+unodeAttrs = unode (\n as -> node n (as, []::[Content]))
 
 node :: QName -> ([Attr],[Content]) -> Element
 node n (attrs,cont) = blank_element.{ elName     = n
