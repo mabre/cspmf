@@ -8,7 +8,7 @@ createInstance packag modul (Topdecl typeName typeArgs constrs) = unlines $
     typeableInstance tn tc pn mn targs typeArgs
     ++
     [ con++" :: Constr\n"++
-      con++" = mkConstr "++ty++" \""++con++"\" [] Prefix" | (_, _, con) <- cons ]
+      con++" = mkConstr "++ty++" \""++c++"\" [] Prefix" | (c, _, con) <- cons ]
     ++
     [ ty++" :: DataType"
     , ty++" = mkDataType \""++pn++"."++mn++"."++tn++"\" "++conList
