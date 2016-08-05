@@ -97,7 +97,7 @@ cspm-frontend: dataderiver libraries
 		Frontend.fr
 
 
-libraries: parsec syb backports misclibs
+libraries: parsec syb xml backports misclibs
 
 parsec:
 	@echo "[1;42mMaking $@[0m"
@@ -124,6 +124,15 @@ syb: backports
 		Generics/Aliases.fr \
 		Generics/Schemes.fr \
 		Generics/Builders.fr
+
+
+xml:
+	@echo "[1;42mMaking $@[0m"
+	$(MKDIR_P) $(BUILD_DIRS)
+	$(FREGEC) -d $(BUILD) -make -sp "Libraries/src/Text/XML/Light" \
+		Light.fr \
+		Output.fr \
+		Types.fr
 
 backports:
 	@echo "[1;42mMaking $@[0m"
