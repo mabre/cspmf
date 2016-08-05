@@ -35,12 +35,13 @@ TMP       = /tmp
 cspmf: cspm-frontend cspm-toprolog cspm-cspm-frontend
 	@echo "[1;42mMade $@[0m"
 
-cspm-cspm-frontend: cspm-toprolog
+cspm-cspm-frontend: #cspm-toprolog
 	@echo "[1;42mMaking $@[0m"
 	
-	$(FREGEC) -d $(BUILD) -make -sp CSPM-cspm-frontend/src/Main \
-		ExecCommand.fr \
-		ExceptionHandler.fr
+	$(FREGEC) -d $(BUILD) -make -sp CSPM-cspm-frontend/src \
+		Language/CSPM/AstToXML.fr \
+		Main/ExecCommand.fr \
+		Main/ExceptionHandler.fr
 	
 	$(JAVAC) -d $(BUILD) CSPM-cspm-frontend/src/Main/Main.java CSPM-cspm-frontend/src/Main/FregeInterface.java CSPM-cspm-frontend/src/Main/Benchmark.java
 

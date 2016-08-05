@@ -33,19 +33,34 @@ moduleToXML m
 --- Translate an AST node to an XML Element.
 --- This is an 'almost' totally generic translation which
 --- works for any Haskell type, but it handles some special cases.
-astToXML :: Data a => a -> Element
+--- Note Frege 3.23 does not like the type of ext1Q, so we use extQ
+--- here instead, which cannot be as generic as we'd like to have it.
+astToXML :: (Data a, Typeable a) => a -> Element
 astToXML
-  = genericCase-- ((((genericCase `extQ` identToXML) `ext1Q` labelToXML)
-    -- `ext1Q` listToXML) `extQ` intToXML) `extQ` commentToXML
+     = genericCase
+        `extQ` identToXML
+        `extQ` labelToXML_LConstructor
+        `extQ` labelToXML_LDecl
+        `extQ` labelToXML_LExp
+        `extQ` labelToXML_LIdent
+        `extQ` labelToXML_LPattern
+        `extQ` listToXML_LConstructor
+        `extQ` listToXML_LDecl
+        `extQ` listToXML_LIdent
+        `extQ` listToXML_LocComment
+        `extQ` intToXML
+        `extQ` commentToXML
+      
   where
+    
     genericCase :: Data a => a -> Element
     genericCase n = unodeElements (showConstr $ toConstr n) $ gmapQ astToXML n
-
+    
     identToXML :: Ident -> Element
     identToXML x = case x of
       Ident s -> unodeAttr "Ident" (Attr (unqual "unIdent") s)
       UIdent u -> unodeElement "UIdent" $ uniqueIdentToXML u
-
+    
     labelToXML :: Data a => Labeled a -> Element
     labelToXML l = add_attrs
         ( idAttr : location)
@@ -53,9 +68,29 @@ astToXML
       where 
         idAttr = strAttr "nodeId" $ show l.nodeId.unNodeId
         location = srcLocAttr l.srcLoc
+    
+    labelToXML_LConstructor :: LConstructor -> Element
+    labelToXML_LConstructor = labelToXML
+    labelToXML_LDecl :: LDecl -> Element
+    labelToXML_LDecl = labelToXML
+    labelToXML_LExp :: LExp -> Element
+    labelToXML_LExp = labelToXML
+    labelToXML_LIdent :: LIdent -> Element
+    labelToXML_LIdent = labelToXML
+    labelToXML_LPattern :: LPattern -> Element
+    labelToXML_LPattern = labelToXML
 
     listToXML :: Data a => [a] -> Element
     listToXML = unodeElements "list" . map astToXML
+    
+    listToXML_LConstructor :: [LConstructor] -> Element
+    listToXML_LConstructor = listToXML
+    listToXML_LDecl :: [LDecl] -> Element
+    listToXML_LDecl = listToXML
+    listToXML_LIdent :: [LIdent] -> Element
+    listToXML_LIdent = listToXML
+    listToXML_LocComment :: [LocComment] -> Element
+    listToXML_LocComment = listToXML
 
     intToXML :: Integer -> Element
     intToXML i = unodeAttr "Integer" $ strAttr "val" $ show i
@@ -73,6 +108,7 @@ astToXML
      ,strAttr "bindType" $ show n.bindType
      ]
 
+    strAttr :: String -> String -> Attr
     strAttr a s = Attr (unqual a) s
 
     srcLocAttr :: SrcLoc.SrcLoc -> [Attr]
@@ -101,6 +137,7 @@ astToXML
         ]
       _ -> []
 
+    locAttr :: Show a => String -> a -> Attr
     locAttr s i = Attr (unqual s) $ show i
 
     commentToXML :: (Comment,SrcLoc.SrcLoc) -> Element
