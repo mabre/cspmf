@@ -154,7 +154,7 @@ private escCData   :: String -> ShowS
 private escCData cs | cs.startsWith "]]>"
                     = showString "]]]]><![CDATA[>" . escCData (strtail cs 3)
 private escCData "" = id
-private escCData cs = showChar (head cs) . escCData (tail cs)
+private escCData cs = showChar' (head cs) . escCData (tail cs)
 
 private escChar    :: Char -> ShowS
 private escChar c = case c of
@@ -169,9 +169,14 @@ private escChar c = case c of
 
   -- NOTE: We escape '\r' explicitly because otherwise they get lost
   -- when parsed back in because of then end-of-line normalization rules.
-  _ | isPrint c || c == '\n' -> showChar c
-    | otherwise -> showString "&#" . shows oc . showChar ';'
+  _ | isPrint c || c == '\n' -> showChar' c
+    | otherwise -> showString "&#" . shows oc . showChar' ';'
       where oc = ord c
+
+--- Original showChar add redundnat quotes around character (#241)
+--- backported code from newer frege version
+private showChar'  :: Char -> ShowS
+private showChar'   = (++) . ctos
 
 private escStr     :: String -> ShowS
 private escStr cs rs = foldr escChar rs (unpacked cs)
