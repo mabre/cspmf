@@ -213,7 +213,8 @@ test-toProlog:
 	@$(DIFF) "$(TESTSDIR)/prolog/$@.pl" $(TMP)/$@.pl || \
 	(echo "Test $@ failed" && exit 1)
 	$(RM) $(TMP)/$@.xml
-	./cspmf.sh translate --xmlOut=$(TMP)/$@.xml $(TESTSDIR)/cspm/$@
+	$(TOUCH) $(TMP)/$@.xml
+	./cspmf.sh translate --xmlOut=$(TMP)/$@.xml $(TESTSDIR)/cspm/$@ $(OR_TRUE)
 	@$(DIFF) "$(TESTSDIR)/xml/$@.xml" $(TMP)/$@.xml || \
 	(echo "Test $@ failed" && exit 1)
 	$(RM) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
@@ -231,7 +232,8 @@ test-toProlog:
 	@$(DIFF) "$(TESTSDIR)/prolog/$@.pl" $(TMP)/$@.pl || \
 	(echo "Test $@ failed" && exit 1)
 	$(RM) $(TMP)/$@.xml
-	./cspmf.sh translate --xmlOut=$(TMP)/$@.xml $(TESTSDIR)/cspm/$@
+	$(TOUCH) $(TMP)/$@.xml
+	./cspmf.sh translate --xmlOut=$(TMP)/$@.xml $(TESTSDIR)/cspm/$@ $(OR_TRUE)
 	@$(DIFF) "$(TESTSDIR)/xml/$@.xml" $(TMP)/$@.xml || \
 	(echo "Test $@ failed" && exit 1)
 	$(RM) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
