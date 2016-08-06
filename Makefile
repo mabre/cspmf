@@ -35,7 +35,7 @@ TMP       = /tmp
 cspmf: cspm-frontend cspm-toprolog cspm-cspm-frontend
 	@echo "[1;42mMade $@[0m"
 
-cspm-cspm-frontend: #cspm-toprolog
+cspm-cspm-frontend: cspm-toprolog
 	@echo "[1;42mMaking $@[0m"
 	
 	$(FREGEC) -d $(BUILD) -make -sp CSPM-cspm-frontend/src \
@@ -127,7 +127,7 @@ syb: backports
 		Generics/Builders.fr
 
 
-xml:
+xml: syb
 	@echo "[1;42mMaking $@[0m"
 	$(MKDIR_P) $(BUILD_DIRS)
 	$(FREGEC) -d $(BUILD) -make -sp "Libraries/src/Text/XML/Light" \
@@ -178,7 +178,7 @@ dataderiver: syb parsec
 jar:
 	@echo "[1;42mMake $@[0m"
 	@echo Note that you might have to change the paths in pg.conf.
-	@echo In case of error messages about missing symbols try running make clean \&\& make cspmf
+	@echo In case of error messages about unresolved references to program class members try running make clean \&\& make cspmf.
 	proguard @pg.conf
 	$(JAR) -ufve cspmf.jar frege.main.Main
 
@@ -204,13 +204,17 @@ test-toProlog:
 	(echo "Test $@ failed" && exit 1)
 
 # Test that
-# * the output of --prologOut matches the reference output
+# * the outputs of --prologOut and --xmlOut match the reference output
 # * prettyOut(file) == removeUnicode(addUnicode(prettyOut(file)))
 %.csp:
 	@echo "[1;42mTesting $@[0m"
 	$(RM) $(TMP)/$@.pl
 	./cspmf.sh translate --prologOut=$(TMP)/$@.pl $(TESTSDIR)/cspm/$@
 	@$(DIFF) "$(TESTSDIR)/prolog/$@.pl" $(TMP)/$@.pl || \
+	(echo "Test $@ failed" && exit 1)
+	$(RM) $(TMP)/$@.xml
+	./cspmf.sh translate --xmlOut=$(TMP)/$@.xml $(TESTSDIR)/cspm/$@
+	@$(DIFF) "$(TESTSDIR)/xml/$@.xml" $(TMP)/$@.xml || \
 	(echo "Test $@ failed" && exit 1)
 	$(RM) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
 	$(TOUCH) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
@@ -225,6 +229,10 @@ test-toProlog:
 	$(RM) $(TMP)/$@.pl
 	./cspmf.sh translate --prologOut=$(TMP)/$@.pl $(TESTSDIR)/cspm/$@
 	@$(DIFF) "$(TESTSDIR)/prolog/$@.pl" $(TMP)/$@.pl || \
+	(echo "Test $@ failed" && exit 1)
+	$(RM) $(TMP)/$@.xml
+	./cspmf.sh translate --xmlOut=$(TMP)/$@.xml $(TESTSDIR)/cspm/$@
+	@$(DIFF) "$(TESTSDIR)/xml/$@.xml" $(TMP)/$@.xml || \
 	(echo "Test $@ failed" && exit 1)
 	$(RM) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
 	$(TOUCH) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
