@@ -228,4 +228,4 @@ test-toProlog:
 .PHONY: clean
 clean:
 	@echo "[1;42mMaking $@[0m"
-	$(RM) $(BUILD_DIRS) $(DIST) $(DOC)
+	$(RM) $(BUILD_DIRS) $(DIST) $(DOC) CSPM-Frontend/__DataTypeable CSPM-Frontend/src/Language/CSPM/Lexer.hs CSPM-Frontend/src/Language/CSPM/Lexer.fr
