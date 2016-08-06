@@ -170,6 +170,7 @@ extQ :: ( Typeable a
      -> q
 extQ f g a = maybe (f a) g (cast a)
 
+infixl 16 extQ
 
 --- Extend a generic monadic transformation by a type-specific case
 extM :: ( Monad m

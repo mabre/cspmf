@@ -38,9 +38,10 @@ cspmf: cspm-frontend cspm-toprolog cspm-cspm-frontend
 cspm-cspm-frontend: cspm-toprolog
 	@echo "[1;42mMaking $@[0m"
 	
-	$(FREGEC) -d $(BUILD) -make -sp CSPM-cspm-frontend/src/Main \
-		ExecCommand.fr \
-		ExceptionHandler.fr
+	$(FREGEC) -d $(BUILD) -make -sp CSPM-cspm-frontend/src \
+		Language/CSPM/AstToXML.fr \
+		Main/ExecCommand.fr \
+		Main/ExceptionHandler.fr
 	
 	$(JAVAC) -d $(BUILD) CSPM-cspm-frontend/src/Main/Main.java CSPM-cspm-frontend/src/Main/FregeInterface.java CSPM-cspm-frontend/src/Main/Benchmark.java
 
@@ -97,7 +98,7 @@ cspm-frontend: dataderiver libraries
 		Frontend.fr
 
 
-libraries: parsec syb backports misclibs
+libraries: parsec syb xml backports misclibs
 
 parsec:
 	@echo "[1;42mMaking $@[0m"
@@ -124,6 +125,15 @@ syb: backports
 		Generics/Aliases.fr \
 		Generics/Schemes.fr \
 		Generics/Builders.fr
+
+
+xml: syb
+	@echo "[1;42mMaking $@[0m"
+	$(MKDIR_P) $(BUILD_DIRS)
+	$(FREGEC) -d $(BUILD) -make -sp "Libraries/src/Text/XML/Light" \
+		Light.fr \
+		Output.fr \
+		Types.fr
 
 backports:
 	@echo "[1;42mMaking $@[0m"
@@ -168,7 +178,7 @@ dataderiver: syb parsec
 jar:
 	@echo "[1;42mMake $@[0m"
 	@echo Note that you might have to change the paths in pg.conf.
-	@echo In case of error messages about missing symbols try running make clean \&\& make cspmf
+	@echo In case of error messages about unresolved references to program class members try running make clean \&\& make cspmf.
 	proguard @pg.conf
 	$(JAR) -ufve cspmf.jar frege.main.Main
 
@@ -194,13 +204,18 @@ test-toProlog:
 	(echo "Test $@ failed" && exit 1)
 
 # Test that
-# * the output of --prologOut matches the reference output
+# * the outputs of --prologOut and --xmlOut match the reference output
 # * prettyOut(file) == removeUnicode(addUnicode(prettyOut(file)))
 %.csp:
 	@echo "[1;42mTesting $@[0m"
 	$(RM) $(TMP)/$@.pl
 	./cspmf.sh translate --prologOut=$(TMP)/$@.pl $(TESTSDIR)/cspm/$@
 	@$(DIFF) "$(TESTSDIR)/prolog/$@.pl" $(TMP)/$@.pl || \
+	(echo "Test $@ failed" && exit 1)
+	$(RM) $(TMP)/$@.xml
+	$(TOUCH) $(TMP)/$@.xml
+	./cspmf.sh translate --xmlOut=$(TMP)/$@.xml $(TESTSDIR)/cspm/$@ $(OR_TRUE)
+	@$(DIFF) "$(TESTSDIR)/xml/$@.xml" $(TMP)/$@.xml || \
 	(echo "Test $@ failed" && exit 1)
 	$(RM) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
 	$(TOUCH) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
@@ -215,6 +230,11 @@ test-toProlog:
 	$(RM) $(TMP)/$@.pl
 	./cspmf.sh translate --prologOut=$(TMP)/$@.pl $(TESTSDIR)/cspm/$@
 	@$(DIFF) "$(TESTSDIR)/prolog/$@.pl" $(TMP)/$@.pl || \
+	(echo "Test $@ failed" && exit 1)
+	$(RM) $(TMP)/$@.xml
+	$(TOUCH) $(TMP)/$@.xml
+	./cspmf.sh translate --xmlOut=$(TMP)/$@.xml $(TESTSDIR)/cspm/$@ $(OR_TRUE)
+	@$(DIFF) "$(TESTSDIR)/xml/$@.xml" $(TMP)/$@.xml || \
 	(echo "Test $@ failed" && exit 1)
 	$(RM) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
 	$(TOUCH) $(TMP)/$@.pretty.csp $(TMP)/$@.unicode.csp $(TMP)/$@.nounicode.csp
