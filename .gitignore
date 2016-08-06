@@ -1,3 +1,7 @@
 *.class
 *.o
 *.hi
+build/
+CSPM-Frontend/__DataTypeable
+CSPM-Frontend/src/Language/CSPM/Lexer.hs
+CSPM-Frontend/src/Language/CSPM/Lexer.fr
