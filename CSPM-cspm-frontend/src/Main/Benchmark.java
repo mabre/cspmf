@@ -15,14 +15,18 @@ import java.util.function.Consumer;
 import java.util.LinkedList;
 import java.util.stream.*;
 
+/**
+ * This class contains methods for benchmarking typical calls to cspmf.
+ */
 public class Benchmark {
 
     /** a remembered ast */
     private static TModule ast;
 
     /**
-     * Measures the runtime of a call with --prologOut or --translateDecl.
-     * @param args[0] prologOut or translateDecl
+     * Measures the runtime of a call with --prologOut, --xmlOut or --translateDecl.
+     * The output files are saved next to the input files.
+     * @param args[0] prologOut, xmlOut or translateDecl
      * @param args[1] number of repetitions
      * @param args[2] the file to be translated
      * @param args[3] (optional) declaration for --translateDecl
@@ -30,10 +34,18 @@ public class Benchmark {
     public static void main(String[] args) {
         if(args.length < 3) {
             System.out.println("too few arguments");
+            printUsageInformation();
             return;
         }
         
-        int repetitions = Integer.parseInt(args[1]);
+        int repetitions;
+        try {
+            repetitions = Integer.parseInt(args[1]);
+        } catch(NumberFormatException e) {
+            System.out.println(args[1] + " is not an integer");
+            printUsageInformation();
+            return;
+        }
         String filename = args[2];
         String[] cmdArgs = new String[3];
         
@@ -44,6 +56,12 @@ public class Benchmark {
                 cmdArgs[2] = filename;
                 benchmark(repetitions, Main::main, cmdArgs);
                 break;
+            case 'x':
+                cmdArgs[0] = "translate";
+                cmdArgs[1] = "--xmlOut=" + filename + ".xml";
+                cmdArgs[2] = filename;
+                benchmark(repetitions, Main::main, cmdArgs);
+                break;
             case 't':
                 cmdArgs[0] = args.length > 2 ? args[3] : "N";
                 rememberAstFromFile(filename);
@@ -51,7 +69,12 @@ public class Benchmark {
                 break;
             default:
                 System.out.println("unknown option " + args[0]);
+                printUsageInformation();
         }
+    }
+    
+    private static void printUsageInformation() {
+        System.out.println("Parameters: prologOut|xmlOut|translateDecl numberOfRepetitions file [declaration='N']");
     }
     
     /**
