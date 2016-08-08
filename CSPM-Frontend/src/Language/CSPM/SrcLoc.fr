@@ -128,7 +128,7 @@ getEndToken s = case s of
 
 
 computeEndPos :: Token -> AlexPosn
-computeEndPos t = foldl' alexMove (t.tokenStart) (unpacked (t.tokenString)) -- TODO string performance?
+computeEndPos t = foldl' alexMove (t.tokenStart) (unpacked (t.tokenString))
 
 
 {-# DEPRECATED srcLocFromTo "sourceLoc arithmetics is not reliable" #-}

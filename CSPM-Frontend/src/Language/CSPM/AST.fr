@@ -49,7 +49,7 @@ derive Ord (Labeled t)
 derive Show (Labeled t)
 
 --- Wrap a node with a dummyLabel.
---- todo: Redo we need a specal case in DataConstructor Labeled.
+--- todo: Redo we need a special case in DataConstructor Labeled.
 labeled :: t -> Labeled t
 labeled t = Labeled {
  nodeId  = NodeId (-1)

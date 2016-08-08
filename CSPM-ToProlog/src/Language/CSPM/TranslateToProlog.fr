@@ -33,8 +33,11 @@ private evaluate x = (return $! x) >>= return
 private native getCPUTime java.lang.System.currentTimeMillis :: () -> IO Long
 
 --- The version of the CSPM-ToProlog library
-toPrologVersion :: Version --TODO
+toPrologVersion :: Version
 toPrologVersion = makeVersion [0,6,1,1]
+
+handleTranslationError :: RenameErrorException -> IO String
+handleTranslationError err = return $ show err.get
 
 --- 'translateExpToPrologTerm' translates a string expression
 --- to a prolog term in regard to the given CSP-M specification.
@@ -43,40 +46,31 @@ translateExpToPrologTerm ::
   -> String
   -> IO ()
 translateExpToPrologTerm file expr = do
-    r <- mainWorkSinglePlTerm getExpPlCode file ("x__entrypoint_expression = " ++ expr) --`catch` handleTranslationError
+    r <- mainWorkSinglePlTerm getExpPlCode file ("x__entrypoint_expression = " ++ expr)
     putStrLn r
-  where
-    getExpPlCode :: Module a -> Doc
-    getExpPlCode = addFullStopToPrologTerm . Term.unTerm . te . getLastBindExpression
 
-handleTranslationError :: RenameErrorException -> IO String --TODO
-handleTranslationError err = return $ show err.get
+--- 'translateExprToPrologTerm'' translates a string expression
+--- to a prolog term in regard to the given CSP-M specification given as AST.
+translateExprToPrologTerm' :: ModuleFromParser -> String -> IO String
+translateExprToPrologTerm' ast expr = mainWorkSinglePlTerm' getExpPlCode ast ("x__entrypoint_expression = " ++ expr)
+
+private getExpPlCode :: Module a -> Doc
+private getExpPlCode = addFullStopToPrologTerm . Term.unTerm . te . getLastBindExpression
 
 --- 'translateDeclToPrologTerm' translates a string declaration
 --- to a prolog term in regard to the given CSP-M specification.
-translateDeclToPrologTerm ::
-     Maybe FilePath
-  -> String
-  -> IO ()
+translateDeclToPrologTerm :: Maybe FilePath -> String -> IO ()
 translateDeclToPrologTerm file decl = do
     r <- mainWorkSinglePlTerm getDeclPlCode file decl
     putStrLn r
-  where
-    getDeclPlCode :: Module a -> Doc
-    getDeclPlCode = addFullStopToPrologTerm . Term.unTerm . head . td . getLastDeclaration
 
 --- 'translateDeclToPrologTerm'' translates a string declaration
 --- to a prolog term in regard to the given CSP-M specification given as AST.
---- TODO same for Expression, Tests
-translateDeclToPrologTerm' ::
-     ModuleFromParser
-  -> String
-  -> IO String
-translateDeclToPrologTerm' ast decl =
-    mainWorkSinglePlTerm' getDeclPlCode ast decl
-  where
-    getDeclPlCode :: Module a -> Doc
-    getDeclPlCode = addFullStopToPrologTerm . Term.unTerm . head . td . getLastDeclaration
+translateDeclToPrologTerm' :: ModuleFromParser -> String -> IO String
+translateDeclToPrologTerm' = mainWorkSinglePlTerm' getDeclPlCode
+
+private getDeclPlCode :: Module a -> Doc
+private getDeclPlCode = addFullStopToPrologTerm . Term.unTerm . head . td . getLastDeclaration
 
 private addFullStopToPrologTerm :: Doc -> Doc
 private addFullStopToPrologTerm plTerm = plTerm <> (text ".")

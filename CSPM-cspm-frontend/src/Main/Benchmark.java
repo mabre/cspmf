@@ -24,9 +24,9 @@ public class Benchmark {
     private static TModule ast;
 
     /**
-     * Measures the runtime of a call with --prologOut, --xmlOut or --translateDecl.
+     * Measures the runtime of a call with --prologOut, --xmlOut, --translateDecl, or --translateExpr.
      * The output files are saved next to the input files.
-     * @param args[0] prologOut, xmlOut or translateDecl
+     * @param args[0] prologOut, xmlOut, translateDecl, or translateExpr
      * @param args[1] number of repetitions
      * @param args[2] the file to be translated
      * @param args[3] (optional) declaration for --translateDecl
@@ -49,6 +49,7 @@ public class Benchmark {
         String filename = args[2];
         String[] cmdArgs = new String[3];
         
+        args[0] = args[0].replace("translate", "").toLowerCase();
         switch(args[0].charAt(0)) {
             case 'p':
                 cmdArgs[0] = "translate";
@@ -62,10 +63,15 @@ public class Benchmark {
                 cmdArgs[2] = filename;
                 benchmark(repetitions, Main::main, cmdArgs);
                 break;
-            case 't':
+            case 'd':
                 cmdArgs[0] = args.length > 2 ? args[3] : "N";
                 rememberAstFromFile(filename);
                 benchmark(repetitions, Benchmark::translateDeclRun, cmdArgs);
+                break;
+            case 'e':
+                cmdArgs[0] = args.length > 2 ? args[3] : "1+1";
+                rememberAstFromFile(filename);
+                benchmark(repetitions, Benchmark::translateExprRun, cmdArgs);
                 break;
             default:
                 System.out.println("unknown option " + args[0]);
@@ -74,7 +80,7 @@ public class Benchmark {
     }
     
     private static void printUsageInformation() {
-        System.out.println("Parameters: prologOut|xmlOut|translateDecl numberOfRepetitions file [declaration='N']");
+        System.out.println("Parameters: prologOut|xmlOut|translateDecl|translateExpr numberOfRepetitions file [declaration='N'|expression='1+1']");
     }
     
     /**
@@ -112,6 +118,30 @@ public class Benchmark {
             long start = System.currentTimeMillis();
             String term = (String)evaluateIOFunction(
                 TranslateToProlog.translateDeclToPrologTerm$tick(
+                    ast,
+                    decl[0]
+                )
+            );
+            long end = System.currentTimeMillis();
+            
+            System.out.println("Done. (" + (end-start) + " ms)");
+            
+            System.out.println(term);
+        } catch(WrappedCheckedException e) {
+            System.out.println(e.getCause().getMessage());
+        }
+    }
+    
+    /**
+     * Calls translateExprToPrologTerm' on the ast with the given declaration and prints the resulting prolog term.
+     * @param decl a list containing one CSPM declaration
+     */
+    private static void translateExprRun(String[] decl) {
+        try {
+            System.out.println("Translating Expression ...");
+            long start = System.currentTimeMillis();
+            String term = (String)evaluateIOFunction(
+                TranslateToProlog.translateExprToPrologTerm$tick(
                     ast,
                     decl[0]
                 )
