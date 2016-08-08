@@ -6,11 +6,11 @@ import Language.CSPM.Lexer as Lexer (scanner)
 import Language.CSPM.Token (Token, LexError)
 import Language.CSPM.TokenClasses (PrimToken)
 import Language.CSPM.UnicodeSymbols (lookupDefaultSymbol)
+
+import Data.DList(DList)
+import Data.DList as DList()
 import frege.control.monad.trans.MonadIO 
 import frege.data.Set (Set)
-
--- import Data.DList as DList() --TODO performance
-type DList = []
 
 import System.FilePath(FilePath,isAbsolute,splitDirectories,normalise,joinPath)
 import frege.control.monad.trans.EitherT
@@ -59,18 +59,18 @@ derive Show FilePart
 --- lex input-string and import all includes files
 lexInclude :: FilePath -> String -> IO (Either LexError [Token])
 lexInclude srcName input
-   = eitherT (return . Left) (return . Right . concat {-. DList.toList-}) $ lexInclude2 srcName input
+   = eitherT (return . Left) (return . Right . concat . DList.toList) $ lexInclude2 srcName input
 
 private lexInclude2 :: FilePath -> String -> EitherT LexError IO Chunks
 private lexInclude2 srcName input = do
         hoistEither $ lexPlain input
     >>= hoistEither . splitIncludes []
     >>= mapM (processPart srcName)
-    >>= return . {-DList.-}concat
+    >>= return . DList.concat
 
 private processPart :: FilePath -> FilePart -> EitherT LexError IO Chunks
 private processPart srcName part = case part of
-    Toks ch -> return $ {-DList.singleton-} [ch]
+    Toks ch -> return $ DList.singleton ch
     Include fname -> (MonadIO.liftIO $ readFile absolutePath) >>= lexInclude2 absolutePath
      where
        absolutePath = getAbsoluteIncludeFileName srcName fname 

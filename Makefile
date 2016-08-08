@@ -148,6 +148,7 @@ misclibs: syb
 	$(MKDIR_P) $(BUILD_DIRS)
 	$(FREGEC) -d $(BUILD) -make -sp "Libraries/src" \
 		Control/Monad/State.fr \
+		Data/DList.fr \
 		Data/Map.fr \
 		Data/IntMap.fr \
 		Data/Set.fr \
