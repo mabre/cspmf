@@ -19,11 +19,16 @@ insert = Map.insert
 lookup :: Int -> IntMap a -> Maybe a
 lookup = Map.lookup
 
--- removed from a everything which is in b
-difference a b = error "IntMap.difference not implemented" -- TODO use filter or HashSet?
-    {-fromList $ map f [ e | e <- Map.toList a ]
-    where f = filter (\e -> lookup (fst e) b == Nothing)-}
+--- remove from a everything which is in b
+difference :: IntMap v -> IntMap v -> IntMap v
+difference a b = fromList $ filter notInB $ Map.toList a
+    where notInB (k,v) = lookup k b == Nothing
+
+fromList :: [(Int, v)] -> IntMap v
 fromList = Map.fromList
+
+toList :: IntMap a -> [(Int,a)]
+toList = Map.toList
 
 tc_Map :: TyCon
 tc_Map = mkTyCon3 "Language.CSPM" "AST" "Map"
