@@ -1,4 +1,3 @@
--- TODO move tests to this repo
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, PolyKinds, StandaloneDeriving,
              AutoDeriveTypeable, TypeOperators, GADTs, FlexibleInstances #-}

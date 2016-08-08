@@ -190,8 +190,33 @@ doc:
 
 
 .PHONY: test %.csp %.fdr test-toProlog
-test: $(TESTFILES) test-toProlog
+test: test-syb test-cspmf
 	@echo "[1;42mTesting done[0m"
+
+test-syb:
+	@echo "[1;42mTesting SYB[0m"
+	$(FREGEC) -sp "Libraries/test/Syb" \
+		DataTest.fr \
+		EverywhereTest.fr \
+		ListTest.fr \
+		StringTest.fr \
+		TupleTest.fr \
+		TypeTest.fr
+	$(FREGE) frege.syb.DataTest
+	$(FREGE) frege.syb.EverywhereTest
+	$(FREGE) frege.syb.ListTest
+	$(FREGE) frege.syb.StringTest
+	$(FREGE) frege.syb.TupleTest
+	$(FREGE) frege.syb.TypeTest
+
+test-filepath:
+	@echo "[1;42mTesting System.FilePath[0m"
+	$(FREGEC) -sp "Libraries/test" \
+		FilePathTest.fr
+	$(FREGE) frege.filePath.Test
+
+
+test-cspmf: $(TESTFILES) test-toProlog
 
 test-toProlog:
 	@echo "[1;42mTesting toProlog[0m"

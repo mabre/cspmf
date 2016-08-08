@@ -1,4 +1,4 @@
-module FilePathTest where
+module FilePath.Test where
 
 import System.FilePath
 import Data.Maybe
@@ -8,14 +8,19 @@ import Data.List
 --- All tests have been taken from the documentation, some have been modified
 --- to work with Frege (ie. conversions between String and [Char] have been
 --- added where necessary).
+main :: IO Bool
 main = do
     putStrLn "Failing tests for Unix:"
-    printFailing unix
-    putStrLn "Failing tests for Windows:"
-    printFailing win
-    putStrLn "(only one test should succeed on your system)"
+    print failingUnix
+    putStrLn "\nFailing tests for Windows:"
+    print failingWin
+    putStrLn "\n(only one test should succeed on your system)"
+    return passed
   where
-    printFailing = putStrLn . show . filter ((== false) . snd)
+    getFailing  = filter ((== false) . snd)
+    failingUnix = getFailing unix
+    failingWin  = getFailing win
+    passed      = null failingUnix || null failingWin
 
 --- identities which hold on a Unix system
 unix = [
