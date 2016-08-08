@@ -83,17 +83,7 @@ data RenameInfo = RenameInfo
    ,prologMode :: PrologMode --- could use a readermonad for prologMode and bindType
     bindType   :: BindType
   }
-
-instance Show RenameInfo where
-    show r = concat [
-        show r.nameSupply,
-        show (Map.toList r.localBindings), --TODO is Map instance of Show?
-        show (Map.toList r.visible),
-        show r.identDefinition,
-        show r.identUse,
-        show r.usedNames,
-        show r.prologMode,
-        show r.bindType]
+derive Show RenameInfo
 
 private initialRState :: RenameInfo
 private initialRState = RenameInfo { nameSupply    = 0,

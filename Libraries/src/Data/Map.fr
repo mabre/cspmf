@@ -1,14 +1,14 @@
--- https://github.com/Frege/frege/blob/master/contrib/dgronau/Map.fr
-
---- A 'Map' based on a balanced binary tree 
--- TODO use standard TreeMap instead?
--- TODO use inline elsewhere
+--- from https://github.com/Frege/frege/blob/master/contrib/dgronau/Map.fr
+--- A 'Map' based on a balanced binary tree
 package frege.data.Map inline (!!) where
 
-import frege.Prelude hiding (toList, join, filter, map, null, empty) -- !!
+import frege.Prelude hiding (toList, join, filter, map, null, empty)
 
 type Size = Int
 data Map k a = Tip | Bin Size k a (Map k a) (Map k a)
+
+instance (Show k, Show a) => Show (Map k a) where
+    show m = "fromList " ++ show (toList m)
 
 fromList :: (Ord k) => [(k, v)] -> Map k v
 fromList xs = fold ins empty xs where

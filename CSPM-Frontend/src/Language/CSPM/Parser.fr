@@ -450,8 +450,7 @@ Warning :
 the expression parser does not accept nested Postfix and Prefix expressions
  "not not true" does not parse !!
 -}
-private type OpTable = [[ExprM.Operator Token PState LExp]] --TODO
--- type OpTable = Int
+private type OpTable = [[ExprM.Operator Token PState LExp]]
 private opTable :: OpTable
 private opTable = baseTable ++ procTable
 
