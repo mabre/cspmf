@@ -75,9 +75,11 @@ public class Main {
             String[] arguments = cmdLine.getArgs();
             
             if(cmdLine.hasOption("help")) {
-                // TODO seperate translate/info
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.printHelp("cspmf translate", options);
+                System.out.println();
+                System.out.println("usage: cspmf info");
+                System.out.println("  print some information about the program");
             } else if(cmdLine.hasOption("version")) {
                 evaluateIOUnitFunction(ExecCommand.version);
             } else if(cmdLine.hasOption("numeric-version")) {
