@@ -89,7 +89,7 @@ private mainWorkSinglePlTerm' :: (ModuleFromRenaming -> Doc) -> ModuleFromParser
 private mainWorkSinglePlTerm' termFun ast decl = do
   ast' <- parseNamedString "no-file-name" decl
   (astNew, _) <- eitherToExc throwRenameError $ renameModule $ mergeDecls ast ast'
-  return $! show $! termFun astNew
+  return $! show $! termFun $! removeSourceLocations $! astNew
 
 --- 'translateToAst' gets a CSPM specification
 --- and returns an AST containing moduleDecls only and no source locations.
