@@ -1,8 +1,6 @@
-BUILD       = build
-BUILD_TOOLS = Tools/build
-BUILD_DIRS  = $(BUILD) $(BUILD_TOOLS)
-DIST        = dist
-DOC         = doc
+BUILD  = build
+DIST   = dist
+DOC    = doc
 
 FREGEJAR = frege.jar
 ALEX     = alex
@@ -22,23 +20,23 @@ OR_TRUE  = || true
 TOUCH    = touch
 CLASS_FILES = `find build -name "*class"`
 
-FREGECFLAGS = -hints -O
-FREGEC0     = $(JAVA) -Xss16m -Xmx2g -jar $(FREGEJAR) -fp ${BUILD}:${BUILD_TOOLS}
+FREGECFLAGS = -make -hints -O
+FREGEC0     = $(JAVA) -Xss16m -Xmx2g -jar $(FREGEJAR) -fp ${BUILD} -d $(BUILD)
 FREGEC      = $(FREGEC0) $(FREGECFLAGS)
-FREGE       = $(JAVA) -Xss16m -Xmx2g -cp $(FREGEJAR):${BUILD}:${BUILD_TOOLS}
+FREGE       = $(JAVA) -Xss16m -Xmx2g -cp $(FREGEJAR):${BUILD}
  
 TESTSDIR  = CSPM-Frontend/test
 TESTFILES = $(notdir $(wildcard $(TESTSDIR)/cspm/*))
 TMP       = /tmp
 
 
-cspmf: cspm-frontend cspm-toprolog cspm-cspm-frontend
+cspmf: cspm-cspm-frontend
 	@echo "[1;42mMade $@[0m"
 
 cspm-cspm-frontend: cspm-toprolog
 	@echo "[1;42mMaking $@[0m"
 	
-	$(FREGEC) -d $(BUILD) -make -sp CSPM-cspm-frontend/src \
+	$(FREGEC) -sp CSPM-cspm-frontend/src \
 		Language/CSPM/AstToXML.fr \
 		Main/ExecCommand.fr \
 		Main/ExceptionHandler.fr
@@ -48,7 +46,7 @@ cspm-cspm-frontend: cspm-toprolog
 cspm-toprolog: cspm-frontend
 	@echo "[1;42mMaking $@[0m"
 	
-	$(FREGEC) -d $(BUILD) -make -sp "CSPM-ToProlog/src/Language" \
+	$(FREGEC) -sp "CSPM-ToProlog/src/Language" \
 		CSPM/CompileAstToProlog.fr \
 		CSPM/TranslateToProlog.fr \
 		Prolog/PrettyPrint/Direct.fr
@@ -57,12 +55,12 @@ cspm-frontend: dataderiver libraries
 	@echo "[1;42mMaking $@[0m"
 	$(BASH) Tools/src/Scripts/DeriveDataTypeable.sh "$(FREGE)"
 	
-	$(FREGEC) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
+	$(FREGEC) -sp "CSPM-Frontend/__DataTypeable" \
 		Token__LexError.fr
 	
 	$(JAVAC) -d $(BUILD) CSPM-Frontend/src/Language/CSPM/LexErrorException.java
 	
-	$(FREGEC) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
+	$(FREGEC) -sp "CSPM-Frontend/__DataTypeable" \
 		TokenClasses.fr \
 		SrcLoc.fr \
 		AlexWrapper.fr \
@@ -71,7 +69,7 @@ cspm-frontend: dataderiver libraries
 	$(ALEX) CSPM-Frontend/src/Language/CSPM/Lexer.x
 	$(BASH) Tools/src/Scripts/AlexToFrege.sh CSPM-Frontend/src/Language/CSPM/Lexer.hs
 	
-	$(FREGEC) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
+	$(FREGEC) -sp "CSPM-Frontend/__DataTypeable" \
 		CSPM-Frontend/src/Language/CSPM/Lexer.fr \
 		AST.fr \
 		UnicodeSymbols.fr \
@@ -84,15 +82,15 @@ cspm-frontend: dataderiver libraries
 	
 	$(JAVAC) -d $(BUILD) CSPM-Frontend/src/Language/CSPM/ParseErrorException.java CSPM-Frontend/src/Language/CSPM/RenameErrorException.java
 	
-	$(FREGEC) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
+	$(FREGEC) -sp "CSPM-Frontend/__DataTypeable" \
 		Parser.fr
 	
 # FATAL: Can't find context for Typeable.Typeable when run with -O
 # https://github.com/Frege/frege/issues/297
-	$(FREGEC0) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
+	$(FREGEC0) -make -sp "CSPM-Frontend/__DataTypeable" \
 		Rename.fr
 	
-	$(FREGEC) -d $(BUILD) -make -sp "CSPM-Frontend/__DataTypeable" \
+	$(FREGEC) -sp "CSPM-Frontend/__DataTypeable" \
 		Utils.fr \
 		AstUtils.fr \
 		Frontend.fr
@@ -102,8 +100,8 @@ libraries: parsec syb xml backports misclibs
 
 parsec:
 	@echo "[1;42mMaking $@[0m"
-	$(MKDIR_P) $(BUILD_DIRS)
-	$(FREGEC) -d $(BUILD) -make -sp "Libraries/src/Text/ParserCombinators/Parsec" \
+	$(MKDIR_P) $(BUILD)
+	$(FREGEC) -sp "Libraries/src/Text/ParserCombinators/Parsec" \
 		Pos.fr \
 		Error.fr \
 		Prim.fr \
@@ -116,9 +114,9 @@ parsec:
 
 syb: backports
 	@echo "[1;42mMaking $@[0m"
-	$(MKDIR_P) $(BUILD_DIRS)
+	$(MKDIR_P) $(BUILD)
 	$(JAVAC) -d $(BUILD) Libraries/src/com/netflix/frege/runtime/Fingerprint.java
-	$(FREGEC) -d $(BUILD) -make -sp "Libraries/src/Data" \
+	$(FREGEC) -sp "Libraries/src/Data" \
 		Fingerprint.fr \
 		Typeable.fr \
 		Data.fr \
@@ -129,24 +127,24 @@ syb: backports
 
 xml: syb
 	@echo "[1;42mMaking $@[0m"
-	$(MKDIR_P) $(BUILD_DIRS)
-	$(FREGEC) -d $(BUILD) -make -sp "Libraries/src/Text/XML/Light" \
+	$(MKDIR_P) $(BUILD)
+	$(FREGEC) -sp "Libraries/src/Text/XML/Light" \
 		Light.fr \
 		Output.fr \
 		Types.fr
 
 backports:
 	@echo "[1;42mMaking $@[0m"
-	$(MKDIR_P) $(BUILD_DIRS)
-	$(FREGEC) -d $(BUILD) -make -sp "Libraries/src" \
+	$(MKDIR_P) $(BUILD)
+	$(FREGEC) -sp "Libraries/src" \
 		Data/Array.fr \
 		System/Environment.fr \
 		System/Exit.fr
 
 misclibs: syb
 	@echo "[1;42mMaking $@[0m"
-	$(MKDIR_P) $(BUILD_DIRS)
-	$(FREGEC) -d $(BUILD) -make -sp "Libraries/src" \
+	$(MKDIR_P) $(BUILD)
+	$(FREGEC) -sp "Libraries/src" \
 		Control/Monad/State.fr \
 		Data/DList.fr \
 		Data/Map.fr \
@@ -161,14 +159,14 @@ tools: arraysplitter dataderiver
 
 arraysplitter:
 	@echo "[1;42mMaking $@[0m"
-	$(MKDIR_P) $(BUILD_DIRS)
-	$(FREGEC) -d $(BUILD_TOOLS) -make -sp "Tools/src" \
+	$(MKDIR_P) $(BUILD)
+	$(FREGEC) -sp "Tools/src" \
 		ArraySplitter/Main.fr
 
 dataderiver: syb parsec
 	@echo "[1;42mMaking $@[0m"
-	$(MKDIR_P) $(BUILD_DIRS)
-	$(FREGEC) -d $(BUILD_TOOLS) -make -sp "Tools/src/DataDeriver" \
+	$(MKDIR_P) $(BUILD)
+	$(FREGEC) -sp "Tools/src/DataDeriver" \
 		AST.fr \
 		Deriver.fr \
 		Main.fr \
@@ -249,4 +247,4 @@ test-toProlog:
 .PHONY: clean
 clean:
 	@echo "[1;42mMaking $@[0m"
-	$(RM) $(BUILD_DIRS) $(DIST) $(DOC) CSPM-Frontend/__DataTypeable CSPM-Frontend/src/Language/CSPM/Lexer.hs CSPM-Frontend/src/Language/CSPM/Lexer.fr
+	$(RM) $(BUILD) $(DIST) $(DOC) CSPM-Frontend/__DataTypeable CSPM-Frontend/src/Language/CSPM/Lexer.hs CSPM-Frontend/src/Language/CSPM/Lexer.fr
