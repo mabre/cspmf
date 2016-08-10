@@ -20,7 +20,6 @@ public class Main {
                                 .longOpt("numeric-version")
                                 .desc("print just the version number")
                                 .build());
-        options.addOption("v", "verbose", false, "verbose");
         options.addOption(Option.builder()
                                 .longOpt("rename")
                                 .desc("run renaming on the AST")
@@ -84,8 +83,7 @@ public class Main {
                 evaluateIOUnitFunction(ExecCommand.version);
             } else if(cmdLine.hasOption("numeric-version")) {
                 evaluateIOUnitFunction(ExecCommand.numericVersion);
-            } else if(cmdLine.hasOption("verbose")
-                      || arguments.length > 0 && arguments[0].equals("info")) {
+            } else if(arguments.length == 0 ||  arguments[0].equals("info")) {
                 evaluateIOUnitFunction(ExecCommand.verbose);
             } else if(arguments.length == 2) {
                 if(arguments[0].equals("translate")) {
