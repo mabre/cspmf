@@ -19,6 +19,7 @@ import Language.CSPM.AST as AST()
 import Language.CSPM.BuiltIn as BuiltIn
 import Language.CSPM.SrcLoc
 import Language.CSPM.Rename__RenameError public
+import Language.CSPM.CspmException
 
 import Data.Data hiding (DataType)
 import Data.Generics.Schemes (everywhere)
@@ -104,6 +105,10 @@ data RenameErrorException = pure native frege.language.CSPM.RenameErrorException
     pure native new new            :: RenameError -> RenameErrorException
     pure native get getRenameError :: RenameErrorException -> RenameError
 derive Exceptional RenameErrorException
+
+instance CspmException RenameError where
+    throwCspm :: RenameError -> IO a
+    throwCspm = throwIO . RenameErrorException.new
 
 private throwError :: RenameError -> RM ()
 private throwError e = unsafeCoerce_ $ throwIO (RenameErrorException.new e)

@@ -36,9 +36,6 @@ private native getCPUTime java.lang.System.currentTimeMillis :: () -> IO Long
 toPrologVersion :: Version
 toPrologVersion = makeVersion [0,6,1,1]
 
-handleTranslationError :: RenameErrorException -> IO String
-handleTranslationError err = return $ show err.get
-
 --- 'translateExpToPrologTerm' translates a string expression
 --- to a prolog term in regard to the given CSP-M specification.
 translateExpToPrologTerm ::
@@ -80,7 +77,7 @@ private mainWorkSinglePlTerm termFun filePath decl = do
   (specSrc,fileName) <- if isJust filePath then readFile (fromJust filePath) >>= \s -> return (s,fromJust filePath) else return ("","no-file-name")
   let src = specSrc ++ "\n--patch entrypoint\n"++decl ++"\n"
   ast <- parseNamedString fileName src
-  (astNew, _) <- eitherToExc throwRenameError $ renameModule ast
+  (astNew, _) <- eitherToExc $ renameModule ast
   let plTerm = termFun astNew
   output <- evaluate $ show plTerm
   return output
@@ -88,7 +85,7 @@ private mainWorkSinglePlTerm termFun filePath decl = do
 private mainWorkSinglePlTerm' :: (ModuleFromRenaming -> Doc) -> ModuleFromParser -> String -> IO String
 private mainWorkSinglePlTerm' termFun ast decl = do
   ast' <- parseNamedString "no-file-name" decl
-  (astNew, _) <- eitherToExc throwRenameError $ renameModule $ mergeDecls ast ast'
+  (astNew, _) <- eitherToExc $ renameModule $ mergeDecls ast ast'
   return $! show $! termFun $! removeSourceLocations $! astNew
 
 --- 'translateToAst' gets a CSPM specification
@@ -140,10 +137,10 @@ private mainWork fileName = do
 
   printDebug $ "Reading File " ++ fileName
   startTime <- (return $ length src) >> getCPUTime ()
-  tokenList <- lexInclude fileName src >>= eitherToExc throwLexError
+  tokenList <- lexInclude fileName src >>= eitherToExc
   time_have_tokens <- getCPUTime ()
 
-  ast <- eitherToExc throwParseError $ parse fileName tokenList
+  ast <- eitherToExc $ parse fileName tokenList
   time_have_ast <- getCPUTime ()
 
   printDebug $ "Parsing OK"
@@ -151,7 +148,7 @@ private mainWork fileName = do
   printDebug $ "parsetime : " ++ showTime(time_have_ast - time_have_tokens)
   
   time_start_renaming <- getCPUTime ()
-  (astNew, renaming) <- eitherToExc throwRenameError $ renameModule ast
+  (astNew, renaming) <- eitherToExc $ renameModule ast
   let
       plCode = cspToProlog astNew
       symbolTable = mkSymbolTable $ renaming.identDefinition

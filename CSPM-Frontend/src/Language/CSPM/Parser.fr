@@ -20,6 +20,7 @@ import Language.CSPM.Token (Token,AlexPosn)
 import Language.CSPM.TokenClasses as TokenClasses
 import Language.CSPM.Token as Token()
 import Language.CSPM.Parser_ParseError public
+import Language.CSPM.CspmException
 
 import Language.CSPM.SrcLoc
 
@@ -59,6 +60,10 @@ data ParseErrorException = pure native frege.language.CSPM.ParseErrorException w
     pure native new new           :: ParseError -> ParseErrorException
     pure native get getParseError :: ParseErrorException -> ParseError
 derive Exceptional ParseErrorException
+
+instance CspmException ParseError where
+    throwCspm :: ParseError -> IO a
+    throwCspm = throwIO . ParseErrorException.new
 
 data PState
  = PState {

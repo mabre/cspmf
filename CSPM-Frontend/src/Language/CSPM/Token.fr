@@ -13,6 +13,7 @@ where
 
 import Language.CSPM.TokenClasses
 import Language.CSPM.Token__LexError public
+import Language.CSPM.CspmException
 
 import Data.Data
 
@@ -39,6 +40,10 @@ data LexErrorException = pure native frege.language.CSPM.LexErrorException where
     pure native new new         :: LexError -> LexErrorException
     pure native get getLexError :: LexErrorException -> LexError
 derive Exceptional LexErrorException
+
+instance CspmException LexError where
+    throwCspm :: LexError -> IO a
+    throwCspm = throwIO . LexErrorException.new
 
 {-# derive DataTypeable #-}
 data Token = Token

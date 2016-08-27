@@ -64,6 +64,7 @@ cspm-frontend: dataderiver libraries
 		TokenClasses.fr \
 		SrcLoc.fr \
 		AlexWrapper.fr \
+		CspmException.fr \
 		Token.fr
 	
 	$(ALEX) CSPM-Frontend/src/Language/CSPM/Lexer.x

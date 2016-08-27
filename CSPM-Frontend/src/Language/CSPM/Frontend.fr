@@ -28,8 +28,7 @@ import Language.CSPM.LexHelper as Lexer
   (public lexInclude, public lexPlain, public removeIgnoredToken)
 import Language.CSPM.PrettyPrinter public
 import Language.CSPM.Utils
-  (public eitherToExc, public throwLexError, public throwParseError, public throwRenameError
- , public parseFile, public parseString, public parseNamedString, public benchmarkFrontend)
+  (public eitherToExc, public parseFile, public parseString, public parseNamedString, public benchmarkFrontend)
 import Data.Version (Version, makeVersion)
 
 --- The version of the CSPM-Frontend library
