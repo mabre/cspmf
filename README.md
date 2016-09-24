@@ -25,17 +25,20 @@ parsing CSPM specifications. It supports serveral modes of parsing.
 
 ## Compiling cspmf
 
-First make sure that all paths and command in the Makefile match your system.
+First make sure that all paths and commands in the Makefile match your system.
 [Frege](https://github.com/Frege/frege/releases) is required in version
 3.23.422-ga05a487, [alex](https://hackage.haskell.org/package/alex) should be
-installed in version 3.1.7 (`cabal install alex-3.1.7`).
+installed in version 3.1.7 (`cabal install alex-3.1.7`); you can have a look at
+`.travis.yml` to see how to set up the dependencies.
 
 ```bash
 make cspmf
 make jar
 ```
 
-The jar is compressed using [ProGuard](http://proguard.sourceforge.net). If you cannot or do not want to build the jar, you can also run cspmf from the build directory using `./cspmf.built.sh`.
+The jar is compressed using [ProGuard](http://proguard.sourceforge.net). If you
+cannot or do not want to build the jar, you can also skip `make jar` and run
+cspmf from the build directory using `./cspmf.built.sh` instead of `./cspmf.sh`.
 
 Use `make test` to run the automatic tests.
 
