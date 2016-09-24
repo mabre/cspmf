@@ -18,7 +18,6 @@ CP       = cp
 CP_P     = cp --parents
 OR_TRUE  = || true
 TOUCH    = touch
-CLASS_FILES = `find build -name "*class"`
 
 FREGECFLAGS = -make -hints -O
 FREGEC0     = $(JAVA) -Xss16m -Xmx2g -jar $(FREGEJAR) -fp ${BUILD} -d $(BUILD)
@@ -186,8 +185,10 @@ jar:
 .PHONY: doc
 doc:
 	@echo "[1;42mMake $@[0m"
-	$(MKDIR_P) $(DOC)
-	$(FREGE) frege.tools.Doc -d $(DOC) $(BUILD)
+	$(MKDIR_P) $(DOC) # exclude non-Frege classes (the compiler should ignore them automatically, but for some reason it doesn't)
+	$(FREGE) frege.tools.Doc -x \
+		frege.language.CSPM.LexErrorException,frege.language.CSPM.ParseErrorException,frege.language.CSPM.RenameErrorException,frege.main.Benchmark,frege.main.FregeInterface,frege.main.Main,com.netflix.frege.runtime.Fingerprint \
+		-d $(DOC) $(BUILD)
 
 
 .PHONY: test %.csp %.fdr test-toProlog
