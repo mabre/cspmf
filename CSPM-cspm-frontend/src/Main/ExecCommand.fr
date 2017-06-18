@@ -77,6 +77,10 @@ removeUnicode src outFile = handleException $ do
     tokens <- readFile src >>= lexInclude src >>= eitherToExc
     writeFile outFile $ concatMap asciiTokenString tokens
 
+prologStdOut :: FilePath -> IO String
+prologStdOut src = -- exception handling is done in translateToProlog
+    translateToPrologStr src
+
 prologOut :: FilePath -> FilePath -> IO ()
 prologOut src outFile = do -- exception handling is done in translateToProlog
     translateToProlog src outFile

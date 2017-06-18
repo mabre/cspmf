@@ -5,6 +5,7 @@ import frege.runtime.Lambda;
 import org.apache.commons.cli.*;
 import org.apache.commons.cli.Option.*;
 
+import static frege.main.FregeInterface.evaluateIOFunction;
 import static frege.main.FregeInterface.evaluateIOUnitFunction;
 
 public class Main {
@@ -53,6 +54,10 @@ public class Main {
                                 .desc("translate a CSP-M file to Prolog")
                                 .hasArg()
                                 .argName("FILE")
+                                .build());
+        options.addOption(Option.builder()
+                                .longOpt("prologStdOut")
+                                .desc("like prologOut, but prints to stdout instead of writing to a file")
                                 .build());
         options.addOption(Option.builder()
                                 .longOpt("expressionToPrologTerm")
@@ -108,6 +113,10 @@ public class Main {
                     if(cmdLine.hasOption("prologOut")) {
                         String outFile = cmdLine.getOptionValue("prologOut");
                         evaluateIOUnitFunction(ExecCommand.prologOut(src, outFile));
+                    }
+                    if(cmdLine.hasOption("prologStdOut")) {
+                        String prologOutput = (String)evaluateIOFunction(ExecCommand.prologStdOut(src));
+                        System.out.println(prologOutput);
                     }
                     if(cmdLine.hasOption("expressionToPrologTerm")) {
                         String expr = cmdLine.getOptionValue("expressionToPrologTerm");

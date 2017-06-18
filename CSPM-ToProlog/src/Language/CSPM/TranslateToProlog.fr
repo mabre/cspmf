@@ -101,6 +101,19 @@ translateToAst specSrc = do
 showModuleTokens :: ModuleFromParser -> String
 showModuleTokens mfp = show mfp.moduleTokens
 
+--- 'translateToPrologStr' reads a CSPM specification from inFile
+--- and returns the Prolog representation.
+--- It handles all lexer and parser errors and catches all exceptions.
+translateToPrologStr ::
+     FilePath -- ^ filename input
+  -> IO String
+translateToPrologStr inFile =
+  (mainWork inFile)
+    `catch` renameErrorHandler
+    `catch` parseErrorHandler
+    `catch` lexErrorHandler
+    `catch` catchAllExceptions
+
 --- 'translateToProlog' reads a CSPM specification from inFile
 --- and writes the Prolog representation to outFile.
 --- It handles all lexer and parser errors and catches all exceptions.
@@ -109,11 +122,7 @@ translateToProlog ::
   -> FilePath -- ^ filename output
   -> IO ()
 translateToProlog inFile outFile = do
-  res <- (mainWork inFile)
-         `catch` renameErrorHandler
-         `catch` parseErrorHandler
-         `catch` lexErrorHandler
-         `catch` catchAllExceptions
+  res <- translateToPrologStr inFile
   putStrLn "Parsing Done!"
   (writeFile outFile res >> putStrLn "Writing File Done!")
          `catch` writeFileExceptionHandler
