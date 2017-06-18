@@ -47,7 +47,7 @@ verbose =
         ,"  cspmf info",nl
         ,"  cspmf translate",nl
         ,nl
-        ,"Copyright (c) Marc Fontaine, Ivaylo Dobrikov 2007-2015",nl
+        ,"Copyright (c) Marc Fontaine, Ivaylo Dobrikov, Markus Brenneis 2007-2017",nl
         ,"Email : Marc.Fontaine@gmx.de, ivaylo.dobrikov@googlemail.com",nl
         ]
   where nl = "\n"
