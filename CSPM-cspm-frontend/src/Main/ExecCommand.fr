@@ -67,10 +67,15 @@ private genericOut showModule src rename outFile = handleException $ do
             else return $ castModule ast1
     writeFile outFile $ showModule ast
 
+addUnicodeStr :: FilePath -> IO String
+addUnicodeStr src = do
+    tokens <- readFile src >>= lexInclude src >>= eitherToExc
+    return $ concatMap unicodeTokenString tokens
+
 addUnicode :: FilePath -> FilePath -> IO ()
 addUnicode src outFile = handleException $ do
-    tokens <- readFile src >>= lexInclude src >>= eitherToExc
-    writeFile outFile $ concatMap unicodeTokenString tokens
+    unicodeString <- addUnicodeStr src
+    writeFile outFile unicodeString
 
 removeUnicode :: FilePath -> FilePath -> IO ()
 removeUnicode src outFile = handleException $ do
@@ -92,7 +97,7 @@ expressionToPrologTerm src str = handleException $ do
     translateExpToPrologTerm (Just src) str
 
 declarationToPrologTerm :: FilePath -> String -> IO ()
-declarationToPrologTerm "no-file" str = handleException $ do
-    translateDeclToPrologTerm Nothing str
-declarationToPrologTerm src str = handleException $ do
-    translateDeclToPrologTerm (Just src) str
+declarationToPrologTerm "no-file" str = handleException $
+    putStrLn =<< translateDeclToPrologTerm Nothing str
+declarationToPrologTerm src str = handleException $
+    putStrLn =<< translateDeclToPrologTerm (Just src) str

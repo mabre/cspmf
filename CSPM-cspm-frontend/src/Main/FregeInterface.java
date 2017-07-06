@@ -1,6 +1,7 @@
 package frege.main;
 
 import frege.runtime.Lambda;
+import frege.prelude.PreludeBase.TMaybe;
 
 /**
  * This class contains helper functions for calling frege functions.
@@ -38,4 +39,9 @@ public class FregeInterface {
             )
         );
     }
+    
+    public static <T> TMaybe just(T o) {
+        return TMaybe.DJust.mk(o);
+    }
+
 }

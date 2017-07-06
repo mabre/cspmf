@@ -56,10 +56,9 @@ private getExpPlCode = addFullStopToPrologTerm . Term.unTerm . te . getLastBindE
 
 --- 'translateDeclToPrologTerm' translates a string declaration
 --- to a prolog term in regard to the given CSP-M specification.
-translateDeclToPrologTerm :: Maybe FilePath -> String -> IO ()
-translateDeclToPrologTerm file decl = do
-    r <- mainWorkSinglePlTerm getDeclPlCode file decl
-    putStrLn r
+translateDeclToPrologTerm :: Maybe FilePath -> String -> IO String
+translateDeclToPrologTerm file decl =
+    mainWorkSinglePlTerm getDeclPlCode file decl
 
 --- 'translateDeclToPrologTerm'' translates a string declaration
 --- to a prolog term in regard to the given CSP-M specification given as AST.
