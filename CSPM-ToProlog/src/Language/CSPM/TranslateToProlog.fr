@@ -41,10 +41,9 @@ toPrologVersion = makeVersion [0,6,1,1]
 translateExpToPrologTerm ::
      Maybe FilePath
   -> String
-  -> IO ()
-translateExpToPrologTerm file expr = do
-    r <- mainWorkSinglePlTerm getExpPlCode file ("x__entrypoint_expression = " ++ expr)
-    putStrLn r
+  -> IO String
+translateExpToPrologTerm file expr =
+    mainWorkSinglePlTerm getExpPlCode file ("x__entrypoint_expression = " ++ expr)
 
 --- 'translateExprToPrologTerm'' translates a string expression
 --- to a prolog term in regard to the given CSP-M specification given as AST.

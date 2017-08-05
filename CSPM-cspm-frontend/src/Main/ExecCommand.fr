@@ -92,9 +92,9 @@ prologOut src outFile = do -- exception handling is done in translateToProlog
 
 expressionToPrologTerm :: FilePath -> String -> IO ()
 expressionToPrologTerm "no-file" str = handleException $ do
-    translateExpToPrologTerm Nothing str
+    putStrLn =<< translateExpToPrologTerm Nothing str
 expressionToPrologTerm src str = handleException $ do
-    translateExpToPrologTerm (Just src) str
+    putStrLn =<< translateExpToPrologTerm (Just src) str
 
 declarationToPrologTerm :: FilePath -> String -> IO ()
 declarationToPrologTerm "no-file" str = handleException $
