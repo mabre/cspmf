@@ -909,8 +909,14 @@ topDeclList = sepByNewLine topDecl
         lstring = tokenPrimExDefault testToken
 
         testToken t = if t.tokenClass == L_String
-                      then Just $ t.tokenString
-                      else Nothing 
+                      then Just $ readString $ t.tokenString
+                      else Nothing
+        
+        -- Frege does not have read
+        readString :: String -> String
+        readString s = case s =~~ ´"(.*)"´ of
+            [_ ,Just v] -> v
+            _           -> error $ s ++ ": no parse as String"
 
   parseAssert :: PT LAssertDecl
   parseAssert =  try assertTauPrio
