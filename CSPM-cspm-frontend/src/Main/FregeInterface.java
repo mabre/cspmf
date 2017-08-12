@@ -43,5 +43,8 @@ public class FregeInterface {
     public static <T> TMaybe just(T o) {
         return TMaybe.DJust.mk(o);
     }
-
+    
+    public static <T> TMaybe nothing() {
+        return TMaybe.DNothing.<T>mk();
+    }
 }
