@@ -19,6 +19,7 @@ import Language.CSPM.AST as AST()
 import Language.CSPM.BuiltIn as BuiltIn
 import Language.CSPM.SrcLoc
 import Language.CSPM.Rename__RenameError public
+import Language.CSPM.Rename__RenameErrorException
 import Language.CSPM.CspmException
 
 import Data.Data hiding (DataType)
@@ -101,7 +102,7 @@ private initPrelude
     = forM_ BuiltIn.builtIns $ \bi -> do
         bindNewTopIdent BuiltInID (labeled $ Ident bi)
 
-data RenameErrorException = pure native frege.language.CSPM.RenameErrorException where
+data RenameErrorException = pure native frege.language.CSPM.Rename__RenameErrorException.RenameErrorException where
     pure native new new            :: RenameError -> RenameErrorException
     pure native get getRenameError :: RenameErrorException -> RenameError
 derive Exceptional RenameErrorException

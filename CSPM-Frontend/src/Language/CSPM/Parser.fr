@@ -19,7 +19,8 @@ import Language.CSPM.AST
 import Language.CSPM.Token (Token,AlexPosn)
 import Language.CSPM.TokenClasses as TokenClasses
 import Language.CSPM.Token as Token()
-import Language.CSPM.Parser_ParseError public
+import Language.CSPM.Parser__ParseError public
+import Language.CSPM.Parser__ParseErrorException
 import Language.CSPM.CspmException
 
 import Language.CSPM.SrcLoc
@@ -56,7 +57,7 @@ testParser p tokenList
   = runParser p initialPState ""
        $ removeIgnoredToken tokenList
 
-data ParseErrorException = pure native frege.language.CSPM.ParseErrorException where
+data ParseErrorException = pure native frege.language.CSPM.Parser__ParseErrorException.ParseErrorException where
     pure native new new           :: ParseError -> ParseErrorException
     pure native get getParseError :: ParseErrorException -> ParseError
 derive Exceptional ParseErrorException

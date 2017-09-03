@@ -55,16 +55,13 @@ cspm-frontend: dataderiver libraries
 	$(BASH) Tools/src/Scripts/DeriveDataTypeable.sh "$(FREGE)"
 	
 	$(FREGEC) -sp "CSPM-Frontend/__DataTypeable" \
-		Token__LexError.fr
-	
-	$(JAVAC) -d $(BUILD) CSPM-Frontend/src/Language/CSPM/LexErrorException.java
-	
-	$(FREGEC) -sp "CSPM-Frontend/__DataTypeable" \
 		TokenClasses.fr \
 		SrcLoc.fr \
 		AlexWrapper.fr \
 		CspmException.fr \
-		Token.fr
+		Token.fr \
+		Token__LexError.fr \
+		Token__LexErrorException.fr
 	
 	$(ALEX) CSPM-Frontend/src/Language/CSPM/Lexer.x
 	$(BASH) Tools/src/Scripts/AlexToFrege.sh CSPM-Frontend/src/Language/CSPM/Lexer.hs
@@ -78,11 +75,9 @@ cspm-frontend: dataderiver libraries
 		BuiltIn.fr \
 		PrettyPrinter.fr \
 		Parser__ParseError.fr \
-		Rename__RenameError.fr
-	
-	$(JAVAC) -d $(BUILD) CSPM-Frontend/src/Language/CSPM/ParseErrorException.java CSPM-Frontend/src/Language/CSPM/RenameErrorException.java
-	
-	$(FREGEC) -sp "CSPM-Frontend/__DataTypeable" \
+		Parser__ParseErrorException.fr \
+		Rename__RenameError.fr \
+		Rename__RenameErrorException.fr \
 		Parser.fr
 	
 # FATAL: Can't find context for Typeable.Typeable when run with -O
